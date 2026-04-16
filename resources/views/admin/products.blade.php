@@ -1,0 +1,160 @@
+<!-- Products Section -->
+<div id="products-section" class="admin-section hidden">
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold">Products Management</h1>
+            <div class="flex gap-4">
+                <a href="{{ route('admin.products.create') }}" class="rounded-2xl bg-pink-600 px-6 py-3 text-sm font-semibold text-white hover:bg-pink-700">Add Product</a>
+                <a href="{{ route('admin.categories.create') }}" class="rounded-2xl bg-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300">Add Categories</a>
+            </div>
+        </div>
+
+        @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+        @endif
+
+        <div class="rounded-3xl bg-white p-6 shadow-soft">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold">Product List</h2>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="Search products..." class="rounded-2xl border border-slate-200 px-4 py-2 text-sm" />
+                    <button class="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200">Filter</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Image</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Category</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Price</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Stock</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($allProducts ?? [] as $product)
+                        <tr>
+                            <td class="px-4 py-4">
+                                @if($product->main_image)
+                                    <img src="{{ asset('storage/' . $product->main_image) }}" alt="{{ $product->name }}" class="w-12 h-12 rounded-lg object-cover" />
+                                @else
+                                    <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-image text-gray-400"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 text-sm font-medium">{{ $product->name }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-500">{{ $product->category->name ?? 'No Category' }}</td>
+                            <td class="px-4 py-4 text-sm">
+                                ${{ number_format($product->price, 2) }}
+                                @if($product->discount_price)
+                                    <span class="text-red-500 line-through text-xs">${{ number_format($product->discount_price, 2) }}</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 text-sm">
+                                <span class="{{ $product->stock_quantity > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ $product->stock_quantity }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-sm">
+                                <span class="px-2 py-1 rounded-full text-xs
+                                    @if($product->status === 'active') bg-green-100 text-green-800
+                                    @elseif($product->status === 'inactive') bg-red-100 text-red-800
+                                    @elseif($product->status === 'pre_order') bg-yellow-100 text-yellow-800
+                                    @endif">
+                                    @if($product->status === 'active') Active
+                                    @elseif($product->status === 'inactive') Inactive
+                                    @elseif($product->status === 'pre_order') Pre-order
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-2">
+                                    <a href="{{ route('admin.products.edit', ['product' => $product->id]) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">Edit</a>
+                                    <form action="{{ route('admin.products.destroy', ['product' => $product->id]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this product?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                                <div class="flex flex-col items-center">
+                                    <i class="fas fa-box-open text-4xl mb-2"></i>
+                                    <p>No products found. <a href="{{ route('admin.products.create') }}" class="text-blue-600 hover:text-blue-800">Create your first product</a></p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-6 shadow-soft">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-semibold">Category List</h2>
+                <a href="{{ route('admin.categories.create') }}" class="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200">Add Category</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Image</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Parent</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($allCategories ?? [] as $category)
+                        <tr>
+                            <td class="px-4 py-4">
+                                @if($category->image)
+                                    <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="w-12 h-12 rounded-lg object-cover" />
+                                @else
+                                    <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
+                                        <i class="fas fa-image text-gray-400"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-4 text-sm font-medium">{{ $category->name }}</td>
+                            <td class="px-4 py-4 text-sm text-slate-500">{{ $category->parent?->name ?? 'None' }}</td>
+                            <td class="px-4 py-4 text-sm">
+                                <span class="px-2 py-1 rounded-full text-xs {{ $category->status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $category->status ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4">
+                                <div class="flex gap-2">
+                                    <a href="{{ route('admin.categories.edit', ['category' => $category->id]) }}" class="text-indigo-600 hover:text-indigo-800 text-sm">Edit</a>
+                                    <form action="{{ route('admin.categories.destroy', ['category' => $category->id]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this category?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                                No categories found.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

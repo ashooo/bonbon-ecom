@@ -1,11 +1,152 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# BonBons PH - E-commerce Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A modern e-commerce platform built with Laravel for selling custom bonbons and candies.
+
+## Features
+
+- 🛍️ Product catalog with customization options
+- 🔐 User authentication with Google OAuth
+- 🛒 Shopping cart functionality
+- 👤 User profiles and order history
+- 📱 Responsive design with Tailwind CSS
+- 🎨 Component-based architecture
+
+## Setup Instructions
+
+### Prerequisites
+
+- PHP 8.1 or higher
+- Composer
+- Node.js and npm
+- MySQL database
+- XAMPP (for local development)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd bonbon-ecom
+   ```
+
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
+
+3. **Install Node.js dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Environment Configuration**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+
+5. **Database Setup**
+   ```bash
+   # Create database in MySQL
+   # Update .env with your database credentials
+   php artisan migrate
+   ```
+
+6. **Google OAuth Setup**
+
+   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   
+   b. Create a new project or select existing one
+   
+   c. Enable Google+ API
+   
+   d. Create OAuth 2.0 credentials:
+      - Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
+      - Set application type to "Web application"
+      - Add authorized redirect URIs: `http://localhost/auth/google/callback`
+   
+   e. Update your `.env` file:
+   ```env
+   GOOGLE_CLIENT_ID=your_google_client_id_here
+   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+   GOOGLE_REDIRECT_URI=http://localhost/auth/google/callback
+   ```
+
+7. **Build Assets**
+   ```bash
+   npm run build
+   # or for development
+   npm run dev
+   ```
+
+8. **Start the Development Server**
+   ```bash
+   php artisan serve
+   ```
+
+## Project Structure
+
+```
+app/
+├── Http/Controllers/
+│   ├── Auth/LoginController.php    # Authentication logic
+│   └── ...
+├── Models/
+│   └── User.php                    # User model with OAuth fields
+database/
+├── migrations/
+│   └── ..._add_google_id_and_avatar_to_users_table.php
+resources/
+├── views/
+│   ├── auth/login.blade.php        # Login form
+│   ├── components/                 # Reusable components
+│   │   ├── navbar.blade.php
+│   │   ├── footer.blade.php
+│   │   └── button.blade.php
+│   └── pages/                      # Page views
+routes/
+└── web.php                         # Application routes
+```
+
+## Authentication Features
+
+- **Email/Password Login**: Traditional authentication
+- **Google OAuth**: Social login with Google accounts
+- **Session Management**: Secure session handling
+- **Logout**: Proper session cleanup
+
+## Development
+
+### Available Commands
+
+```bash
+# Run migrations
+php artisan migrate
+
+# Create new migration
+php artisan make:migration create_table_name
+
+# Run tests
+php artisan test
+
+# Clear cache
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+```
+
+### Code Style
+
+This project uses Laravel Pint for code formatting:
+
+```bash
+./vendor/bin/pint
+```
+
+---
+
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 ## About Laravel
 

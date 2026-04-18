@@ -16,8 +16,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::updateOrCreate([
             'email' => 'admin@example.com',
         ], [
@@ -31,6 +29,20 @@ class DatabaseSeeder extends Seeder
         ], [
             'name' => 'Test User',
             'password' => Hash::make('12345678'),
+        ]);
+
+        User::updateOrCreate([
+            'email' => 'customer@example.com',
+        ], [
+            'name' => 'Customer Demo',
+            'password' => Hash::make('12345678'),
+            'phone' => '09991234567',
+        ]);
+
+        $this->call([
+            StoreSettingsSeeder::class,
+            CatalogSeeder::class,
+            CustomerFlowSeeder::class,
         ]);
     }
 }           

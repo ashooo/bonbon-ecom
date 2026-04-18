@@ -21,15 +21,23 @@ class ProductImage extends Model
     }
 
     // Get the image URL
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute($value)
     {
-        return asset('storage/' . $this->image_url);
+        if (! $value) {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        return asset('storage/' . ltrim($value, '/'));
     }
 
     // Backward-compatible aliases used by current admin/product pages.
     public function getImagePathAttribute()
     {
-        return $this->image_url;
+        return $this->attributes['image_url'] ?? null;
     }
 
     public function setImagePathAttribute($value): void
@@ -39,7 +47,7 @@ class ProductImage extends Model
 
     public function getSortOrderAttribute()
     {
-        return $this->display_order;
+        return $this->attributes['display_order'] ?? 0;
     }
 
     public function setSortOrderAttribute($value): void

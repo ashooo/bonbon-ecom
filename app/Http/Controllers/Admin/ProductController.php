@@ -33,7 +33,7 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories = Category::where('status', true)->orderBy('name')->get();
+        $categories = Category::active()->orderBy('name')->get();
         return view('admin.products.create', compact('categories'));
     }
 
@@ -58,9 +58,12 @@ class ProductController extends Controller
         ]);
 
         $data = $request->only([
-            'name', 'description', 'price', 'discount_price', 'stock_quantity',
-            'status', 'pre_order_days', 'is_featured', 'is_best_seller', 'category_id'
+            'name', 'description', 'price', 'stock_quantity', 'is_featured', 'is_best_seller', 'category_id',
         ]);
+        $data['sale_price'] = $request->input('discount_price');
+        $data['is_active'] = $request->input('status') !== 'inactive';
+        $data['is_preorder'] = $request->input('status') === 'pre_order';
+        $data['preorder_days'] = $request->input('pre_order_days', 0);
         $data['slug'] = Str::slug($request->name);
 
         // Handle main image upload
@@ -77,8 +80,8 @@ class ProductController extends Controller
                 $imagePath = $image->store('products/gallery', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $imagePath,
-                    'sort_order' => $index
+                    'image_url' => $imagePath,
+                    'display_order' => $index,
                 ]);
             }
         }
@@ -99,7 +102,7 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $categories = Category::where('status', true)->orderBy('name')->get();
+        $categories = Category::active()->orderBy('name')->get();
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -124,9 +127,12 @@ class ProductController extends Controller
         ]);
 
         $data = $request->only([
-            'name', 'description', 'price', 'discount_price', 'stock_quantity',
-            'status', 'pre_order_days', 'is_featured', 'is_best_seller', 'category_id'
+            'name', 'description', 'price', 'stock_quantity', 'is_featured', 'is_best_seller', 'category_id',
         ]);
+        $data['sale_price'] = $request->input('discount_price');
+        $data['is_active'] = $request->input('status') !== 'inactive';
+        $data['is_preorder'] = $request->input('status') === 'pre_order';
+        $data['preorder_days'] = $request->input('pre_order_days', 0);
 
         // Update slug if name changed
         if ($request->name !== $product->name) {
@@ -149,14 +155,14 @@ class ProductController extends Controller
         // Handle additional images
         if ($request->hasFile('images')) {
             // Get current max sort order
-            $maxSortOrder = $product->images()->max('sort_order') ?? -1;
+            $maxSortOrder = $product->images()->max('display_order') ?? -1;
 
             foreach ($request->file('images') as $index => $image) {
                 $imagePath = $image->store('products/gallery', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $imagePath,
-                    'sort_order' => $maxSortOrder + $index + 1
+                    'image_url' => $imagePath,
+                    'display_order' => $maxSortOrder + $index + 1,
                 ]);
             }
         }
@@ -208,7 +214,7 @@ class ProductController extends Controller
         ]);
 
         foreach ($request->images as $imageData) {
-            ProductImage::where('id', $imageData['id'])->update(['sort_order' => $imageData['sort_order']]);
+            ProductImage::where('id', $imageData['id'])->update(['display_order' => $imageData['sort_order']]);
         }
 
         return response()->json(['success' => true]);

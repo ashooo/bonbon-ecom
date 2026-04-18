@@ -8,16 +8,18 @@ use Illuminate\Support\Str;
 class Category extends Model
 {
     protected $fillable = [
+        'parent_id',
         'name',
+        'slug',
         'description',
         'image',
-        'slug',
-        'status',
-        'parent_id'
+        'display_order',
+        'is_active',
     ];
 
     protected $casts = [
-        'status' => 'boolean',
+        'display_order' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     // Automatically generate slug from name
@@ -54,6 +56,11 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     // Get all descendants (for nested categories)
     public function descendants()
     {
@@ -63,6 +70,17 @@ class Category extends Model
     // Check if category is active
     public function isActive()
     {
-        return $this->status;
+        return (bool) $this->is_active;
+    }
+
+    // Backward-compatible alias used by existing views/controllers.
+    public function getStatusAttribute()
+    {
+        return (bool) $this->is_active;
+    }
+
+    public function setStatusAttribute($value): void
+    {
+        $this->attributes['is_active'] = (bool) $value;
     }
 }

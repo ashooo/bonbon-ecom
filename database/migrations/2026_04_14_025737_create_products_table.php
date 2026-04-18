@@ -13,19 +13,23 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description');
-            $table->decimal('price', 10, 2);
-            $table->decimal('discount_price', 10, 2)->nullable();
+            $table->foreignId('category_id')->constrained()->restrictOnDelete()->cascadeOnUpdate();
+            $table->string('name', 100);
+            $table->string('slug', 100)->unique();
+            $table->text('description')->nullable();
+            $table->decimal('price', 8, 2);
+            $table->decimal('sale_price', 8, 2)->nullable();
+            $table->string('unit_size', 30)->nullable();
+            $table->boolean('is_preorder')->default(false);
+            $table->integer('preorder_days')->default(0);
+            $table->boolean('allows_customization')->default(false);
+            $table->boolean('is_featured')->default(false);
+            $table->boolean('is_active')->default(true);
+
+            // Compatibility fields used by current front-end/admin pages.
             $table->integer('stock_quantity')->default(0);
             $table->string('main_image')->nullable();
-            $table->enum('status', ['active', 'inactive', 'pre_order'])->default('active');
-            $table->integer('pre_order_days')->nullable();
-            $table->boolean('is_featured')->default(false);
             $table->boolean('is_best_seller')->default(false);
-            $table->string('slug')->unique();
-            $table->unsignedBigInteger('category_id');
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->timestamps();
         });
     }

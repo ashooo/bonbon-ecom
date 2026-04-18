@@ -8,25 +8,35 @@ use Illuminate\Support\Str;
 class Product extends Model
 {
     protected $fillable = [
+        'category_id',
         'name',
+        'slug',
         'description',
         'price',
+        'sale_price',
+        'unit_size',
+        'is_preorder',
+        'preorder_days',
+        'allows_customization',
+        'is_active',
+        // Compatibility fields still used by existing UI.
         'discount_price',
         'stock_quantity',
         'main_image',
-        'status',
-        'pre_order_days',
         'is_featured',
         'is_best_seller',
-        'slug',
-        'category_id'
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'sale_price' => 'decimal:2',
         'discount_price' => 'decimal:2',
         'stock_quantity' => 'integer',
+        'preorder_days' => 'integer',
         'pre_order_days' => 'integer',
+        'is_preorder' => 'boolean',
+        'allows_customization' => 'boolean',
+        'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'is_best_seller' => 'boolean',
     ];
@@ -56,7 +66,12 @@ class Product extends Model
     // Product images relationship
     public function images()
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+        return $this->hasMany(ProductImage::class)->orderBy('display_order');
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(Variant::class)->orderBy('display_order');
     }
 
     // Cart items relationship
@@ -80,33 +95,75 @@ class Product extends Model
     // Check if product is active
     public function isActive()
     {
-        return $this->status === 'active';
+        return (bool) $this->is_active;
     }
 
     // Check if product is on pre-order
     public function isPreOrder()
     {
-        return $this->status === 'pre_order';
+        return (bool) $this->is_preorder;
     }
 
     // Get the effective price (with discount if available)
     public function getEffectivePriceAttribute()
     {
-        return $this->discount_price ?? $this->price;
+        return $this->sale_price ?? $this->price;
     }
 
     // Check if product has discount
     public function hasDiscount()
     {
-        return $this->discount_price !== null && $this->discount_price < $this->price;
+        return $this->sale_price !== null && $this->sale_price < $this->price;
     }
 
     // Get discount percentage
     public function getDiscountPercentageAttribute()
     {
         if ($this->hasDiscount()) {
-            return round((($this->price - $this->discount_price) / $this->price) * 100);
+            return round((($this->price - $this->sale_price) / $this->price) * 100);
         }
         return 0;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    // Backward-compatible alias used by existing front-end templates/controllers.
+    public function getStatusAttribute()
+    {
+        if (! $this->is_active) {
+            return 'inactive';
+        }
+
+        return $this->is_preorder ? 'pre_order' : 'active';
+    }
+
+    public function setStatusAttribute($value): void
+    {
+        $status = strtolower((string) $value);
+        $this->attributes['is_active'] = $status !== 'inactive';
+        $this->attributes['is_preorder'] = $status === 'pre_order';
+    }
+
+    public function getDiscountPriceAttribute()
+    {
+        return $this->sale_price;
+    }
+
+    public function setDiscountPriceAttribute($value): void
+    {
+        $this->attributes['sale_price'] = $value;
+    }
+
+    public function getPreOrderDaysAttribute()
+    {
+        return $this->preorder_days;
+    }
+
+    public function setPreOrderDaysAttribute($value): void
+    {
+        $this->attributes['preorder_days'] = $value;
     }
 }

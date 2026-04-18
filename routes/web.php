@@ -14,17 +14,17 @@ Route::get('/', function () {
 
     if (Schema::hasTable('products') && Schema::hasTable('categories')) {
         $featuredProducts = \App\Models\Product::with('category')
-            ->whereIn('status', ['active', 'pre_order'])
+            ->where('is_active', true)
             ->where('is_featured', true)
             ->latest()
             ->take(6)
             ->get();
 
         $featuredCategories = \App\Models\Category::query()
-            ->where('status', true)
+            ->where('is_active', true)
             ->whereNull('parent_id')
             ->withCount(['products' => function ($query) {
-                $query->whereIn('status', ['active', 'pre_order']);
+                $query->where('is_active', true);
             }])
             ->orderBy('name')
             ->take(8)
@@ -40,12 +40,12 @@ Route::get('/products', function (Request $request) {
 
     if (Schema::hasTable('products') && Schema::hasTable('categories')) {
         $categories = \App\Models\Category::query()
-            ->where('status', true)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
         $productsQuery = \App\Models\Product::with('category')
-            ->whereIn('status', ['active', 'pre_order']);
+            ->where('is_active', true);
 
         if ($request->filled('search')) {
             $search = $request->string('search')->trim()->value();
@@ -61,8 +61,8 @@ Route::get('/products', function (Request $request) {
         }
 
         match ($request->input('sort')) {
-            'price_low' => $productsQuery->orderBy('discount_price')->orderBy('price'),
-            'price_high' => $productsQuery->orderByDesc('discount_price')->orderByDesc('price'),
+            'price_low' => $productsQuery->orderBy('sale_price')->orderBy('price'),
+            'price_high' => $productsQuery->orderByDesc('sale_price')->orderByDesc('price'),
             'latest' => $productsQuery->latest(),
             default => $productsQuery->orderBy('name'),
         };
@@ -78,11 +78,11 @@ Route::get('/product/{slug}', function ($slug) {
 
     $product = \App\Models\Product::with(['category', 'images'])
         ->where('slug', $slug)
-        ->whereIn('status', ['active', 'pre_order'])
+        ->where('is_active', true)
         ->firstOrFail();
 
     $relatedProducts = \App\Models\Product::with('category')
-        ->whereIn('status', ['active', 'pre_order'])
+        ->where('is_active', true)
         ->where('id', '!=', $product->id)
         ->when($product->category_id, function ($query) use ($product) {
             $query->where('category_id', $product->category_id);

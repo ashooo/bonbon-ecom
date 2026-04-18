@@ -205,10 +205,16 @@ class ProfileController extends Controller
 
         $newOrder = Auth::user()->orders()->create([
             'order_number' => Str::upper('ORD-' . Str::random(8)),
-            'status' => 'Pending',
-            'total_amount' => $order->total_amount,
-            'description' => 'Reorder of ' . $order->order_number,
-            'placed_at' => now(),
+            'customer_name' => Auth::user()->name,
+            'customer_email' => Auth::user()->email,
+            'customer_phone' => Auth::user()->phone ?? 'N/A',
+            'order_type' => 'pickup',
+            'fulfillment_date' => now()->toDateString(),
+            'total' => $order->total_amount,
+            'subtotal' => $order->total_amount,
+            'status' => 'pending',
+            'payment_status' => 'pending',
+            'special_instructions' => 'Reorder of ' . $order->order_number,
         ]);
 
         return redirect()->route('profile')->with('success', 'Your reorder has been placed. Order ' . $newOrder->order_number . ' created.');

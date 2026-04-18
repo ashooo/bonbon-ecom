@@ -82,8 +82,7 @@
 
             <form action="{{ route('cart.add') }}" method="POST" class="rounded-3xl bg-white p-6 shadow-sm">
                 @csrf
-                <input type="hidden" name="product_name" value="{{ $product->name }}">
-                <input type="hidden" name="product_image" value="{{ $product->main_image_url }}">
+                <input type="hidden" name="product_id" value="{{ $product->id }}">
                 <input type="hidden" name="unit_price" value="{{ $product->effective_price }}">
 
                 <div class="mb-4">

@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete()->cascadeOnUpdate();
+            $table->string('name', 100)->unique();
+            $table->string('slug', 100)->unique();
             $table->text('description')->nullable();
             $table->string('image')->nullable();
-            $table->string('slug')->unique();
-            $table->boolean('status')->default(true);
-            $table->unsignedBigInteger('parent_id')->nullable();
-            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->integer('display_order')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

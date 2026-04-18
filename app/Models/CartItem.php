@@ -11,6 +11,9 @@ class CartItem extends Model
 
     protected $fillable = [
         'cart_id',
+        'product_id',
+        'variant_id',
+        'special_instructions',
         'product_name',
         'product_size',
         'product_image',
@@ -27,8 +30,37 @@ class CartItem extends Model
         return $this->belongsTo(Cart::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(Variant::class);
+    }
+
     public function getSubtotalAttribute()
     {
         return $this->unit_price * $this->quantity;
+    }
+
+    // Backward-compatible dynamic values for current cart UI.
+    public function getProductNameAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        return $this->product?->name;
+    }
+
+    public function getProductImageAttribute($value)
+    {
+        if ($value) {
+            return $value;
+        }
+
+        return $this->product?->main_image_url;
     }
 }

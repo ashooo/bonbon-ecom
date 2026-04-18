@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,30 +28,32 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $request->validate([
-            'product_name' => 'required|string',
-            'product_size' => 'nullable|string',
-            'product_image' => 'nullable|string',
+            'product_id' => 'required|exists:products,id',
+            'variant_id' => 'nullable|exists:product_variants,id',
             'unit_price' => 'required|numeric|min:0.01',
             'quantity' => 'nullable|integer|min:1',
+            'special_instructions' => 'nullable|string|max:255',
         ]);
 
         $cart = Auth::user()->getOrCreateCart();
         $quantity = $request->input('quantity', 1);
+        $product = Product::findOrFail($request->integer('product_id'));
+        $variantId = $request->integer('variant_id') ?: null;
 
         $existingItem = $cart->items()
-            ->where('product_name', $request->product_name)
-            ->where('product_size', $request->product_size)
+            ->where('product_id', $product->id)
+            ->where('variant_id', $variantId)
             ->first();
 
         if ($existingItem) {
             $existingItem->increment('quantity', $quantity);
         } else {
             $cart->items()->create([
-                'product_name' => $request->product_name,
-                'product_size' => $request->product_size,
-                'product_image' => $request->product_image,
+                'product_id' => $product->id,
+                'variant_id' => $variantId,
                 'unit_price' => $request->unit_price,
                 'quantity' => $quantity,
+                'special_instructions' => $request->input('special_instructions'),
             ]);
         }
 

@@ -48,7 +48,8 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id'
         ]);
 
-        $data = $request->only(['name', 'description', 'status', 'parent_id']);
+        $data = $request->only(['name', 'description', 'parent_id']);
+        $data['is_active'] = $request->boolean('status', true);
         $data['slug'] = Str::slug($request->name);
 
         // Handle image upload
@@ -96,7 +97,8 @@ class CategoryController extends Controller
             'parent_id' => 'nullable|exists:categories,id'
         ]);
 
-        $data = $request->only(['name', 'description', 'status', 'parent_id']);
+        $data = $request->only(['name', 'description', 'parent_id']);
+        $data['is_active'] = $request->boolean('status', true);
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -139,7 +141,7 @@ class CategoryController extends Controller
      */
     public function getCategories()
     {
-        $categories = Category::where('status', true)
+        $categories = Category::active()
             ->orderBy('name')
             ->get(['id', 'name', 'parent_id']);
 

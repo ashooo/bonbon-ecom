@@ -10,7 +10,10 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete()->cascadeOnUpdate();
+            $table->string('session_id', 40)->nullable();
+            $table->timestamp('expires_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

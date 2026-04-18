@@ -3,6 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "setup": "composer run setup:local",
         "build": "vite build",
         "dev": "vite"
     },

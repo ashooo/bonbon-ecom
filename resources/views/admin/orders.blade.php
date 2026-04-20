@@ -81,9 +81,24 @@
                                     default => 'bg-yellow-100 text-yellow-800',
                                 };
                             @endphp
-                            <tr>
+                            <tr class="cursor-pointer hover:bg-slate-50" data-order-url="{{ route('admin.orders.show', [
+                                'order' => $order,
+                                'status' => $orderFilters['status'] ?? 'all',
+                                'search' => $orderFilters['search'] ?? '',
+                                'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1,
+                            ]) }}">
                                 <td class="px-4 py-4 text-sm">
-                                    <p class="font-semibold">{{ $order->order_number }}</p>
+                                    <a
+                                        href="{{ route('admin.orders.show', [
+                                            'order' => $order,
+                                            'status' => $orderFilters['status'] ?? 'all',
+                                            'search' => $orderFilters['search'] ?? '',
+                                            'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1,
+                                        ]) }}"
+                                        class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+                                    >
+                                        {{ $order->order_number }}
+                                    </a>
                                     <p class="text-xs text-slate-500">{{ $order->created_at?->format('M d, Y h:i A') }}</p>
                                 </td>
                                 <td class="px-4 py-4 text-sm">
@@ -114,21 +129,35 @@
                                 </td>
                                 <td class="px-4 py-4 text-sm font-semibold">&#8369;{{ number_format((float) $order->total, 2) }}</td>
                                 <td class="px-4 py-4">
-                                    <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="flex items-center gap-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="redirect_status" value="{{ $orderFilters['status'] ?? 'all' }}">
-                                        <input type="hidden" name="redirect_search" value="{{ $orderFilters['search'] ?? '' }}">
-                                        <input type="hidden" name="redirect_page" value="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}">
-                                        <select name="status" class="rounded-xl border border-slate-200 px-3 py-1 text-xs">
-                                            @foreach (['pending', 'confirmed', 'ready', 'completed', 'cancelled'] as $optionStatus)
-                                                <option value="{{ $optionStatus }}" @selected($status === $optionStatus)>{{ ucfirst($optionStatus) }}</option>
-                                            @endforeach
-                                        </select>
-                                        <button type="submit" class="rounded-xl bg-slate-700 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800">
-                                            Update
-                                        </button>
-                                    </form>
+                                    <div class="flex flex-col gap-2">
+                                        <a
+                                            href="{{ route('admin.orders.show', [
+                                                'order' => $order,
+                                                'status' => $orderFilters['status'] ?? 'all',
+                                                'search' => $orderFilters['search'] ?? '',
+                                                'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1,
+                                            ]) }}"
+                                            class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline"
+                                        >
+                                            View Details
+                                        </a>
+
+                                        <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="flex items-center gap-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="redirect_status" value="{{ $orderFilters['status'] ?? 'all' }}">
+                                            <input type="hidden" name="redirect_search" value="{{ $orderFilters['search'] ?? '' }}">
+                                            <input type="hidden" name="redirect_page" value="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}">
+                                            <select name="status" class="rounded-xl border border-slate-200 px-3 py-1 text-xs">
+                                                @foreach (['pending', 'confirmed', 'ready', 'completed', 'cancelled'] as $optionStatus)
+                                                    <option value="{{ $optionStatus }}" @selected($status === $optionStatus)>{{ ucfirst($optionStatus) }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="submit" class="rounded-xl bg-slate-700 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800">
+                                                Update
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -150,3 +179,15 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        document.querySelectorAll('#orders-section tbody tr[data-order-url]').forEach((row) => {
+            row.addEventListener('click', (event) => {
+                const interactive = event.target.closest('a, button, form, select, input, textarea, label');
+                if (interactive) return;
+                window.location.href = row.dataset.orderUrl;
+            });
+        });
+    })();
+</script>

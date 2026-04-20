@@ -166,11 +166,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('.admin-section');
+            const hasSectionUi = sections.length > 0;
+            const dashboardUrl = @json(route('admin.dashboard'));
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    e.preventDefault();
                     const section = this.getAttribute('data-section');
+
+                    if (!hasSectionUi) {
+                        window.location.href = `${dashboardUrl}?section=${encodeURIComponent(section)}`;
+                        return;
+                    }
+
+                    e.preventDefault();
 
                     // Remove active class from all links
                     navLinks.forEach(l => l.classList.remove('active'));
@@ -187,11 +195,13 @@
                 });
             });
 
-            const requestedSection = new URLSearchParams(window.location.search).get('section');
-            const defaultLink = document.querySelector(`[data-section="${requestedSection}"]`)
-                || document.querySelector('[data-section="dashboard"]');
+            if (hasSectionUi) {
+                const requestedSection = new URLSearchParams(window.location.search).get('section');
+                const defaultLink = document.querySelector(`[data-section="${requestedSection}"]`)
+                    || document.querySelector('[data-section="dashboard"]');
 
-            defaultLink?.click();
+                defaultLink?.click();
+            }
         });
     </script>
 </body>

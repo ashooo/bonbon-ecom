@@ -21,6 +21,20 @@ class OrderController extends Controller
         return redirect()->route('admin.dashboard', $query);
     }
 
+    public function show(Request $request, Order $order)
+    {
+        $order->load(['items.variant.product', 'user']);
+
+        $backQuery = array_filter([
+            'section' => 'orders',
+            'status' => $request->string('status')->value(),
+            'search' => $request->string('search')->value(),
+            'page' => $request->integer('page') ?: null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        return view('admin.orders.show', compact('order', 'backQuery'));
+    }
+
     public function updateStatus(Request $request, Order $order): RedirectResponse
     {
         $data = $request->validate([

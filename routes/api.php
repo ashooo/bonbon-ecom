@@ -16,19 +16,20 @@ Route::prefix('v1')->group(function () {
 
     Route::post('/auth/login', [AuthController::class, 'login']);
 
+    // Guest-friendly shopping flow
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/add', [CartController::class, 'add']);
+    Route::put('/cart/update/{item}', [CartController::class, 'update']);
+    Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
+    Route::delete('/cart/clear', [CartController::class, 'clear']);
+    Route::post('/checkout', [OrderController::class, 'store']);
+
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
 
-        Route::get('/cart', [CartController::class, 'index']);
-        Route::post('/cart/add', [CartController::class, 'add']);
-        Route::put('/cart/update/{item}', [CartController::class, 'update']);
-        Route::delete('/cart/remove/{item}', [CartController::class, 'remove']);
-        Route::delete('/cart/clear', [CartController::class, 'clear']);
-
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
-        Route::post('/checkout', [OrderController::class, 'store']);
         Route::put('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     });
 });

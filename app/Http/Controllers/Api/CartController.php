@@ -2,31 +2,68 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Variant;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
-    private function getCart(): Cart
+    private ?string $guestCartToken = null;
+
+    private function resolveGuestCartToken(Request $request): string
     {
-        $user = Auth::user();
+        $token = trim((string) ($request->header('X-Cart-Token')
+            ?? $request->query('cart_token')
+            ?? $request->cookie('cart_token')
+            ?? ''));
+
+        return $token !== '' ? $token : Str::random(40);
+    }
+
+    private function getCart(Request $request): Cart
+    {
+        if (Auth::check()) {
+            $this->guestCartToken = null;
+
+            return Cart::firstOrCreate(
+                ['user_id' => Auth::id()],
+                ['expires_at' => now()->addDays(30)]
+            )->load('items.product', 'items.variant');
+        }
+
+        $this->guestCartToken = $this->resolveGuestCartToken($request);
 
         return Cart::firstOrCreate(
-            ['user_id' => $user->id],
-            ['expires_at' => now()->addDays(30)]
+            ['session_id' => $this->guestCartToken],
+            ['user_id' => null, 'expires_at' => now()->addDays(30)]
         )->load('items.product', 'items.variant');
     }
 
-    public function index()
+    private function responseWithCartToken(array $payload)
     {
-        $cart = $this->getCart();
+        if ($this->guestCartToken) {
+            $payload['cart_token'] = $this->guestCartToken;
+        }
 
-        return response()->json([
+        $response = response()->json($payload);
+
+        if ($this->guestCartToken) {
+            $response->cookie('cart_token', $this->guestCartToken, 60 * 24 * 30);
+        }
+
+        return $response;
+    }
+
+    public function index(Request $request)
+    {
+        $cart = $this->getCart($request);
+
+        return $this->responseWithCartToken([
             'success' => true,
             'data' => [
                 'cart' => $cart,
@@ -46,9 +83,16 @@ class CartController extends Controller
             'special_instructions' => 'nullable|string|max:255',
         ]);
 
-        $cart = $this->getCart();
+        $cart = $this->getCart($request);
         $product = Product::findOrFail($request->integer('product_id'));
         $variant = $request->filled('variant_id') ? Variant::findOrFail($request->integer('variant_id')) : null;
+
+        if ($variant && (int) $variant->product_id !== (int) $product->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Selected variant does not belong to the selected product.',
+            ], 422);
+        }
 
         $unitPrice = (float) ($product->sale_price ?? $product->price);
         if ($variant) {
@@ -74,7 +118,7 @@ class CartController extends Controller
             ]);
         }
 
-        return response()->json([
+        return $this->responseWithCartToken([
             'success' => true,
             'message' => 'Product added to cart successfully',
         ]);
@@ -86,10 +130,10 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $cart = $this->getCart();
+        $cart = $this->getCart($request);
         $cartItem = CartItem::findOrFail($item);
 
-        if ($cartItem->cart_id !== $cart->id) {
+        if ((int) $cartItem->cart_id !== (int) $cart->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -98,18 +142,18 @@ class CartController extends Controller
 
         $cartItem->update(['quantity' => $request->integer('quantity')]);
 
-        return response()->json([
+        return $this->responseWithCartToken([
             'success' => true,
             'message' => 'Cart updated successfully',
         ]);
     }
 
-    public function remove(string $item)
+    public function remove(Request $request, string $item)
     {
-        $cart = $this->getCart();
+        $cart = $this->getCart($request);
         $cartItem = CartItem::findOrFail($item);
 
-        if ($cartItem->cart_id !== $cart->id) {
+        if ((int) $cartItem->cart_id !== (int) $cart->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized',
@@ -118,18 +162,18 @@ class CartController extends Controller
 
         $cartItem->delete();
 
-        return response()->json([
+        return $this->responseWithCartToken([
             'success' => true,
             'message' => 'Item removed from cart successfully',
         ]);
     }
 
-    public function clear()
+    public function clear(Request $request)
     {
-        $cart = $this->getCart();
+        $cart = $this->getCart($request);
         $cart->items()->delete();
 
-        return response()->json([
+        return $this->responseWithCartToken([
             'success' => true,
             'message' => 'Cart cleared successfully',
         ]);

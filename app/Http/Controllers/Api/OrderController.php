@@ -13,6 +13,30 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    private function resolveCart(Request $request): ?Cart
+    {
+        if (Auth::check()) {
+            return Cart::query()
+                ->where('user_id', Auth::id())
+                ->with('items.variant.product')
+                ->first();
+        }
+
+        $token = trim((string) ($request->header('X-Cart-Token')
+            ?? $request->query('cart_token')
+            ?? $request->cookie('cart_token')
+            ?? ''));
+
+        if ($token === '') {
+            return null;
+        }
+
+        return Cart::query()
+            ->where('session_id', $token)
+            ->with('items.variant.product')
+            ->first();
+    }
+
     public function index()
     {
         $orders = Order::query()
@@ -60,10 +84,7 @@ class OrderController extends Controller
             'special_instructions' => 'nullable|string',
         ]);
 
-        $cart = Cart::query()
-            ->where('user_id', Auth::id())
-            ->with('items.variant.product')
-            ->first();
+        $cart = $this->resolveCart($request);
 
         if (! $cart || $cart->items->isEmpty()) {
             return response()->json([
@@ -88,7 +109,7 @@ class OrderController extends Controller
                 'order_type' => $request->string('order_type')->value(),
                 'fulfillment_date' => $request->date('fulfillment_date'),
                 'fulfillment_time' => $request->input('fulfillment_time'),
-                'address_id' => $request->integer('address_id') ?: null,
+                'address_id' => Auth::check() ? ($request->integer('address_id') ?: null) : null,
                 'delivery_address' => $request->string('delivery_address')->value(),
                 'delivery_fee' => $deliveryFee,
                 'subtotal' => $subtotal,
@@ -99,21 +120,26 @@ class OrderController extends Controller
             ]);
 
             foreach ($cart->items as $item) {
-                if (! $item->variant_id) {
+                $variantId = $item->variant_id
+                    ?? $item->product?->variants()->where('is_default', true)->value('id')
+                    ?? $item->product?->variants()->value('id');
+
+                if (! $variantId) {
                     continue;
                 }
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'variant_id' => $item->variant_id,
+                    'variant_id' => $variantId,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->quantity * $item->unit_price,
                     'special_instructions' => $item->special_instructions,
                 ]);
 
-                if ($item->variant) {
-                    $item->variant->decrement('stock_quantity', $item->quantity);
+                $variant = $item->variant ?: $item->product?->variants()->find($variantId);
+                if ($variant) {
+                    $variant->decrement('stock_quantity', $item->quantity);
                 }
             }
 
@@ -122,11 +148,17 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return response()->json([
+            $response = response()->json([
                 'success' => true,
                 'data' => $order,
                 'message' => 'Order placed successfully',
             ], 201);
+
+            if (! Auth::check()) {
+                $response->cookie('cart_token', '', -1);
+            }
+
+            return $response;
         } catch (\Throwable $e) {
             DB::rollBack();
 

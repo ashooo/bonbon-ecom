@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $items = $items ?? collect();
+        $subtotal = $subtotal ?? 0;
+        $delivery = $delivery ?? 5.99;
+        $tax = $tax ?? ($subtotal * 0.1);
+        $total = $total ?? ($subtotal + $delivery + $tax);
+    @endphp
+
     <h1 class="text-3xl font-bold mb-8">Checkout</h1>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -8,53 +16,62 @@
         <div>
             <h2 class="text-2xl font-bold mb-6">Order Summary</h2>
             <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="space-y-4">
-                    <!-- Order Item 1 -->
-                    <div class="flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/80x80?text=Chocolate+Cake" alt="Chocolate Cake" class="w-16 h-16 rounded">
-                        <div class="flex-1">
-                            <h3 class="font-semibold">Chocolate Delight Cake</h3>
-                            <p class="text-gray-600">Small size</p>
-                            <p class="text-pink-600">$25.99</p>
+                @if ($items->count() > 0)
+                    <div class="space-y-4">
+                        @foreach ($items as $item)
+                            <div class="flex items-center space-x-4">
+                                <img
+                                    src="{{ $item->product?->main_image_url ?? 'https://via.placeholder.com/80x80?text=Product' }}"
+                                    alt="{{ $item->product?->name ?? 'Product' }}"
+                                    class="w-16 h-16 rounded object-cover"
+                                >
+                                <div class="flex-1">
+                                    <h3 class="font-semibold">{{ $item->product?->name ?? 'Unavailable product' }}</h3>
+                                    @if ($item->variant?->name)
+                                        <p class="text-gray-600">{{ $item->variant->name }}</p>
+                                    @endif
+                                    @if ($item->product?->status === 'pre_order' && ($item->product?->pre_order_days ?? 0) > 0)
+                                        <p class="text-amber-700 text-sm">Pre-order: {{ $item->product->pre_order_days }} day lead time</p>
+                                    @endif
+                                    <p class="text-pink-600">&#8369;{{ number_format($item->unit_price, 2) }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-600">Qty: {{ $item->quantity }}</p>
+                                    <p class="font-semibold">&#8369;{{ number_format($item->unit_price * $item->quantity, 2) }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <hr class="my-6">
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>&#8369;{{ number_format($subtotal, 2) }}</span>
                         </div>
-                        <span>Qty: 1</span>
-                    </div>
-
-                    <!-- Order Item 2 -->
-                    <div class="flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/80x80?text=Vanilla+Cake" alt="Vanilla Cake" class="w-16 h-16 rounded">
-                        <div class="flex-1">
-                            <h3 class="font-semibold">Vanilla Dream Cake</h3>
-                            <p class="text-gray-600">Medium size</p>
-                            <p class="text-pink-600">$35.99</p>
+                        <div class="flex justify-between">
+                            <span>Delivery</span>
+                            <span>&#8369;{{ number_format($delivery, 2) }}</span>
                         </div>
-                        <span>Qty: 2</span>
+                        <div class="flex justify-between">
+                            <span>Tax</span>
+                            <span>&#8369;{{ number_format($tax, 2) }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <hr class="my-6">
+                    <hr class="my-4">
 
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span>Subtotal</span>
-                        <span>$61.98</span>
+                    <div class="flex justify-between text-xl font-bold">
+                        <span>Total</span>
+                        <span>&#8369;{{ number_format($total, 2) }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Delivery</span>
-                        <span>$5.99</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Tax</span>
-                        <span>$6.20</span>
-                    </div>
-                </div>
-
-                <hr class="my-4">
-
-                <div class="flex justify-between text-xl font-bold">
-                    <span>Total</span>
-                    <span>$74.17</span>
-                </div>
+                @else
+                    <p class="text-gray-600">Your cart is empty.</p>
+                    <a href="/products" class="mt-4 inline-block bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        Continue Shopping
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -144,7 +161,7 @@
             </div>
 
             <!-- Place Order Button -->
-            <button class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300">
+            <button class="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300" {{ $items->count() === 0 ? 'disabled' : '' }}>
                 Place Order
             </button>
         </div>

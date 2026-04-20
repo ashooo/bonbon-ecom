@@ -7,6 +7,7 @@ use App\Models\StoreSetting;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 Route::get('/', function () {
     $featuredProducts = collect();
@@ -103,9 +104,7 @@ Route::post('/cart/{item}/increment', [CartController::class, 'increment'])->nam
 Route::post('/cart/{item}/decrement', [CartController::class, 'decrement'])->name('cart.decrement');
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
-Route::get('/checkout', function () {
-    return view('pages.checkout');
-});
+Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 
 Route::get('/customize', function () {
     return view('pages.customize');

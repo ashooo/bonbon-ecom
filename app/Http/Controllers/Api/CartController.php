@@ -94,10 +94,7 @@ class CartController extends Controller
             ], 422);
         }
 
-        $unitPrice = (float) ($product->sale_price ?? $product->price);
-        if ($variant) {
-            $unitPrice += (float) $variant->price_adjustment;
-        }
+        $unitPrice = (float) $product->price;
 
         $cartItem = CartItem::query()
             ->where('cart_id', $cart->id)

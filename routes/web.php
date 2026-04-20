@@ -96,12 +96,12 @@ Route::get('/product/{slug}', function ($slug) {
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart/add', [CartController::class, 'add'])->middleware('auth')->name('cart.add');
-Route::put('/cart/{item}', [CartController::class, 'updateQuantity'])->middleware('auth')->name('cart.update');
-Route::delete('/cart/{item}', [CartController::class, 'remove'])->middleware('auth')->name('cart.remove');
-Route::post('/cart/{item}/increment', [CartController::class, 'increment'])->middleware('auth')->name('cart.increment');
-Route::post('/cart/{item}/decrement', [CartController::class, 'decrement'])->middleware('auth')->name('cart.decrement');
-Route::post('/cart/clear', [CartController::class, 'clear'])->middleware('auth')->name('cart.clear');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::put('/cart/{item}', [CartController::class, 'updateQuantity'])->name('cart.update');
+Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/{item}/increment', [CartController::class, 'increment'])->name('cart.increment');
+Route::post('/cart/{item}/decrement', [CartController::class, 'decrement'])->name('cart.decrement');
+Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::get('/checkout', function () {
     return view('pages.checkout');

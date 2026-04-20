@@ -16,13 +16,13 @@
                 <div class="space-y-4">
                     @foreach ($items as $item)
                         <div class="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4">
-                            <img src="{{ $item->product_image ?? 'https://via.placeholder.com/100x100?text=Product' }}" alt="{{ $item->product_name }}" class="w-20 h-20 rounded object-cover">
+                            <img src="{{ $item->product?->main_image_url ?? 'https://via.placeholder.com/100x100?text=Product' }}" alt="{{ $item->product?->name ?? 'Product' }}" class="w-20 h-20 rounded object-cover">
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold">{{ $item->product_name }}</h3>
-                                @if ($item->product_size)
-                                    <p class="text-gray-600">{{ $item->product_size }}</p>
+                                <h3 class="text-lg font-semibold">{{ $item->product?->name ?? 'Unavailable product' }}</h3>
+                                @if ($item->variant?->name)
+                                    <p class="text-gray-600">{{ $item->variant->name }}</p>
                                 @endif
-                                <p class="text-pink-600 font-bold">₱{{ number_format($item->unit_price, 2) }}</p>
+                                <p class="text-pink-600 font-bold">&#8369;{{ number_format($item->unit_price, 2) }}</p>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <form method="POST" action="{{ route('cart.decrement', $item) }}" class="inline">
@@ -55,21 +55,21 @@
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
-                        <span>₱{{ number_format($subtotal, 2) }}</span>
+                        <span>&#8369;{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Delivery</span>
-                        <span>₱{{ number_format($delivery, 2) }}</span>
+                        <span>&#8369;{{ number_format($delivery, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Tax (10%)</span>
-                        <span>₱{{ number_format($tax, 2) }}</span>
+                        <span>&#8369;{{ number_format($tax, 2) }}</span>
                     </div>
                 </div>
                 <hr class="my-4">
                 <div class="flex justify-between text-lg font-bold mb-6">
                     <span>Total</span>
-                    <span>₱{{ number_format($total, 2) }}</span>
+                    <span>&#8369;{{ number_format($total, 2) }}</span>
                 </div>
                 <a href="/checkout" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
                     Proceed to Checkout

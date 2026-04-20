@@ -157,13 +157,19 @@ class Product extends Model
         $this->attributes['sale_price'] = $value;
     }
 
-    public function getPreOrderDaysAttribute()
+    // Backward-compatible alias used by existing front-end/admin pages.
+    public function getPreOrderDaysAttribute($value): int
     {
-        return $this->preorder_days;
+        if ($value !== null) {
+            return (int) $value;
+        }
+
+        return (int) ($this->attributes['preorder_days'] ?? 0);
     }
 
     public function setPreOrderDaysAttribute($value): void
     {
-        $this->attributes['preorder_days'] = $value;
+        $days = $value === null || $value === '' ? 0 : (int) $value;
+        $this->attributes['preorder_days'] = max(0, $days);
     }
 }

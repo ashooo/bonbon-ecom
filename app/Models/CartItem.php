@@ -13,12 +13,9 @@ class CartItem extends Model
         'cart_id',
         'product_id',
         'variant_id',
-        'special_instructions',
-        'product_name',
-        'product_size',
-        'product_image',
-        'unit_price',
         'quantity',
+        'unit_price',
+        'special_instructions',
     ];
 
     protected $casts = [
@@ -43,24 +40,5 @@ class CartItem extends Model
     public function getSubtotalAttribute()
     {
         return $this->unit_price * $this->quantity;
-    }
-
-    // Backward-compatible dynamic values for current cart UI.
-    public function getProductNameAttribute($value)
-    {
-        if ($value) {
-            return $value;
-        }
-
-        return $this->product?->name;
-    }
-
-    public function getProductImageAttribute($value)
-    {
-        if ($value) {
-            return $value;
-        }
-
-        return $this->product?->main_image_url;
     }
 }

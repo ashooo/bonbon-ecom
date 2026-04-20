@@ -44,7 +44,7 @@
 
                 @if($product->status === 'pre_order')
                     <span class="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#5A3A3A]">
-                        Pre-order
+                        Pre-order{{ ($product->pre_order_days ?? 0) > 0 ? ' • ' . $product->pre_order_days . ' days' : '' }}
                     </span>
                 @endif
             </div>
@@ -83,7 +83,6 @@
             <form action="{{ route('cart.add') }}" method="POST" class="rounded-3xl bg-white p-6 shadow-sm">
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <input type="hidden" name="unit_price" value="{{ $product->effective_price }}">
 
                 <div class="mb-4">
                     <label for="quantity" class="mb-2 block text-sm font-medium text-gray-700">Quantity</label>
@@ -97,21 +96,12 @@
                     >
                 </div>
 
-                @auth
-                    <button
-                        type="submit"
-                        class="w-full rounded-2xl bg-pink-600 px-6 py-3 text-lg font-bold text-white transition duration-300 hover:bg-pink-700"
-                    >
-                        Add to Cart
-                    </button>
-                @else
-                    <a
-                        href="{{ route('login') }}"
-                        class="block w-full rounded-2xl bg-pink-600 px-6 py-3 text-center text-lg font-bold text-white transition duration-300 hover:bg-pink-700"
-                    >
-                        Login to Add to Cart
-                    </a>
-                @endauth
+                <button
+                    type="submit"
+                    class="w-full rounded-2xl bg-pink-600 px-6 py-3 text-lg font-bold text-white transition duration-300 hover:bg-pink-700"
+                >
+                    Add to Cart
+                </button>
             </form>
         </div>
     </div>
@@ -129,6 +119,11 @@
                         >
                         <div class="p-5">
                             <h3 class="text-lg font-semibold">{{ $relatedProduct->name }}</h3>
+                            @if($relatedProduct->status === 'pre_order' && ($relatedProduct->pre_order_days ?? 0) > 0)
+                                <p class="mt-1 text-sm font-medium text-amber-700">
+                                    Pre-order: {{ $relatedProduct->pre_order_days }} day lead time
+                                </p>
+                            @endif
                             <p class="mt-2 text-[#5A3A3A] font-bold">&#8369;{{ number_format($relatedProduct->effective_price, 2) }}</p>
                         </div>
                     </a>

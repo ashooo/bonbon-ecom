@@ -3,26 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Models\CartItem;
+use App\Models\Cart;
 use App\Models\Product;
+use App\Models\Variant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
-    public function index()
+    private ?string $guestCartToken = null;
+
+    private function resolveGuestCartToken(Request $request): string
     {
-        if (! Auth::check()) {
-            return redirect()->route('login')->with('error', 'Please log in to view your cart.');
+        $token = trim((string) ($request->cookie('cart_token') ?? ''));
+
+        return $token !== '' ? $token : Str::random(40);
+    }
+
+    private function getCart(Request $request): Cart
+    {
+        if (Auth::check()) {
+            $this->guestCartToken = null;
+
+            return Auth::user()->getOrCreateCart()->load('items.product', 'items.variant');
         }
 
-        $cart = Auth::user()->getOrCreateCart();
+        $this->guestCartToken = $this->resolveGuestCartToken($request);
+
+        return Cart::firstOrCreate(
+            ['session_id' => $this->guestCartToken],
+            ['user_id' => null, 'expires_at' => now()->addDays(30)]
+        )->load('items.product', 'items.variant');
+    }
+
+    private function redirectWithCartToken(Request $request, string $routeName, string $message): \Illuminate\Http\RedirectResponse
+    {
+        $response = redirect()->route($routeName)->with('success', $message);
+
+        if (! Auth::check()) {
+            $token = $this->guestCartToken ?: $this->resolveGuestCartToken($request);
+            $response->cookie('cart_token', $token, 60 * 24 * 30);
+        }
+
+        return $response;
+    }
+
+    private function ensureItemBelongsToCart(Request $request, CartItem $item): void
+    {
+        $cart = $this->getCart($request);
+
+        if ((int) $item->cart_id !== (int) $cart->id) {
+            abort(403);
+        }
+    }
+
+    public function index()
+    {
+        $request = request();
+        $cart = $this->getCart($request);
         $items = $cart->items;
         $subtotal = $cart->subtotal;
         $delivery = 5.99;
         $tax = $subtotal * 0.1;
         $total = $subtotal + $delivery + $tax;
 
-        return view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total'));
+        $response = response()->view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total'));
+
+        if ($this->guestCartToken) {
+            $response->cookie('cart_token', $this->guestCartToken, 60 * 24 * 30);
+        }
+
+        return $response;
     }
 
     public function add(Request $request)
@@ -30,41 +82,47 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'variant_id' => 'nullable|exists:product_variants,id',
-            'unit_price' => 'required|numeric|min:0.01',
             'quantity' => 'nullable|integer|min:1',
             'special_instructions' => 'nullable|string|max:255',
         ]);
 
-        $cart = Auth::user()->getOrCreateCart();
+        $cart = $this->getCart($request);
         $quantity = $request->input('quantity', 1);
         $product = Product::findOrFail($request->integer('product_id'));
-        $variantId = $request->integer('variant_id') ?: null;
+        $variant = $request->filled('variant_id') ? Variant::findOrFail($request->integer('variant_id')) : null;
+
+        if ($variant && (int) $variant->product_id !== (int) $product->id) {
+            return back()->withErrors([
+                'variant_id' => 'Selected variant does not belong to the selected product.',
+            ]);
+        }
+
+        $unitPrice = (float) $product->price;
 
         $existingItem = $cart->items()
             ->where('product_id', $product->id)
-            ->where('variant_id', $variantId)
+            ->where('variant_id', $variant?->id)
             ->first();
 
         if ($existingItem) {
             $existingItem->increment('quantity', $quantity);
         } else {
             $cart->items()->create([
+                'cart_id' => $cart->id,
                 'product_id' => $product->id,
-                'variant_id' => $variantId,
-                'unit_price' => $request->unit_price,
+                'variant_id' => $variant?->id,
+                'unit_price' => $unitPrice,
                 'quantity' => $quantity,
                 'special_instructions' => $request->input('special_instructions'),
             ]);
         }
 
-        return redirect()->route('cart.index')->with('success', 'Item added to cart!');
+        return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
     }
 
     public function updateQuantity(CartItem $item, Request $request)
     {
-        if ($item->cart->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->ensureItemBelongsToCart($request, $item);
 
         $request->validate([
             'quantity' => 'required|integer|min:1',
@@ -72,44 +130,38 @@ class CartController extends Controller
 
         $item->update(['quantity' => $request->quantity]);
 
-        return redirect()->route('cart.index')->with('success', 'Quantity updated!');
+        return $this->redirectWithCartToken($request, 'cart.index', 'Quantity updated!');
     }
 
-    public function remove(CartItem $item)
+    public function remove(Request $request, CartItem $item)
     {
-        if ($item->cart->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->ensureItemBelongsToCart($request, $item);
 
         $item->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Item removed from cart!');
+        return $this->redirectWithCartToken($request, 'cart.index', 'Item removed from cart!');
     }
 
-    public function clear()
+    public function clear(Request $request)
     {
-        $cart = Auth::user()->getOrCreateCart();
+        $cart = $this->getCart($request);
         $cart->items()->delete();
 
-        return redirect()->route('cart.index')->with('success', 'Cart cleared!');
+        return $this->redirectWithCartToken($request, 'cart.index', 'Cart cleared!');
     }
 
-    public function increment(CartItem $item)
+    public function increment(Request $request, CartItem $item)
     {
-        if ($item->cart->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->ensureItemBelongsToCart($request, $item);
 
         $item->increment('quantity');
 
-        return back();
+        return $this->redirectWithCartToken($request, 'cart.index', 'Quantity updated!');
     }
 
-    public function decrement(CartItem $item)
+    public function decrement(Request $request, CartItem $item)
     {
-        if ($item->cart->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $this->ensureItemBelongsToCart($request, $item);
 
         if ($item->quantity > 1) {
             $item->decrement('quantity');
@@ -117,6 +169,6 @@ class CartController extends Controller
             $item->delete();
         }
 
-        return back();
+        return $this->redirectWithCartToken($request, 'cart.index', 'Quantity updated!');
     }
 }

@@ -16,6 +16,11 @@
             <span class="absolute right-3 top-3 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#5A3A3A]">
                 Pre-order
             </span>
+            @if(($product->pre_order_days ?? 0) > 0)
+                <span class="absolute bottom-3 right-3 rounded-full bg-[#5A3A3A]/85 px-3 py-1 text-xs font-semibold text-white">
+                    {{ $product->pre_order_days }} day lead time
+                </span>
+            @endif
         @endif
     </div>
 

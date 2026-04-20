@@ -153,6 +153,62 @@
             @enderror
         </div>
 
+        <!-- Variants -->
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">Variants *</label>
+                <button type="button" id="add-variant-btn" class="rounded-lg bg-slate-700 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">
+                    Add Variant
+                </button>
+            </div>
+            <p class="mb-3 text-xs text-gray-500">You can edit, add, or remove variants. One variant will remain default.</p>
+
+            @error('variants')
+                <p class="mb-3 text-sm text-red-600">{{ $message }}</p>
+            @enderror
+
+            <div id="variants-container" class="space-y-3"></div>
+            <template id="variant-template">
+                <div class="variant-row rounded-lg border border-gray-200 p-3">
+                    <input type="hidden" data-name="id" value="">
+                    <input type="hidden" data-name="remove" value="0">
+                    <input type="hidden" data-name="is_default" value="0">
+                    <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                            <input type="text" data-name="name" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">SKU</label>
+                            <input type="text" data-name="sku" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Price Adj.</label>
+                            <input type="number" step="0.01" data-name="price_adjustment" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                            <input type="number" min="0" data-name="stock_quantity" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="inline-flex items-center gap-2 text-xs">
+                                <input type="radio" data-default-radio class="h-4 w-4">
+                                Default
+                            </label>
+                            <label class="inline-flex items-center gap-2 text-xs">
+                                <input type="hidden" data-name="is_active" value="0">
+                                <input type="checkbox" data-active-checkbox class="h-4 w-4" checked>
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="remove-variant text-xs text-red-600 hover:text-red-700">Remove</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
         <!-- Status and Flags -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -198,7 +254,104 @@
     </form>
 </div>
 
+@php
+    $existingVariantsPayload = $product->variants->map(function ($variant) {
+        return [
+            'id' => $variant->id,
+            'name' => $variant->name,
+            'sku' => $variant->sku,
+            'price_adjustment' => $variant->price_adjustment,
+            'stock_quantity' => $variant->stock_quantity,
+            'is_default' => (bool) $variant->is_default,
+            'is_active' => (bool) $variant->is_active,
+        ];
+    })->values()->all();
+@endphp
+
 <script>
+(() => {
+    const container = document.getElementById('variants-container');
+    const addBtn = document.getElementById('add-variant-btn');
+    const template = document.getElementById('variant-template');
+    const oldVariants = @json(old('variants'));
+    const existingVariants = @json($existingVariantsPayload);
+    const initialVariants = Array.isArray(oldVariants) ? oldVariants : existingVariants;
+
+    const renumber = () => {
+        const rows = container.querySelectorAll('.variant-row');
+        rows.forEach((row, index) => {
+            row.querySelectorAll('[data-name]').forEach((input) => {
+                input.name = `variants[${index}][${input.dataset.name}]`;
+            });
+
+            const radio = row.querySelector('[data-default-radio]');
+            if (radio) {
+                radio.name = 'variant_default_selector';
+                radio.addEventListener('change', () => {
+                    if (radio.checked) {
+                        rows.forEach((otherRow) => {
+                            const defaultInput = otherRow.querySelector('[data-name="is_default"]');
+                            const removeInput = otherRow.querySelector('[data-name="remove"]');
+                            if (!defaultInput || !removeInput || removeInput.value === '1') return;
+                            defaultInput.value = otherRow === row ? '1' : '0';
+                        });
+                    }
+                });
+            }
+
+            const activeCheckbox = row.querySelector('[data-active-checkbox]');
+            if (activeCheckbox) {
+                activeCheckbox.addEventListener('change', () => {
+                    const activeInput = row.querySelector('[data-name="is_active"]');
+                    if (activeInput) activeInput.value = activeCheckbox.checked ? '1' : '0';
+                });
+            }
+        });
+
+        const activeRows = [...rows].filter((row) => row.querySelector('[data-name="remove"]').value !== '1');
+        const defaultInputs = activeRows.map((row) => row.querySelector('[data-name="is_default"]'));
+        if (defaultInputs.length > 0 && defaultInputs.every((input) => input.value !== '1')) {
+            defaultInputs[0].value = '1';
+            const radio = activeRows[0].querySelector('[data-default-radio]');
+            if (radio) radio.checked = true;
+        }
+    };
+
+    const addRow = (data = {}) => {
+        const clone = template.content.firstElementChild.cloneNode(true);
+        clone.querySelector('[data-name="id"]').value = data.id ?? '';
+        clone.querySelector('[data-name="name"]').value = data.name ?? '';
+        clone.querySelector('[data-name="sku"]').value = data.sku ?? '';
+        clone.querySelector('[data-name="price_adjustment"]').value = data.price_adjustment ?? 0;
+        clone.querySelector('[data-name="stock_quantity"]').value = data.stock_quantity ?? 0;
+        clone.querySelector('[data-name="is_default"]').value = data.is_default ? '1' : '0';
+        clone.querySelector('[data-name="is_active"]').value = (data.is_active ?? 1) ? '1' : '0';
+        clone.querySelector('[data-default-radio]').checked = !!data.is_default;
+        clone.querySelector('[data-active-checkbox]').checked = (data.is_active ?? 1) ? true : false;
+
+        clone.querySelector('.remove-variant').addEventListener('click', () => {
+            const idValue = clone.querySelector('[data-name="id"]').value;
+            if (idValue) {
+                clone.querySelector('[data-name="remove"]').value = '1';
+                clone.classList.add('hidden');
+            } else {
+                clone.remove();
+            }
+            renumber();
+        });
+
+        container.appendChild(clone);
+        renumber();
+    };
+
+    addBtn.addEventListener('click', () => addRow());
+    if (initialVariants.length === 0) {
+        addRow({ is_default: true, is_active: true });
+    } else {
+        initialVariants.forEach((variant) => addRow(variant));
+    }
+})();
+
 function deleteImage(imageId) {
     if (confirm('Are you sure you want to delete this image?')) {
         fetch(`/admin/products/images/${imageId}`, {

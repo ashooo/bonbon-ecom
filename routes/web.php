@@ -139,7 +139,35 @@ Route::get('/profile', [ProfileController::class, 'show'])
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', function (Request $request) {
         $products = \App\Models\Product::with('category')->latest()->take(10)->get();
-        $allProducts = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc')->get();
+        $productSearchFilter = $request->string('product_search')->trim()->value();
+        $productStatusFilter = $request->string('product_status')->value();
+        $productCategoryFilter = $request->integer('product_category') ?: null;
+
+        $allProductsQuery = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc');
+
+        if ($productSearchFilter !== '') {
+            $allProductsQuery->where(function ($query) use ($productSearchFilter) {
+                $query->where('name', 'like', '%' . $productSearchFilter . '%')
+                    ->orWhere('description', 'like', '%' . $productSearchFilter . '%')
+                    ->orWhere('slug', 'like', '%' . $productSearchFilter . '%');
+            });
+        }
+
+        if ($productCategoryFilter) {
+            $allProductsQuery->where('category_id', $productCategoryFilter);
+        }
+
+        if ($productStatusFilter !== '' && $productStatusFilter !== 'all') {
+            if ($productStatusFilter === 'active') {
+                $allProductsQuery->where('is_active', true)->where('is_preorder', false);
+            } elseif ($productStatusFilter === 'pre_order') {
+                $allProductsQuery->where('is_active', true)->where('is_preorder', true);
+            } elseif ($productStatusFilter === 'inactive') {
+                $allProductsQuery->where('is_active', false);
+            }
+        }
+
+        $allProducts = $allProductsQuery->paginate(12, ['*'], 'product_page')->withQueryString();
         $allCategories = \App\Models\Category::with('parent')->orderBy('name')->get();
         $settings = Schema::hasTable('store_settings')
             ? StoreSetting::query()->first()
@@ -176,6 +204,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'status' => $statusFilter === '' ? 'all' : $statusFilter,
             'search' => $searchFilter,
         ];
+        $productFilters = [
+            'search' => $productSearchFilter,
+            'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
+            'category' => $productCategoryFilter,
+        ];
 
         return view('admin.dashboard', compact(
             'products',
@@ -184,7 +217,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'settings',
             'orders',
             'orderCounts',
-            'orderFilters'
+            'orderFilters',
+            'productFilters'
         ));
     })->name('admin.dashboard');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');

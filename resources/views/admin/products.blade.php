@@ -18,10 +18,30 @@
         <div class="rounded-3xl bg-white p-6 shadow-soft">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-semibold">Product List</h2>
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Search products..." class="rounded-2xl border border-slate-200 px-4 py-2 text-sm" />
-                    <button class="rounded-2xl bg-slate-100 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200">Filter</button>
-                </div>
+                <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap gap-2">
+                    <input
+                        type="text"
+                        name="product_search"
+                        value="{{ $productFilters['search'] ?? '' }}"
+                        placeholder="Search products..."
+                        class="rounded-2xl border border-slate-200 px-4 py-2 text-sm"
+                    />
+                    <select name="product_status" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm">
+                        <option value="all" {{ ($productFilters['status'] ?? 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+                        <option value="active" {{ ($productFilters['status'] ?? '') === 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="pre_order" {{ ($productFilters['status'] ?? '') === 'pre_order' ? 'selected' : '' }}>Pre-order</option>
+                        <option value="inactive" {{ ($productFilters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
+                    <select name="product_category" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm">
+                        <option value="">All Categories</option>
+                        @foreach($allCategories ?? [] as $category)
+                            <option value="{{ $category->id }}" {{ (string) ($productFilters['category'] ?? '') === (string) $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button class="rounded-2xl bg-slate-700 px-4 py-2 text-sm text-white hover:bg-slate-800">Apply</button>
+                </form>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -51,9 +71,9 @@
                             <td class="px-4 py-4 text-sm font-medium">{{ $product->name }}</td>
                             <td class="px-4 py-4 text-sm text-slate-500">{{ $product->category->name ?? 'No Category' }}</td>
                             <td class="px-4 py-4 text-sm">
-                                ${{ number_format($product->price, 2) }}
-                                @if($product->discount_price)
-                                    <span class="text-red-500 line-through text-xs">${{ number_format($product->discount_price, 2) }}</span>
+                                &#8369;{{ number_format((float) $product->effective_price, 2) }}
+                                @if($product->hasDiscount())
+                                    <span class="text-red-500 line-through text-xs">&#8369;{{ number_format((float) $product->price, 2) }}</span>
                                 @endif
                             </td>
                             <td class="px-4 py-4 text-sm">
@@ -97,6 +117,17 @@
                     </tbody>
                 </table>
             </div>
+
+            @if (isset($allProducts) && method_exists($allProducts, 'links'))
+                <div class="mt-6">
+                    {{ $allProducts->appends([
+                        'section' => 'products',
+                        'product_search' => $productFilters['search'] ?? null,
+                        'product_status' => $productFilters['status'] ?? 'all',
+                        'product_category' => $productFilters['category'] ?? null,
+                    ])->links() }}
+                </div>
+            @endif
         </div>
 
         <div class="rounded-3xl bg-white p-6 shadow-soft">

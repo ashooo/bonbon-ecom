@@ -9,6 +9,7 @@
         $total = $total ?? ($subtotal + $delivery + $tax);
         $maxPreOrderDays = $maxPreOrderDays ?? 0;
         $minFulfillmentDate = $minFulfillmentDate ?? now()->toDateString();
+        $minFulfillmentTime = $minFulfillmentTime ?? now()->format('H:i');
     @endphp
 
     <h1 class="text-3xl font-bold mb-8">Checkout</h1>
@@ -67,15 +68,15 @@
                     <div class="space-y-2">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span>&#8369;{{ number_format($subtotal, 2) }}</span>
+                            <span id="checkout-subtotal" data-value="{{ number_format($subtotal, 2, '.', '') }}">&#8369;{{ number_format($subtotal, 2) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Delivery</span>
-                            <span>&#8369;{{ number_format($delivery, 2) }}</span>
+                            <span id="checkout-delivery" data-delivery-fee="5.99">&#8369;{{ number_format($delivery, 2) }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span>Tax</span>
-                            <span>&#8369;{{ number_format($tax, 2) }}</span>
+                            <span id="checkout-tax" data-value="{{ number_format($tax, 2, '.', '') }}">&#8369;{{ number_format($tax, 2) }}</span>
                         </div>
                     </div>
 
@@ -83,7 +84,7 @@
 
                     <div class="flex justify-between text-xl font-bold">
                         <span>Total</span>
-                        <span>&#8369;{{ number_format($total, 2) }}</span>
+                        <span id="checkout-total" data-value="{{ number_format($total, 2, '.', '') }}">&#8369;{{ number_format($total, 2) }}</span>
                     </div>
                 @else
                     <p class="text-gray-600">Your cart is empty.</p>
@@ -180,6 +181,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Fulfillment Time</label>
                         <input
                             type="time"
+                            id="fulfillment_time"
                             name="fulfillment_time"
                             value="{{ old('fulfillment_time') }}"
                             required
@@ -223,7 +225,42 @@
         (function () {
             const orderType = document.getElementById('order_type');
             const deliveryAddress = document.getElementById('delivery_address');
+            const subtotalEl = document.getElementById('checkout-subtotal');
+            const taxEl = document.getElementById('checkout-tax');
+            const deliveryEl = document.getElementById('checkout-delivery');
+            const totalEl = document.getElementById('checkout-total');
+            const fulfillmentDateInput = document.querySelector('input[name="fulfillment_date"]');
+            const fulfillmentTimeInput = document.getElementById('fulfillment_time');
+            const minDate = @json($minFulfillmentDate);
+            const minTime = @json($minFulfillmentTime);
             if (!orderType || !deliveryAddress) return;
+
+            const formatPeso = (value) => `₱${Number(value).toFixed(2)}`;
+            const refreshTotals = () => {
+                if (!subtotalEl || !taxEl || !deliveryEl || !totalEl) return;
+
+                const subtotal = Number(subtotalEl.dataset.value || '0');
+                const tax = Number(taxEl.dataset.value || '0');
+                const deliveryFee = Number(deliveryEl.dataset.deliveryFee || '0');
+                const delivery = orderType.value === 'delivery' ? deliveryFee : 0;
+                const total = subtotal + tax + delivery;
+
+                deliveryEl.textContent = formatPeso(delivery);
+                totalEl.textContent = formatPeso(total);
+            };
+
+            const enforceMinTime = () => {
+                if (!fulfillmentDateInput || !fulfillmentTimeInput) return;
+
+                if (fulfillmentDateInput.value === minDate) {
+                    fulfillmentTimeInput.min = minTime;
+                    if (fulfillmentTimeInput.value && fulfillmentTimeInput.value < minTime) {
+                        fulfillmentTimeInput.value = minTime;
+                    }
+                } else {
+                    fulfillmentTimeInput.removeAttribute('min');
+                }
+            };
 
             const toggleDelivery = () => {
                 if (orderType.value === 'delivery') {
@@ -231,9 +268,13 @@
                 } else {
                     deliveryAddress.removeAttribute('required');
                 }
+
+                refreshTotals();
             };
 
             orderType.addEventListener('change', toggleDelivery);
+            fulfillmentDateInput?.addEventListener('change', enforceMinTime);
+            enforceMinTime();
             toggleDelivery();
         })();
     </script>

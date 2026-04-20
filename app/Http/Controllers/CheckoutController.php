@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Variant;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -63,14 +65,31 @@ class CheckoutController extends Controller
         return array_slice(array_values(array_unique($filtered)), 0, 20);
     }
 
+    private function resolveVariantForCartItem($item): ?Variant
+    {
+        if ($item->variant_id) {
+            return Variant::query()->find($item->variant_id);
+        }
+
+        $product = $item->product;
+        if (! $product) {
+            return null;
+        }
+
+        return $product->variants()->where('is_default', true)->first()
+            ?? $product->variants()->first();
+    }
+
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
         $items = $cart->items;
         $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
-        $minFulfillmentDate = now()->addDays($maxPreOrderDays)->toDateString();
+        $minFulfillmentAt = now()->addDays($maxPreOrderDays);
+        $minFulfillmentDate = $minFulfillmentAt->toDateString();
+        $minFulfillmentTime = $minFulfillmentAt->format('H:i');
         $subtotal = $cart->subtotal;
-        $delivery = 5.99;
+        $delivery = 0.0;
         $tax = $subtotal * 0.1;
         $total = $subtotal + $delivery + $tax;
 
@@ -82,7 +101,8 @@ class CheckoutController extends Controller
             'tax',
             'total',
             'maxPreOrderDays',
-            'minFulfillmentDate'
+            'minFulfillmentDate',
+            'minFulfillmentTime'
         ));
 
         if ($this->guestCartToken) {
@@ -103,7 +123,8 @@ class CheckoutController extends Controller
         }
 
         $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
-        $minFulfillmentDate = now()->addDays($maxPreOrderDays)->toDateString();
+        $minFulfillmentAt = now()->addDays($maxPreOrderDays);
+        $minFulfillmentDate = $minFulfillmentAt->toDateString();
 
         $request->validate([
             'customer_name' => 'required|string|max:100',
@@ -115,6 +136,33 @@ class CheckoutController extends Controller
             'fulfillment_time' => 'required|date_format:H:i',
             'special_instructions' => 'nullable|string',
         ]);
+
+        $selectedFulfillmentAt = Carbon::createFromFormat(
+            'Y-m-d H:i',
+            $request->string('fulfillment_date')->value() . ' ' . $request->string('fulfillment_time')->value()
+        );
+
+        if ($selectedFulfillmentAt->lt($minFulfillmentAt)) {
+            return redirect()->route('checkout.index')->withErrors([
+                'fulfillment_date' => 'Selected fulfillment date/time is too early based on pre-order lead time.',
+            ])->withInput();
+        }
+
+        foreach ($cart->items as $item) {
+            $resolvedVariant = $this->resolveVariantForCartItem($item);
+
+            if (! $resolvedVariant) {
+                return redirect()->route('checkout.index')->withErrors([
+                    'checkout' => 'Some cart items are unavailable for checkout. Please review your cart and try again.',
+                ])->withInput();
+            }
+
+            if ((int) $resolvedVariant->stock_quantity < (int) $item->quantity) {
+                return redirect()->route('checkout.index')->withErrors([
+                    'checkout' => 'Insufficient stock for ' . ($item->product?->name ?? 'an item') . '.',
+                ])->withInput();
+            }
+        }
 
         DB::beginTransaction();
 
@@ -144,27 +192,21 @@ class CheckoutController extends Controller
             ]);
 
             foreach ($cart->items as $item) {
-                $variantId = $item->variant_id
-                    ?? $item->product?->variants()->where('is_default', true)->value('id')
-                    ?? $item->product?->variants()->value('id');
-
-                if (! $variantId) {
-                    continue;
+                $variant = $this->resolveVariantForCartItem($item);
+                if (! $variant) {
+                    throw new \RuntimeException('Unable to resolve a product variant for checkout.');
                 }
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'variant_id' => $variantId,
+                    'variant_id' => $variant->id,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->quantity * $item->unit_price,
                     'special_instructions' => $item->special_instructions,
                 ]);
 
-                $variant = $item->variant ?: $item->product?->variants()->find($variantId);
-                if ($variant) {
-                    $variant->decrement('stock_quantity', $item->quantity);
-                }
+                $variant->decrement('stock_quantity', $item->quantity);
             }
 
             $cart->items()->delete();

@@ -44,6 +44,25 @@ class CheckoutController extends Controller
             ->max(fn ($item) => (int) ($item->product?->pre_order_days ?? 0));
     }
 
+    private function parseGuestOrderNumbers(Request $request): array
+    {
+        $raw = $request->cookie('guest_orders', '[]');
+        $decoded = json_decode((string) $raw, true);
+
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        $normalized = array_map(
+            fn ($value) => strtoupper(trim((string) $value)),
+            $decoded
+        );
+
+        $filtered = array_values(array_filter($normalized, fn ($value) => $value !== ''));
+
+        return array_slice(array_values(array_unique($filtered)), 0, 20);
+    }
+
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
@@ -154,10 +173,15 @@ class CheckoutController extends Controller
             DB::commit();
 
             $response = redirect()
-                ->route('checkout.index')
+                ->route('orders.index')
                 ->with('success', 'Order placed successfully! Order number: ' . $order->order_number);
 
             if (! Auth::check()) {
+                $guestOrders = $this->parseGuestOrderNumbers($request);
+                array_unshift($guestOrders, $order->order_number);
+                $guestOrders = array_slice(array_values(array_unique($guestOrders)), 0, 20);
+
+                $response->cookie('guest_orders', json_encode($guestOrders), 60 * 24 * 180);
                 $response->cookie('cart_token', '', -1);
             }
 

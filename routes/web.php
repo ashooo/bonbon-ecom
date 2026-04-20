@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderHistoryController;
 
 Route::get('/', function () {
     $featuredProducts = collect();
@@ -106,6 +107,8 @@ Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear')
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
+Route::post('/orders/lookup', [OrderHistoryController::class, 'lookup'])->name('orders.lookup');
 
 Route::get('/customize', function () {
     return view('pages.customize');

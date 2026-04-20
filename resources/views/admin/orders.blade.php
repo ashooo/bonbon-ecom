@@ -1,58 +1,152 @@
 <!-- Orders Section -->
 <div id="orders-section" class="admin-section hidden">
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <h1 class="text-3xl font-bold">Orders Management</h1>
-            <div class="flex gap-4">
-                <button class="rounded-2xl bg-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-300">All Orders</button>
-                <button class="rounded-2xl bg-yellow-100 px-6 py-3 text-sm font-semibold text-yellow-700 hover:bg-yellow-200">Pending</button>
-                <button class="rounded-2xl bg-blue-100 px-6 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-200">Processing</button>
-                <button class="rounded-2xl bg-green-100 px-6 py-3 text-sm font-semibold text-green-700 hover:bg-green-200">Completed</button>
-                <button class="rounded-2xl bg-red-100 px-6 py-3 text-sm font-semibold text-red-700 hover:bg-red-200">Cancelled</button>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.orders.index', ['status' => 'all', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? 'all') === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300' }}">
+                    All ({{ $orderCounts['all'] ?? 0 }})
+                </a>
+                <a href="{{ route('admin.orders.index', ['status' => 'pending', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? '') === 'pending' ? 'bg-yellow-600 text-white' : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' }}">
+                    Pending ({{ $orderCounts['pending'] ?? 0 }})
+                </a>
+                <a href="{{ route('admin.orders.index', ['status' => 'confirmed', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? '') === 'confirmed' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200' }}">
+                    Confirmed ({{ $orderCounts['confirmed'] ?? 0 }})
+                </a>
+                <a href="{{ route('admin.orders.index', ['status' => 'ready', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? '') === 'ready' ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' }}">
+                    Ready ({{ $orderCounts['ready'] ?? 0 }})
+                </a>
+                <a href="{{ route('admin.orders.index', ['status' => 'completed', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? '') === 'completed' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
+                    Completed ({{ $orderCounts['completed'] ?? 0 }})
+                </a>
+                <a href="{{ route('admin.orders.index', ['status' => 'cancelled', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {{ ($orderFilters['status'] ?? '') === 'cancelled' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200' }}">
+                    Cancelled ({{ $orderCounts['cancelled'] ?? 0 }})
+                </a>
             </div>
         </div>
 
         <div class="rounded-3xl bg-white p-6 shadow-soft">
+            @if (session('success'))
+                <div class="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if ($errors->any())
+                <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                    <ul class="list-disc pl-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-6 flex flex-col gap-3 md:flex-row">
+                <input type="hidden" name="status" value="{{ $orderFilters['status'] ?? 'all' }}">
+                <input
+                    type="text"
+                    name="search"
+                    value="{{ $orderFilters['search'] ?? '' }}"
+                    placeholder="Search by order number, name, or email"
+                    class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                >
+                <button type="submit" class="rounded-2xl bg-slate-700 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                    Search
+                </button>
+            </form>
+
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="border-b border-slate-200">
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Order ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Order</th>
                             <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Customer</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Product</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Items</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Schedule</th>
                             <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
                             <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Total</th>
                             <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr>
-                            <td class="px-4 py-4 text-sm font-medium">#12345</td>
-                            <td class="px-4 py-4 text-sm">John Doe</td>
-                            <td class="px-4 py-4 text-sm">Chocolate Cake</td>
-                            <td class="px-4 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Delivered</span>
-                            </td>
-                            <td class="px-4 py-4 text-sm">$25.99</td>
-                            <td class="px-4 py-4">
-                                <button class="text-indigo-600 hover:text-indigo-800 text-sm">View Details</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-4 text-sm font-medium">#12344</td>
-                            <td class="px-4 py-4 text-sm">Jane Smith</td>
-                            <td class="px-4 py-4 text-sm">Vanilla Cake</td>
-                            <td class="px-4 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Processing</span>
-                            </td>
-                            <td class="px-4 py-4 text-sm">$35.99</td>
-                            <td class="px-4 py-4">
-                                <button class="text-indigo-600 hover:text-indigo-800 text-sm">View Details</button>
-                            </td>
-                        </tr>
+                        @forelse(($orders ?? collect()) as $order)
+                            @php
+                                $status = $order->status ?? 'pending';
+                                $statusClass = match ($status) {
+                                    'completed' => 'bg-green-100 text-green-800',
+                                    'cancelled' => 'bg-red-100 text-red-800',
+                                    'confirmed' => 'bg-blue-100 text-blue-800',
+                                    'ready' => 'bg-indigo-100 text-indigo-800',
+                                    default => 'bg-yellow-100 text-yellow-800',
+                                };
+                            @endphp
+                            <tr>
+                                <td class="px-4 py-4 text-sm">
+                                    <p class="font-semibold">{{ $order->order_number }}</p>
+                                    <p class="text-xs text-slate-500">{{ $order->created_at?->format('M d, Y h:i A') }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <p class="font-medium">{{ $order->customer_name }}</p>
+                                    <p class="text-xs text-slate-500">{{ $order->customer_email }}</p>
+                                    <p class="text-xs text-slate-500">{{ $order->customer_phone }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <p>{{ $order->items->sum('quantity') }} item(s)</p>
+                                    <p class="text-xs text-slate-500">
+                                        {{ $order->items->first()?->variant?->product?->name ?? 'No items' }}
+                                        @if ($order->items->count() > 1)
+                                            +{{ $order->items->count() - 1 }} more
+                                        @endif
+                                    </p>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <p class="font-medium">{{ ucfirst((string) $order->order_type) }}</p>
+                                    <p class="text-xs text-slate-500">
+                                        {{ $order->fulfillment_date?->format('M d, Y') ?? 'N/A' }}
+                                        {{ $order->fulfillment_time ? \Illuminate\Support\Str::of($order->fulfillment_time)->substr(0, 5) : '' }}
+                                    </p>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <span class="rounded-full px-2 py-1 text-xs font-semibold {{ $statusClass }}">
+                                        {{ ucfirst($status) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm font-semibold">&#8369;{{ number_format((float) $order->total, 2) }}</td>
+                                <td class="px-4 py-4">
+                                    <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="flex items-center gap-2">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="redirect_status" value="{{ $orderFilters['status'] ?? 'all' }}">
+                                        <input type="hidden" name="redirect_search" value="{{ $orderFilters['search'] ?? '' }}">
+                                        <input type="hidden" name="redirect_page" value="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}">
+                                        <select name="status" class="rounded-xl border border-slate-200 px-3 py-1 text-xs">
+                                            @foreach (['pending', 'confirmed', 'ready', 'completed', 'cancelled'] as $optionStatus)
+                                                <option value="{{ $optionStatus }}" @selected($status === $optionStatus)>{{ ucfirst($optionStatus) }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button type="submit" class="rounded-xl bg-slate-700 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800">
+                                            Update
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">
+                                    No orders found for the selected filters.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
+
+            @if (isset($orders) && method_exists($orders, 'links'))
+                <div class="mt-6">
+                    {{ $orders->appends(['section' => 'orders'])->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>

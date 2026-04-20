@@ -4,11 +4,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use App\Models\StoreSetting;
+use App\Models\Order;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 
 Route::get('/', function () {
     $featuredProducts = collect();
@@ -135,15 +137,55 @@ Route::get('/profile', [ProfileController::class, 'show'])
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
-    Route::get('/', function () {
+    Route::get('/', function (Request $request) {
         $products = \App\Models\Product::with('category')->latest()->take(10)->get();
         $allProducts = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc')->get();
         $allCategories = \App\Models\Category::with('parent')->orderBy('name')->get();
         $settings = Schema::hasTable('store_settings')
             ? StoreSetting::query()->first()
             : null;
+        $statusFilter = $request->string('status')->value();
+        $searchFilter = $request->string('search')->trim()->value();
 
-        return view('admin.dashboard', compact('products', 'allProducts', 'allCategories', 'settings'));
+        $ordersQuery = Order::query()
+            ->with(['items.variant.product', 'user'])
+            ->latest();
+
+        if ($statusFilter !== '' && $statusFilter !== 'all') {
+            $ordersQuery->where('status', $statusFilter);
+        }
+
+        if ($searchFilter !== '') {
+            $ordersQuery->where(function ($query) use ($searchFilter) {
+                $query->where('order_number', 'like', '%' . $searchFilter . '%')
+                    ->orWhere('customer_name', 'like', '%' . $searchFilter . '%')
+                    ->orWhere('customer_email', 'like', '%' . $searchFilter . '%');
+            });
+        }
+
+        $orders = $ordersQuery->paginate(12)->withQueryString();
+        $orderCounts = [
+            'all' => Order::count(),
+            'pending' => Order::where('status', 'pending')->count(),
+            'confirmed' => Order::where('status', 'confirmed')->count(),
+            'ready' => Order::where('status', 'ready')->count(),
+            'completed' => Order::where('status', 'completed')->count(),
+            'cancelled' => Order::where('status', 'cancelled')->count(),
+        ];
+        $orderFilters = [
+            'status' => $statusFilter === '' ? 'all' : $statusFilter,
+            'search' => $searchFilter,
+        ];
+
+        return view('admin.dashboard', compact(
+            'products',
+            'allProducts',
+            'allCategories',
+            'settings',
+            'orders',
+            'orderCounts',
+            'orderFilters'
+        ));
     })->name('admin.dashboard');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
 
@@ -171,6 +213,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     ]);
     Route::delete('/products/images/{image}', [\App\Http\Controllers\Admin\ProductController::class, 'deleteImage'])->name('admin.products.images.delete');
     Route::post('/products/images/order', [\App\Http\Controllers\Admin\ProductController::class, 'updateImageOrder'])->name('admin.products.images.order');
+
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+    Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
 });
 
 Route::post('/profile', [ProfileController::class, 'update'])

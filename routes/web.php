@@ -105,6 +105,7 @@ Route::post('/cart/{item}/decrement', [CartController::class, 'decrement'])->nam
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
 Route::get('/customize', function () {
     return view('pages.customize');

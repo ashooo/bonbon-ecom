@@ -7,9 +7,28 @@
         $delivery = $delivery ?? 5.99;
         $tax = $tax ?? ($subtotal * 0.1);
         $total = $total ?? ($subtotal + $delivery + $tax);
+        $maxPreOrderDays = $maxPreOrderDays ?? 0;
+        $minFulfillmentDate = $minFulfillmentDate ?? now()->toDateString();
     @endphp
 
     <h1 class="text-3xl font-bold mb-8">Checkout</h1>
+
+    @if (session('success'))
+        <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+            <p class="font-semibold">Please fix the following:</p>
+            <ul class="mt-2 list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <!-- Order Summary -->
@@ -80,90 +99,142 @@
             <!-- Delivery Information -->
             <div class="mb-8">
                 <h2 class="text-2xl font-bold mb-6">Delivery Information</h2>
-                <form class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        </div>
+                <form method="POST" action="{{ route('checkout.store') }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input
+                            type="text"
+                            name="customer_name"
+                            value="{{ old('customer_name', auth()->user()->name ?? '') }}"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                        <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <input
+                            type="email"
+                            name="customer_email"
+                            value="{{ old('customer_email', auth()->user()->email ?? '') }}"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <input
+                            type="tel"
+                            name="customer_phone"
+                            value="{{ old('customer_phone', auth()->user()->phone ?? '') }}"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                        <input type="text" placeholder="Street address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 mb-2">
-                        <input type="text" placeholder="Apartment, suite, etc." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Order Type</label>
+                        <select
+                            id="order_type"
+                            name="order_type"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
+                            <option value="pickup" {{ old('order_type', 'pickup') === 'pickup' ? 'selected' : '' }}>Pickup</option>
+                            <option value="delivery" {{ old('order_type') === 'delivery' ? 'selected' : '' }}>Delivery</option>
+                        </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
-                            <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                        </div>
+                    <div id="delivery_address_group">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Address</label>
+                        <textarea
+                            id="delivery_address"
+                            name="delivery_address"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            {{ old('order_type') === 'delivery' ? 'required' : '' }}
+                            placeholder="House/Unit, Street, Barangay, City"
+                        >{{ old('delivery_address') }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Required if order type is Delivery.</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Date & Time</label>
-                        <input type="datetime-local" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fulfillment Date</label>
+                        @if ($maxPreOrderDays > 0)
+                            <p class="text-xs text-amber-700 mb-2">
+                                Earliest available schedule is {{ $maxPreOrderDays }} day(s) from now because of pre-order items in your cart.
+                            </p>
+                        @endif
+                        <input
+                            type="date"
+                            name="fulfillment_date"
+                            value="{{ old('fulfillment_date') }}"
+                            min="{{ $minFulfillmentDate }}"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
                     </div>
-                </form>
-            </div>
 
-            <!-- Payment Method -->
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-6">Payment Method</h2>
-                <div class="space-y-4">
-                    <div class="border border-gray-300 rounded-md p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment" value="card" class="mr-3">
-                            <span class="font-medium">Credit/Debit Card</span>
-                        </label>
-                        <div class="mt-4 space-y-2">
-                            <input type="text" placeholder="Card Number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                            <div class="grid grid-cols-2 gap-4">
-                                <input type="text" placeholder="MM/YY" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
-                                <input type="text" placeholder="CVV" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fulfillment Time</label>
+                        <input
+                            type="time"
+                            name="fulfillment_time"
+                            value="{{ old('fulfillment_time') }}"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
+                        <textarea
+                            name="special_instructions"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                            placeholder="Optional notes for your order"
+                        >{{ old('special_instructions') }}</textarea>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-bold mb-6">Payment Method</h2>
+                        <div class="space-y-4">
+                            <div class="border border-gray-300 rounded-md p-4">
+                                <label class="flex items-center">
+                                    <input type="radio" checked disabled class="mr-3">
+                                    <span class="font-medium">Cash on Delivery / Store Confirmation</span>
+                                </label>
                             </div>
                         </div>
                     </div>
 
-                    <div class="border border-gray-300 rounded-md p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment" value="paypal" class="mr-3">
-                            <span class="font-medium">PayPal</span>
-                        </label>
-                    </div>
-
-                    <div class="border border-gray-300 rounded-md p-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="payment" value="cash" class="mr-3">
-                            <span class="font-medium">Cash on Delivery</span>
-                        </label>
-                    </div>
-                </div>
+                    <!-- Place Order Button -->
+                    <button class="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300" {{ $items->count() === 0 ? 'disabled' : '' }}>
+                        Place Order
+                    </button>
+                </form>
             </div>
-
-            <!-- Place Order Button -->
-            <button class="w-full bg-pink-600 hover:bg-pink-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg text-lg transition duration-300" {{ $items->count() === 0 ? 'disabled' : '' }}>
-                Place Order
-            </button>
         </div>
     </div>
+
+    <script>
+        (function () {
+            const orderType = document.getElementById('order_type');
+            const deliveryAddress = document.getElementById('delivery_address');
+            if (!orderType || !deliveryAddress) return;
+
+            const toggleDelivery = () => {
+                if (orderType.value === 'delivery') {
+                    deliveryAddress.setAttribute('required', 'required');
+                } else {
+                    deliveryAddress.removeAttribute('required');
+                }
+            };
+
+            orderType.addEventListener('change', toggleDelivery);
+            toggleDelivery();
+        })();
+    </script>
 @endsection

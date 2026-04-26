@@ -245,6 +245,7 @@
             let isResizing = false;
             let heartbeatTimer = null;
             let currentChannelName = null;
+            let currentConversation = null;
 
             const routes = {
                 session: @json(route('chat.session')),
@@ -289,6 +290,16 @@
                 window.Echo.channel(channelName).listen('.chat.conversation.updated', () => {
                     sync(false);
                 });
+            };
+
+            const resetConversationSubscription = () => {
+                if (!window.Echo || !currentChannelName) {
+                    currentChannelName = null;
+                    return;
+                }
+
+                window.Echo.leave(currentChannelName);
+                currentChannelName = null;
             };
 
             const startHeartbeat = () => {
@@ -456,6 +467,16 @@
             };
 
             const renderConversation = (conversation) => {
+                currentConversation = conversation;
+
+                if (!conversation) {
+                    statusDot.className = 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-300';
+                    statusText.textContent = 'Offline';
+                    typingIndicator.classList.add('hidden');
+                    resetConversationSubscription();
+                    return;
+                }
+
                 const supportOnline = conversation.admin_is_online;
                 statusDot.className = `absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${supportOnline ? 'bg-emerald-500' : 'bg-slate-300'}`;
                 statusText.textContent = supportOnline ? 'Online now' : 'Offline';
@@ -469,7 +490,7 @@
                     renderConversation(payload.conversation);
                     renderMessages(payload.messages);
 
-                    if (resubscribe) {
+                    if (resubscribe && payload.conversation?.broadcast_channel) {
                         subscribeToConversation(payload.conversation.broadcast_channel);
                     }
                 } catch (error) {
@@ -514,6 +535,9 @@
                     typingState = false;
                     void sendTyping(false);
                     renderConversation(payload.conversation);
+                    if (payload.conversation?.broadcast_channel) {
+                        subscribeToConversation(payload.conversation.broadcast_channel);
+                    }
                     renderMessages([...currentMessages, payload.message]);
                     scrollToBottom();
                 } catch (error) {

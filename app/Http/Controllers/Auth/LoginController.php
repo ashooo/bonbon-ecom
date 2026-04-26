@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -78,13 +79,13 @@ class LoginController extends Controller
     // Google OAuth
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->redirect();
+        return Socialite::driver('google')->stateless()->redirect();
     }
 
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            $googleUser = Socialite::driver('google')->stateless()->user();
 
             $user = User::where('email', $googleUser->getEmail())->first();
 
@@ -115,6 +116,11 @@ class LoginController extends Controller
             return redirect()->intended($fallback)->with('success', 'Welcome! You have been logged in with Google.');
 
         } catch (\Exception $e) {
+            Log::error('Google login failed.', [
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
+
             return redirect('/login')->with('error', 'Something went wrong with Google login. Please try again.');
         }
     }

@@ -17,20 +17,30 @@ class ChatController extends Controller
 {
     public function show(Request $request)
     {
-        $conversation = $this->resolveConversation($request, true);
+        $conversation = $this->resolveConversation($request, false);
 
         return view('pages.assistant', [
             'conversation' => $conversation,
             'chatIdentity' => [
-                'name' => $conversation->user?->name ?? $conversation->guest_name,
-                'email' => $conversation->user?->email ?? $conversation->guest_email,
+                'name' => $conversation?->user?->name ?? $conversation?->guest_name ?? Auth::user()?->name,
+                'email' => $conversation?->user?->email ?? $conversation?->guest_email ?? Auth::user()?->email,
             ],
         ]);
     }
 
     public function session(Request $request): JsonResponse
     {
-        $conversation = $this->resolveConversation($request, true);
+        $conversation = $this->resolveConversation($request, false);
+
+        if (! $conversation) {
+            return response()->json([
+                'conversation' => null,
+                'messages' => [],
+                'meta' => [
+                    'allowed_file_types' => 'Images, PDF, DOC, DOCX up to 5MB',
+                ],
+            ]);
+        }
 
         $this->touchPresence($request, $conversation, 'customer');
         $this->markConversationRead($conversation, 'customer');
@@ -46,14 +56,14 @@ class ChatController extends Controller
 
     public function updateProfile(Request $request): JsonResponse
     {
-        $conversation = $this->resolveConversation($request, true);
+        $conversation = $this->resolveConversation($request, false);
 
         $data = $request->validate([
             'name' => 'nullable|string|max:120',
             'email' => 'nullable|email|max:255',
         ]);
 
-        if (! Auth::check()) {
+        if ($conversation && ! Auth::check()) {
             $conversation->update([
                 'guest_name' => $data['name'] ?: 'Guest Shopper',
                 'guest_email' => $data['email'] ?: null,
@@ -61,7 +71,7 @@ class ChatController extends Controller
         }
 
         return response()->json([
-            'conversation' => $this->serializeConversation($conversation->fresh(), 'customer'),
+            'conversation' => $conversation ? $this->serializeConversation($conversation->fresh(), 'customer') : null,
         ]);
     }
 
@@ -118,7 +128,11 @@ class ChatController extends Controller
 
     public function typing(Request $request): JsonResponse
     {
-        $conversation = $this->resolveConversation($request, true);
+        $conversation = $this->resolveConversation($request, false);
+        if (! $conversation) {
+            return response()->json(['ok' => true]);
+        }
+
         $isTyping = $request->boolean('is_typing');
 
         $conversation->update([
@@ -133,7 +147,11 @@ class ChatController extends Controller
 
     public function presence(Request $request): JsonResponse
     {
-        $conversation = $this->resolveConversation($request, true);
+        $conversation = $this->resolveConversation($request, false);
+
+        if (! $conversation) {
+            return response()->json(['ok' => true]);
+        }
 
         $this->touchPresence($request, $conversation, 'customer');
         event(new ChatConversationUpdated($conversation->fresh(), 'presence'));
@@ -164,7 +182,7 @@ class ChatController extends Controller
         );
     }
 
-    private function resolveConversation(Request $request, bool $createIfMissing): ChatConversation
+    private function resolveConversation(Request $request, bool $createIfMissing): ?ChatConversation
     {
         $request->session()->start();
 
@@ -188,8 +206,6 @@ class ChatController extends Controller
                 'last_message_at' => now(),
             ]);
         }
-
-        abort_unless($conversation, 404);
 
         return $conversation;
     }

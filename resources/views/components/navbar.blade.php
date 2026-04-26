@@ -9,7 +9,6 @@
             <a href="{{ url('/products') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Products</a>
             <a href="{{ route('orders.index') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
             <a href="/customize" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
-            <a href="{{ route('assistant') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">BonBon Assistant</a>
         </nav>
 
         <div class="flex items-center space-x-4">

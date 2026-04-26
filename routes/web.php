@@ -8,8 +8,10 @@ use App\Models\Order;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 
 Route::get('/', function () {
@@ -116,9 +118,14 @@ Route::get('/customize', function () {
     return view('pages.customize');
 });
 
-Route::get('/assistant', function () {
-    return view('pages.assistant');
-})->name('assistant');
+Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
+Route::get('/chat/session', [ChatController::class, 'session'])->name('chat.session');
+Route::post('/chat/profile', [ChatController::class, 'updateProfile'])->name('chat.profile');
+Route::post('/chat/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
+Route::post('/chat/presence', [ChatController::class, 'presence'])->name('chat.presence');
+Route::get('/chat/attachments/{message}', [ChatController::class, 'attachment'])->name('chat.attachments.show');
+Route::get('/chat/attachments/{message}/download', [ChatController::class, 'downloadAttachment'])->name('chat.attachments.download');
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -251,6 +258,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
+
+    Route::get('/chats', [AdminChatController::class, 'index'])->name('admin.chat.index');
+    Route::get('/chats/data', [AdminChatController::class, 'data'])->name('admin.chat.data');
+    Route::post('/chats/{conversation}/messages', [AdminChatController::class, 'storeMessage'])->name('admin.chat.messages.store');
+    Route::post('/chats/{conversation}/typing', [AdminChatController::class, 'typing'])->name('admin.chat.typing');
+    Route::post('/chat-presence/{conversation?}', [AdminChatController::class, 'presence'])->name('admin.chat.presence');
+    Route::post('/chats/auto-replies', [AdminChatController::class, 'upsertAutoReply'])->name('admin.chat.auto-replies.upsert');
+    Route::delete('/chats/auto-replies/{autoReply}', [AdminChatController::class, 'destroyAutoReply'])->name('admin.chat.auto-replies.destroy');
 });
 
 Route::post('/profile', [ProfileController::class, 'update'])

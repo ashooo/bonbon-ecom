@@ -141,6 +141,8 @@
         </div>
     </div>
 
+    @stack('scripts')
+
     <script>
         const clockEl = document.getElementById('admin-clock');
         function updateAdminClock() {

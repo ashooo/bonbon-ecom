@@ -41,6 +41,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             StoreSettingsSeeder::class,
+            ChatSupportSeeder::class,
+            ChatConversationSeeder::class,
             CatalogSeeder::class,
             CustomerFlowSeeder::class,
         ]);

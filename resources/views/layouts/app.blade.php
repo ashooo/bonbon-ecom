@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Bonbon Ecom') }}</title>
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=great-vibes:400|instrument-sans:400,500,600" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,12 +19,22 @@
             --border-soft: #F5F5F5;
             --brand-brown: #5A3A3A;
             --brand-soft-brown: #7A5252;
+            --chat-panel-width: 430px;
         }
 
         body {
             font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
             background-color: var(--border-soft);
             color: var(--text-dark);
+        }
+
+        body.chat-open #app-shell {
+            padding-right: var(--chat-panel-width);
+        }
+        body.chat-open #bonbon-chat-open {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(12px);
         }
 
         .bg-pink-600 { background-color: var(--pink-medium) !important; }
@@ -52,74 +62,554 @@
         .font-script {
             font-family: 'Great Vibes', cursive;
         }
+        #app-shell {
+            transition: padding-right 220ms ease;
+        }
+        #bonbon-chat-panel {
+            width: var(--chat-panel-width);
+            transform: translateX(calc(var(--chat-panel-width) + 16px));
+            transition: transform 220ms ease;
+        }
+        body.chat-open #bonbon-chat-panel {
+            transform: translateX(0);
+        }
+        @media (max-width: 1023px) {
+            body.chat-open #app-shell {
+                padding-right: 0;
+            }
+            #bonbon-chat-panel {
+                width: min(100vw, 100%);
+                transform: translateX(100%);
+            }
+            body.chat-open #bonbon-chat-backdrop {
+                opacity: 1;
+                pointer-events: auto;
+            }
+        }
     </style>
-    <!-- Styles / Scripts -->
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
 <body class="bg-[#F5F5F5] text-[#2E2E2E]">
-    @include('components.navbar')
+    <div id="bonbon-chat-backdrop" class="pointer-events-none fixed inset-0 z-30 bg-[#2E2E2E]/25 opacity-0 transition-opacity lg:hidden"></div>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        @yield('content')
-    </main>
+    <aside id="bonbon-chat-panel" class="fixed inset-y-0 right-0 z-40 flex h-screen max-w-full flex-col overflow-hidden border-l border-[#EED9DE] bg-[linear-gradient(180deg,_#fffefe,_#fff7f8)] shadow-[-18px_0_45px_rgba(90,58,58,0.14)]">
+        <button id="bonbon-chat-resizer" type="button" class="absolute left-0 top-0 hidden h-full w-2 -translate-x-1/2 cursor-col-resize rounded-full bg-transparent lg:block" aria-label="Resize chat panel"></button>
 
-    @include('components.footer')
-
-    <!-- Chat Support -->
-    <div id="chat-button" class="fixed bottom-4 right-4 bg-pink-600 text-white p-4 rounded-full shadow-lg cursor-pointer">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-        </svg>
-    </div>
-
-    <!-- Chat Window (hidden by default) -->
-    <div id="chat-window" class="fixed bottom-16 right-4 w-80 h-96 bg-white border border-gray-300 rounded-lg shadow-lg hidden">
-        <div class="bg-pink-600 text-white p-4 rounded-t-lg">
-            <h3 class="font-semibold">Chat Support</h3>
-        </div>
-        <div id="chat-messages" class="p-4 h-64 overflow-y-auto">
-            <!-- Messages will be added here -->
-        </div>
-        <div class="p-4 border-t">
-            <div class="flex">
-                <input id="chat-input" type="text" placeholder="Type your message..." class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-pink-500">
-                <button id="send-button" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-r-lg">Send</button>
+        <div class="shrink-0 bg-white/90 px-5 py-4 backdrop-blur">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#F8E2E7] text-sm font-semibold text-[#5A3A3A]">
+                        @if($storeSettings?->chat_avatar_url)
+                            <img src="{{ $storeSettings->chat_avatar_url }}" alt="{{ $storeSettings->chat_display_name ?? 'Bonbon Chat' }}" class="h-full w-full rounded-full object-cover">
+                        @else
+                            {{ strtoupper(substr($storeSettings?->chat_display_name ?? 'Bonbon Chat', 0, 2)) }}
+                        @endif
+                        <span id="bonbon-chat-status-dot" class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-300"></span>
+                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-[#5A3A3A]">{{ $storeSettings?->chat_display_name ?: 'Bonbon Chat' }}</p>
+                        <p id="bonbon-chat-status-text" class="text-xs font-semibold uppercase tracking-[0.24em] text-[#C88A92]">Offline</p>
+                    </div>
+                </div>
+                <button id="bonbon-chat-close" type="button" class="rounded-full p-2 text-[#8C6770] transition hover:bg-[#FFF0F3]">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 6l12 12M18 6l-12 12" />
+                    </svg>
+                </button>
             </div>
         </div>
+
+        <div id="bonbon-chat-thread" class="min-h-0 flex-1 overflow-y-auto px-4 py-5">
+            <div id="bonbon-chat-empty" class="space-y-5">
+                <div class="rounded-[1.75rem] border border-dashed border-[#E9CBD3] bg-white px-5 py-6 text-sm leading-7 text-[#8C6770]">
+                    Ask about shipping, prices, custom cakes, or send image pegs. Messages update live with typing, delivery, and seen status.
+                </div>
+                <div>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#B38A93]">Quick prompts</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (['What are your best sellers?', 'Do you offer same-day delivery?', 'How much is shipping?', 'Can I send a peg design?'] as $prompt)
+                            <button type="button" class="bonbon-quick-prompt rounded-full border border-[#F0D5DB] bg-white px-4 py-2 text-xs font-semibold text-[#6F4C54] transition hover:-translate-y-0.5 hover:bg-[#FFF5F7]" data-prompt="{{ $prompt }}">{{ $prompt }}</button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="shrink-0 border-t border-[#F1DADF] bg-white px-4 py-4">
+            <div id="bonbon-chat-typing-indicator" class="mb-3 hidden text-sm text-[#9E7680]">Bonbon Support is typing...</div>
+
+            <form id="bonbon-chat-send-form" class="space-y-3" enctype="multipart/form-data">
+                <div id="bonbon-chat-attachment-preview" class="hidden rounded-[1.25rem] border border-[#EED9DE] bg-[#FFF7F8] p-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div id="bonbon-chat-attachment-preview-content" class="min-w-0 flex-1"></div>
+                        <button id="bonbon-chat-attachment-clear" type="button" class="rounded-full p-2 text-[#8C6770] transition hover:bg-white">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 6l12 12M18 6l-12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-end gap-3 rounded-[1.75rem] border border-[#EED9DE] bg-[#FFF9FA] p-3">
+                    <label class="inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white text-[#6B4951] shadow-sm ring-1 ring-[#F1DADF] transition hover:bg-[#FFF3F5]">
+                        <input id="bonbon-chat-attachment" name="attachment" type="file" class="hidden" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m18 13-5.172 5.172a4 4 0 1 1-5.656-5.656L13.5 6.187A2 2 0 0 1 16.328 9l-6.364 6.364a.75.75 0 1 1-1.06-1.06l5.657-5.657" />
+                        </svg>
+                    </label>
+
+                    <div class="min-w-[180px] flex-1">
+                        <textarea id="bonbon-chat-message-input" name="body" rows="1" class="max-h-40 w-full resize-none bg-transparent px-2 py-3 text-sm text-[#5A3A3A] outline-none placeholder:text-[#B28D95]" placeholder="Message Bonbon Support..."></textarea>
+                    </div>
+
+                    <button type="submit" class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#5A3A3A] text-white transition hover:bg-[#7A5252]">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 px-2">
+                    <p id="bonbon-chat-upload-name" class="text-xs text-[#9E7680]">Images, PDF, DOC, DOCX up to 5MB</p>
+                </div>
+            </form>
+        </div>
+    </aside>
+
+    <div id="app-shell">
+        @include('components.navbar')
+
+        <main class="container mx-auto px-4 py-8">
+            @if (session('success'))
+                <div class="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="mb-6 rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @yield('content')
+        </main>
+
+        @include('components.footer')
     </div>
 
+    <button
+        id="bonbon-chat-open"
+        type="button"
+        class="fixed bottom-5 right-5 z-40 flex items-center gap-3 rounded-full bg-[#5A3A3A] px-5 py-3 text-white shadow-[0_18px_40px_rgba(90,58,58,0.28)] transition hover:-translate-y-0.5 hover:bg-[#7A5252]"
+    >
+        <span class="flex h-10 w-10 items-center justify-center rounded-full bg-white/15">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h8M8 14h5m-8 6 1.7-3.4A8 8 0 1 1 20 12a8 8 0 0 1-8 8H5Z" />
+            </svg>
+        </span>
+        <span>
+            <span class="block text-xs uppercase tracking-[0.24em] text-white/70">Need help?</span>
+            <span class="block text-sm font-semibold">Open Bonbon Chat</span>
+        </span>
+    </button>
+
+    @stack('scripts')
+
     <script>
-        // Simple chat functionality
-        const chatButton = document.getElementById('chat-button');
-        const chatWindow = document.getElementById('chat-window');
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-button');
-        const chatMessages = document.getElementById('chat-messages');
+        (() => {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+            const backdrop = document.getElementById('bonbon-chat-backdrop');
+            const openButton = document.getElementById('bonbon-chat-open');
+            const closeButton = document.getElementById('bonbon-chat-close');
+            const resizer = document.getElementById('bonbon-chat-resizer');
+            const thread = document.getElementById('bonbon-chat-thread');
+            const emptyState = document.getElementById('bonbon-chat-empty');
+            const sendForm = document.getElementById('bonbon-chat-send-form');
+            const messageInput = document.getElementById('bonbon-chat-message-input');
+            const attachmentInput = document.getElementById('bonbon-chat-attachment');
+            const attachmentPreview = document.getElementById('bonbon-chat-attachment-preview');
+            const attachmentPreviewContent = document.getElementById('bonbon-chat-attachment-preview-content');
+            const attachmentClear = document.getElementById('bonbon-chat-attachment-clear');
+            const uploadName = document.getElementById('bonbon-chat-upload-name');
+            const typingIndicator = document.getElementById('bonbon-chat-typing-indicator');
+            const statusDot = document.getElementById('bonbon-chat-status-dot');
+            const statusText = document.getElementById('bonbon-chat-status-text');
+            let typingTimer = null;
+            let typingState = false;
+            let currentMessagesHash = '';
+            let currentMessages = [];
+            let hasLoaded = false;
+            let isResizing = false;
+            let heartbeatTimer = null;
+            let currentChannelName = null;
 
-        chatButton.addEventListener('click', () => {
-            chatWindow.classList.toggle('hidden');
-        });
+            const routes = {
+                session: @json(route('chat.session')),
+                send: @json(route('chat.messages.store')),
+                typing: @json(route('chat.typing')),
+                presence: @json(route('chat.presence')),
+            };
 
-        sendButton.addEventListener('click', () => {
-            const message = chatInput.value.trim();
-            if (message) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'mb-2';
-                messageDiv.innerHTML = `<div class="bg-gray-200 p-2 rounded-lg">${message}</div>`;
-                chatMessages.appendChild(messageDiv);
-                chatInput.value = '';
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        });
+            const buildHeaders = (json = false) => {
+                const socketId = window.Echo?.socketId?.();
 
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendButton.click();
-            }
-        });
+                return {
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    ...(json ? { 'Content-Type': 'application/json' } : {}),
+                    ...(socketId ? { 'X-Socket-ID': socketId } : {}),
+                };
+            };
+
+            const escapeHtml = (value) => {
+                const div = document.createElement('div');
+                div.textContent = value ?? '';
+                return div.innerHTML;
+            };
+
+            const isNearBottom = () => thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120;
+            const scrollToBottom = () => {
+                thread.scrollTop = thread.scrollHeight;
+            };
+
+            const subscribeToConversation = (channelName) => {
+                if (!window.Echo || !channelName || currentChannelName === channelName) {
+                    return;
+                }
+
+                if (currentChannelName) {
+                    window.Echo.leave(currentChannelName);
+                }
+
+                currentChannelName = channelName;
+                window.Echo.channel(channelName).listen('.chat.conversation.updated', () => {
+                    sync(false);
+                });
+            };
+
+            const startHeartbeat = () => {
+                stopHeartbeat();
+                heartbeatTimer = window.setInterval(() => {
+                    fetch(routes.presence, {
+                        method: 'POST',
+                        headers: buildHeaders(true),
+                        body: JSON.stringify({}),
+                    });
+                }, 30000);
+            };
+
+            const stopHeartbeat = () => {
+                if (heartbeatTimer) {
+                    window.clearInterval(heartbeatTimer);
+                    heartbeatTimer = null;
+                }
+            };
+
+            const openPanel = () => {
+                document.body.classList.add('chat-open');
+
+                if (!hasLoaded) {
+                    sync();
+                    hasLoaded = true;
+                }
+
+                startHeartbeat();
+            };
+
+            const closePanel = () => {
+                document.body.classList.remove('chat-open');
+                stopHeartbeat();
+            };
+
+            const formatAttachment = (message) => {
+                if (!message.attachment_url) {
+                    return '';
+                }
+
+                if (message.is_image) {
+                    return `
+                        <div class="mt-3 overflow-hidden rounded-2xl bg-white/70">
+                            <a href="${message.attachment_view_url || message.attachment_url}" target="_blank" class="block">
+                                <img src="${message.attachment_view_url || message.attachment_url}" alt="${escapeHtml(message.attachment_name ?? 'Attachment')}" class="max-h-72 w-full object-cover">
+                            </a>
+                            <div class="flex items-center justify-end border-t border-white/60 px-3 py-2">
+                                <a href="${message.attachment_download_url || message.attachment_url}" download class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5A3A3A] shadow-sm transition hover:bg-[#FFF0F3]">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="mt-3 flex items-center gap-3 rounded-2xl border border-white/50 bg-white/75 px-4 py-3 text-sm font-semibold text-[#5A3A3A]">
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#F8E4E8]">FILE</span>
+                        <span class="truncate flex-1">${escapeHtml(message.attachment_name ?? 'Download attachment')}</span>
+                        <a href="${message.attachment_download_url || message.attachment_url}" download class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#5A3A3A] shadow-sm transition hover:bg-[#FFF0F3]">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+                            </svg>
+                        </a>
+                    </div>
+                `;
+            };
+
+            const renderComposerAttachment = (file) => {
+                if (!file) {
+                    attachmentPreview.classList.add('hidden');
+                    attachmentPreviewContent.innerHTML = '';
+                    uploadName.textContent = 'Images, PDF, DOC, DOCX up to 5MB';
+                    return;
+                }
+
+                uploadName.textContent = file.name;
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        attachmentPreviewContent.innerHTML = `
+                            <div class="flex items-start gap-3">
+                                <img src="${reader.result}" alt="${escapeHtml(file.name)}" class="h-20 w-20 rounded-2xl object-cover">
+                                <div class="min-w-0 pt-1">
+                                    <p class="truncate text-sm font-semibold text-[#5A3A3A]">${escapeHtml(file.name)}</p>
+                                    <p class="mt-1 text-xs text-[#8C6770]">Image ready to send</p>
+                                </div>
+                            </div>
+                        `;
+                        attachmentPreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                attachmentPreviewContent.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-xs font-semibold text-[#5A3A3A] shadow-sm ring-1 ring-[#F1DADF]">FILE</span>
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-[#5A3A3A]">${escapeHtml(file.name)}</p>
+                            <p class="mt-1 text-xs text-[#8C6770]">Attachment ready to send</p>
+                        </div>
+                    </div>
+                `;
+                attachmentPreview.classList.remove('hidden');
+            };
+
+            const renderMessages = (messages) => {
+                currentMessages = messages;
+                const nextHash = JSON.stringify(messages.map((message) => [message.id, message.receipt_label]));
+                const shouldStick = isNearBottom();
+
+                if (!messages.length) {
+                    thread.innerHTML = '';
+                    thread.appendChild(emptyState);
+                    currentMessagesHash = nextHash;
+                    return;
+                }
+
+                if (currentMessagesHash === nextHash && thread.querySelector('[data-message-id]')) {
+                    return;
+                }
+
+                thread.innerHTML = messages.map((message) => {
+                    if (message.sender_type === 'system') {
+                        return `
+                            <div data-message-id="${message.id}" class="mb-5 flex justify-center">
+                                <div class="max-w-xl rounded-full bg-[#FCEDEF] px-4 py-2 text-center text-xs font-medium text-[#8C6770]">
+                                    ${escapeHtml(message.body ?? '')}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    const wrapper = message.is_mine ? 'justify-end' : 'justify-start';
+                    const bubble = message.is_mine ? 'bg-[#5A3A3A] text-white' : 'border border-[#F0DCE1] bg-white text-[#5A3A3A]';
+                    const meta = message.is_mine ? 'text-white/70' : 'text-[#A07C84]';
+                    const radius = message.is_mine ? 'rounded-[1.8rem_1.8rem_0.5rem_1.8rem]' : 'rounded-[1.8rem_1.8rem_1.8rem_0.5rem]';
+
+                    return `
+                        <div data-message-id="${message.id}" class="mb-4 flex ${wrapper}">
+                            <div class="max-w-[90%]">
+                                <div class="${bubble} ${radius} px-4 py-3 shadow-sm">
+                                    ${message.body ? `<div class="whitespace-pre-wrap text-sm leading-7">${escapeHtml(message.body)}</div>` : ''}
+                                    ${formatAttachment(message)}
+                                </div>
+                                <div class="mt-1 flex ${message.is_mine ? 'justify-end' : 'justify-start'} gap-2 px-1 text-[11px] ${meta}">
+                                    <span>${escapeHtml(message.timestamp)}</span>
+                                    ${message.is_mine ? `<span>${escapeHtml(message.receipt_label)}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                currentMessagesHash = nextHash;
+
+                if (shouldStick) {
+                    scrollToBottom();
+                }
+            };
+
+            const renderConversation = (conversation) => {
+                const supportOnline = conversation.admin_is_online;
+                statusDot.className = `absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${supportOnline ? 'bg-emerald-500' : 'bg-slate-300'}`;
+                statusText.textContent = supportOnline ? 'Online now' : 'Offline';
+                typingIndicator.classList.toggle('hidden', !conversation.admin_is_typing);
+            };
+
+            const sync = async (resubscribe = true) => {
+                try {
+                    const response = await fetch(routes.session, { headers: buildHeaders() });
+                    const payload = await response.json();
+                    renderConversation(payload.conversation);
+                    renderMessages(payload.messages);
+
+                    if (resubscribe) {
+                        subscribeToConversation(payload.conversation.broadcast_channel);
+                    }
+                } catch (error) {
+                    statusDot.className = 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-amber-400';
+                }
+            };
+
+            const sendTyping = async (isTyping) => {
+                if (typingState === isTyping) {
+                    return;
+                }
+
+                typingState = isTyping;
+                await fetch(routes.typing, {
+                    method: 'POST',
+                    headers: buildHeaders(true),
+                    body: JSON.stringify({ is_typing: isTyping }),
+                });
+            };
+
+            sendForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const formData = new FormData(sendForm);
+
+                try {
+                    const response = await fetch(routes.send, {
+                        method: 'POST',
+                        headers: buildHeaders(),
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Unable to send message.');
+                    }
+
+                    const payload = await response.json();
+
+                    messageInput.value = '';
+                    attachmentInput.value = '';
+                    renderComposerAttachment(null);
+                    messageInput.style.height = 'auto';
+                    typingState = false;
+                    void sendTyping(false);
+                    renderConversation(payload.conversation);
+                    renderMessages([...currentMessages, payload.message]);
+                    scrollToBottom();
+                } catch (error) {
+                    uploadName.textContent = 'Message failed to send. Please try again.';
+                }
+            });
+
+            attachmentInput.addEventListener('change', () => {
+                renderComposerAttachment(attachmentInput.files[0] ?? null);
+            });
+
+            attachmentClear.addEventListener('click', () => {
+                attachmentInput.value = '';
+                renderComposerAttachment(null);
+            });
+
+            document.querySelectorAll('.bonbon-quick-prompt').forEach((button) => {
+                button.addEventListener('click', () => {
+                    openPanel();
+                    messageInput.value = button.dataset.prompt ?? '';
+                    messageInput.focus();
+                    messageInput.dispatchEvent(new Event('input'));
+                });
+            });
+
+            messageInput.addEventListener('input', () => {
+                messageInput.style.height = 'auto';
+                messageInput.style.height = `${Math.min(messageInput.scrollHeight, 160)}px`;
+                void sendTyping(messageInput.value.trim().length > 0);
+
+                window.clearTimeout(typingTimer);
+                typingTimer = window.setTimeout(() => {
+                    void sendTyping(false);
+                }, 1800);
+            });
+
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendForm.requestSubmit();
+                }
+            });
+
+            const resize = (clientX) => {
+                const min = 340;
+                const max = Math.min(window.innerWidth * 0.7, 760);
+                const width = Math.max(min, Math.min(window.innerWidth - clientX, max));
+                document.documentElement.style.setProperty('--chat-panel-width', `${width}px`);
+            };
+
+            resizer.addEventListener('mousedown', (event) => {
+                if (window.innerWidth < 1024) {
+                    return;
+                }
+
+                isResizing = true;
+                document.body.style.userSelect = 'none';
+                resize(event.clientX);
+            });
+
+            window.addEventListener('mousemove', (event) => {
+                if (!isResizing) {
+                    return;
+                }
+
+                resize(event.clientX);
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (!isResizing) {
+                    return;
+                }
+
+                isResizing = false;
+                document.body.style.userSelect = '';
+            });
+
+            openButton.addEventListener('click', openPanel);
+            closeButton.addEventListener('click', closePanel);
+            backdrop.addEventListener('click', closePanel);
+            window.addEventListener('bonbon-chat:open', openPanel);
+
+            window.addEventListener('beforeunload', () => {
+                fetch(routes.typing, {
+                    method: 'POST',
+                    headers: buildHeaders(true),
+                    body: JSON.stringify({ is_typing: false }),
+                    keepalive: true,
+                });
+            });
+
+            @if (request()->routeIs('assistant'))
+                openPanel();
+                hasLoaded = true;
+            @endif
+        })();
     </script>
 </body>
 </html>

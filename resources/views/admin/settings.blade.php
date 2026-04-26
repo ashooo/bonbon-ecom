@@ -1,7 +1,6 @@
 <!-- Settings Section -->
 <div id="settings-section" class="admin-section hidden">
-    <div class="space-y-6">
-        <h1 class="text-3xl font-bold">Settings</h1>
+    <div class="space-y-6"> 
 
         @if(session('success'))
             <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
@@ -27,6 +26,17 @@
                     </div>
 
                     <div>
+                        <label for="chat_display_name" class="block text-sm font-medium text-slate-700 mb-2">Bonbon Chat Display Name</label>
+                        <input
+                            id="chat_display_name"
+                            name="chat_display_name"
+                            type="text"
+                            value="{{ old('chat_display_name', $settings?->chat_display_name ?? $storeSettings?->chat_display_name ?? 'Bonbon Chat') }}"
+                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                        />
+                    </div>
+
+                    <div>
                         <label for="hero_image" class="block text-sm font-medium text-slate-700 mb-2">Homepage Hero Image</label>
                         <input id="hero_image" name="hero_image" type="file" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
 
@@ -35,6 +45,19 @@
                                 src="{{ $settings?->hero_image_url ?? $storeSettings?->hero_image_url }}"
                                 alt="Hero preview"
                                 class="mt-4 max-h-48 rounded-2xl object-contain"
+                            />
+                        @endif
+                    </div>
+
+                    <div>
+                        <label for="chat_avatar" class="block text-sm font-medium text-slate-700 mb-2">Bonbon Chat Avatar</label>
+                        <input id="chat_avatar" name="chat_avatar" type="file" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" />
+
+                        @if(($settings?->chat_avatar_url ?? $storeSettings?->chat_avatar_url))
+                            <img
+                                src="{{ $settings?->chat_avatar_url ?? $storeSettings?->chat_avatar_url }}"
+                                alt="Bonbon Chat avatar preview"
+                                class="mt-4 h-20 w-20 rounded-full object-cover"
                             />
                         @endif
                     </div>

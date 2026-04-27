@@ -13,7 +13,9 @@ class SettingsController extends Controller
     {
         $data = $request->validate([
             'brand_name' => 'required|string|max:255',
+            'chat_display_name' => 'nullable|string|max:255',
             'hero_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
+            'chat_avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
             'store_description' => 'nullable|string|max:2000',
             'footer_email' => 'nullable|email|max:255',
             'footer_phone' => 'nullable|string|max:255',
@@ -31,6 +33,14 @@ class SettingsController extends Controller
             }
 
             $data['hero_image'] = $request->file('hero_image')->store('settings', 'public');
+        }
+
+        if ($request->hasFile('chat_avatar')) {
+            if ($settings->chat_avatar) {
+                Storage::disk('public')->delete($settings->chat_avatar);
+            }
+
+            $data['chat_avatar'] = $request->file('chat_avatar')->store('settings', 'public');
         }
 
         $settings->update($data);

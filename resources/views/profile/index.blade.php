@@ -8,7 +8,6 @@
     @endphp
 
     <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8">My Profile</h1>
 
         @if (session('success'))
             <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
@@ -26,32 +25,33 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-            <aside class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="text-center mb-6">
-                        <div class="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 bg-pink-100">
-                            <img src="{{ $user->profile_image_url }}" alt="" class="w-full h-full object-cover">
+        <div class="overflow-hidden rounded-2xl bg-white shadow-md">
+            <div class="grid grid-cols-1 lg:grid-cols-4 items-start">
+                <aside class="lg:col-span-1 border-b border-gray-200 lg:border-b-0 lg:border-r lg:border-gray-200 bg-gray-50/60">
+                    <div class="p-6 lg:p-8">
+                        <div class="text-center mb-8">
+                            <div class="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 bg-pink-100">
+                                <img src="{{ $user->profile_image_url }}" alt="" class="w-full h-full object-cover">
+                            </div>
+
+                            <h2 class="text-xl font-bold">{{ $user->name }}</h2>
+                            <p class="text-gray-600">{{ $user->email }}</p>
+                            @if ($user->phone)
+                                <p class="text-sm text-gray-500">{{ $user->phone }}</p>
+                            @endif
                         </div>
-                        
-                        <h2 class="text-xl font-bold">{{ $user->name }}</h2>
-                        <p class="text-gray-600">{{ $user->email }}</p>
-                        @if ($user->phone)
-                            <p class="text-sm text-gray-500">{{ $user->phone }}</p>
-                        @endif
+
+                        <nav class="space-y-2">
+                            <button type="button" data-tab="personal-info" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Personal Information</button>
+                            <button type="button" data-tab="order-history" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Order History</button>
+                            <button type="button" data-tab="payment-methods" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Payment Methods</button>
+                            <button type="button" data-tab="addresses" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Addresses</button>
+                        </nav>
                     </div>
+                </aside>
 
-                    <nav class="space-y-2">
-                        <button type="button" data-tab="personal-info" class="tab-link block w-full text-left px-4 py-3 rounded-lg bg-pink-50 text-pink-700 font-semibold">Personal Information</button>
-                        <button type="button" data-tab="order-history" class="tab-link block w-full text-left px-4 py-3 rounded-lg hover:bg-pink-50 text-gray-700">Order History</button>
-                        <button type="button" data-tab="payment-methods" class="tab-link block w-full text-left px-4 py-3 rounded-lg hover:bg-pink-50 text-gray-700">Payment Methods</button>
-                        <button type="button" data-tab="addresses" class="tab-link block w-full text-left px-4 py-3 rounded-lg hover:bg-pink-50 text-gray-700">Addresses</button>
-                    </nav>
-                </div>
-            </aside>
-
-            <main class="lg:col-span-3 space-y-6">
-                <section id="personal-info" class="tab-section bg-white rounded-lg shadow-md p-6">
+                <main class="lg:col-span-3 p-6 lg:p-8">
+                    <section id="personal-info" class="tab-section">
                     <h3 class="text-xl font-bold mb-4">Personal Information</h3>
                     <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6">
                         @csrf
@@ -123,9 +123,9 @@
                             Save Personal Information
                         </button>
                     </form>
-                </section>
+                    </section>
 
-                <section id="order-history" class="tab-section hidden bg-white rounded-lg shadow-md p-6">
+                    <section id="order-history" class="tab-section hidden">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-xl font-bold">Order History</h3>
                         <span class="text-sm text-gray-500">Showing {{ $orders->count() }} most recent orders</span>
@@ -164,9 +164,9 @@
                             You have no orders yet. Your recent purchases will appear here.
                         </div>
                     @endforelse
-                </section>
+                    </section>
 
-                <section id="payment-methods" class="tab-section hidden bg-white rounded-lg shadow-md p-6">
+                    <section id="payment-methods" class="tab-section hidden">
                     <h3 class="text-xl font-bold mb-4">Payment Methods</h3>
 
                     <div class="space-y-4 mb-6">
@@ -260,9 +260,9 @@
                             <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">Save Payment Method</button>
                         </form>
                     </div>
-                </section>
+                    </section>
 
-                <section id="addresses" class="tab-section hidden bg-white rounded-lg shadow-md p-6">
+                    <section id="addresses" class="tab-section hidden">
                     <h3 class="text-xl font-bold mb-4">Addresses</h3>
 
                     <div class="space-y-4 mb-6">
@@ -367,8 +367,9 @@
                             <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">Add Address</button>
                         </form>
                     </div>
-                </section>
-            </main>
+                    </section>
+                </main>
+            </div>
         </div>
     </div>
 
@@ -383,8 +384,12 @@
 
             tabs.forEach((button) => {
                 button.classList.toggle('bg-pink-50', button.dataset.tab === tabId);
+                button.classList.toggle('border-pink-200', button.dataset.tab === tabId);
                 button.classList.toggle('text-pink-700', button.dataset.tab === tabId);
+                button.classList.toggle('font-semibold', button.dataset.tab === tabId);
+                button.classList.toggle('border-transparent', button.dataset.tab !== tabId);
                 button.classList.toggle('text-gray-700', button.dataset.tab !== tabId);
+                button.classList.toggle('font-medium', button.dataset.tab !== tabId);
             });
         }
 

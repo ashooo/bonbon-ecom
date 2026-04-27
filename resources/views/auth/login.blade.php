@@ -2,6 +2,26 @@
 
 @section('content')
     @php $showRegister = $showRegister ?? false; @endphp
+    <style>
+        #login-form input[type="email"],
+        #login-form input[type="password"],
+        #login-form label {
+            color: #111827;
+        }
+
+        #login-form input[type="email"]::placeholder,
+        #login-form input[type="password"]::placeholder {
+            color: #9ca3af;
+        }
+
+        #login-form input:-webkit-autofill,
+        #login-form input:-webkit-autofill:hover,
+        #login-form input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #111827;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+            transition: background-color 9999s ease-in-out 0s;
+        }
+    </style>
     <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
         <h1 class="text-3xl font-bold text-center mb-8">Welcome Back</h1>
 
@@ -16,8 +36,8 @@
             @csrf
             <!-- Email -->
             <div>
-                <label for="email" class="block text-sm font-medium text-[#5A3A3A] dark:text-[#E8A2A2] mb-2">Email Address</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full px-3 py-2 border border-gray-300 dark:border-[#444444] rounded-md bg-white dark:bg-[#1A1A1A] text-[#2E2E2E] dark:text-[#E8E8E8] focus:outline-none focus:ring-2 focus:ring-pink-500 dark:focus:ring-[#8B5A63] transition-colors">
+                <label for="email" class="mb-2 block text-sm font-medium text-[#E6B7BE]">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
                 @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -25,8 +45,8 @@
 
             <!-- Password -->
             <div>
-                <label for="password" class="block text-sm font-medium text-[#5A3A3A] dark:text-[#E8A2A2] mb-2">Password</label>
-                <input type="password" id="password" name="password" required class="w-full px-3 py-2 border border-gray-300 dark:border-[#444444] rounded-md bg-white dark:bg-[#1A1A1A] text-[#2E2E2E] dark:text-[#E8E8E8] focus:outline-none focus:ring-2 focus:ring-pink-500 dark:focus:ring-[#8B5A63] transition-colors">
+                <label for="password" class="mb-2 block text-sm font-medium text-[#E6B7BE]">Password</label>
+                <input type="password" id="password" name="password" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -35,7 +55,7 @@
             <!-- Remember Me -->
             <div class="flex items-center">
                 <input type="checkbox" id="remember" name="remember" value="1" class="mr-2">
-                <label for="remember" class="text-sm text-[#5A3A3A] dark:text-[#E8E8E8]">Remember me</label>
+                <label for="remember" class="text-sm text-black">Remember me</label>
             </div>
 
             <!-- Login Button -->
@@ -74,7 +94,7 @@
 
         <!-- Forgot Password -->
         <div class="mt-4 text-center">
-            <a href="/forgot-password" class="text-sm text-gray-500 hover:text-gray-700">Forgot your password?</a>
+            <a href="{{ route('password.request') }}" class="text-sm text-gray-500 hover:text-gray-700">Forgot your password?</a>
         </div>
     </div>
 

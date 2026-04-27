@@ -127,14 +127,27 @@
         <!-- Current Additional Images -->
         @if($product->images->count() > 0)
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Current Additional Images</label>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <label class="block text-sm font-medium text-gray-700">Current Additional Images</label>
+                <div class="flex items-center gap-3">
+                    <span id="image-order-status" class="hidden text-xs text-gray-500"></span>
+                    <button
+                        type="button"
+                        id="save-image-order-btn"
+                        class="rounded-md bg-slate-700 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+                    >
+                        Save Image Order
+                    </button>
+                </div>
+            </div>
+            <p class="mb-3 text-xs text-gray-500">Drag and drop to reorder product gallery images.</p>
+            <div id="image-sortable-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 @foreach($product->images->sortBy('sort_order') as $image)
-                <div class="relative">
+                <div class="relative cursor-move rounded-lg border border-transparent" draggable="true" data-image-id="{{ $image->id }}">
                     <img src="{{ asset('storage/' . $image->image_path) }}" alt="Product image" class="w-full h-20 object-cover rounded-lg">
                     <button type="button" onclick="deleteImage({{ $image->id }})"
                             class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
-                        ×
+                        &times;
                     </button>
                 </div>
                 @endforeach
@@ -375,5 +388,121 @@ function deleteImage(imageId) {
         });
     }
 }
+
+(() => {
+    const imageGrid = document.getElementById('image-sortable-grid');
+    if (!imageGrid) return;
+
+    const saveBtn = document.getElementById('save-image-order-btn');
+    const statusEl = document.getElementById('image-order-status');
+    const orderEndpoint = @json(route('admin.products.images.order'));
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    let draggedItem = null;
+    let isSaving = false;
+
+    const setStatus = (message, tone = 'neutral') => {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.classList.remove('hidden', 'text-gray-500', 'text-green-600', 'text-red-600');
+        if (tone === 'success') {
+            statusEl.classList.add('text-green-600');
+        } else if (tone === 'error') {
+            statusEl.classList.add('text-red-600');
+        } else {
+            statusEl.classList.add('text-gray-500');
+        }
+    };
+
+    const clearStatusLater = () => {
+        setTimeout(() => {
+            if (!statusEl) return;
+            statusEl.classList.add('hidden');
+            statusEl.textContent = '';
+        }, 2500);
+    };
+
+    const imageItems = () => [...imageGrid.querySelectorAll('[data-image-id]')];
+
+    const collectOrderPayload = () => ({
+        images: imageItems().map((item, index) => ({
+            id: Number(item.dataset.imageId),
+            sort_order: index,
+        })),
+    });
+
+    const persistImageOrder = async () => {
+        if (isSaving) return;
+        isSaving = true;
+        if (saveBtn) saveBtn.disabled = true;
+        setStatus('Saving order...', 'neutral');
+
+        try {
+            const response = await fetch(orderEndpoint, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(collectOrderPayload()),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error('Reorder failed');
+            }
+
+            setStatus('Image order saved.', 'success');
+            clearStatusLater();
+        } catch (error) {
+            console.error(error);
+            setStatus('Failed to save image order.', 'error');
+        } finally {
+            isSaving = false;
+            if (saveBtn) saveBtn.disabled = false;
+        }
+    };
+
+    imageItems().forEach((item) => {
+        item.addEventListener('dragstart', () => {
+            draggedItem = item;
+            item.classList.add('opacity-50');
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('opacity-50');
+            draggedItem = null;
+        });
+
+        item.addEventListener('dragover', (event) => {
+            event.preventDefault();
+        });
+
+        item.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            if (!draggedItem || draggedItem === item) return;
+
+            const allItems = imageItems();
+            const draggedIndex = allItems.indexOf(draggedItem);
+            const targetIndex = allItems.indexOf(item);
+
+            if (draggedIndex < targetIndex) {
+                item.after(draggedItem);
+            } else {
+                item.before(draggedItem);
+            }
+
+            await persistImageOrder();
+        });
+    });
+
+    saveBtn?.addEventListener('click', async () => {
+        await persistImageOrder();
+    });
+})();
 </script>
 @endsection

@@ -123,7 +123,7 @@
                                 <p class="text-sm text-slate-500">admin@bonbon.com</p>
                             </div>
                             <div class="flex flex-col p-3 gap-2">
-                                <form method="POST" action="{{ route('logout') }}">
+                                <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf
                                     <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">
                                         Logout

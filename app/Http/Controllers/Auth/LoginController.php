@@ -14,13 +14,32 @@ use Laravel\Socialite\Facades\Socialite;
 
 class LoginController extends Controller
 {
+    private const INVALID_CREDENTIALS_MESSAGE = 'The provided credentials do not match our records.';
+
+    private function redirectIfAuthenticatedAdmin()
+    {
+        if (Auth::check() && Auth::user()?->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return null;
+    }
+
     public function showLoginForm()
     {
+        if ($redirect = $this->redirectIfAuthenticatedAdmin()) {
+            return $redirect;
+        }
+
         return view('auth.login', ['showRegister' => false]);
     }
 
     public function showRegisterForm()
     {
+        if ($redirect = $this->redirectIfAuthenticatedAdmin()) {
+            return $redirect;
+        }
+
         return view('auth.login', ['showRegister' => true]);
     }
 
@@ -50,21 +69,24 @@ class LoginController extends Controller
             'remember' => 'nullable|boolean'
         ]);
 
-        $credentials = $request->only('email', 'password');
+        $email = Str::lower(trim($request->string('email')->value()));
+
+        $credentials = [
+            'email' => $email,
+            'password' => $request->input('password'),
+            'is_admin' => false,
+        ];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            $user = Auth::user();
-            $fallback = $user && $user->is_admin
-                ? route('admin.dashboard')
-                : '/';
+            $fallback = '/';
 
             return redirect()->intended($fallback)->with('success', 'Welcome back!');
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+        return redirect()->route('login')->withErrors([
+            'email' => self::INVALID_CREDENTIALS_MESSAGE,
         ])->onlyInput('email');
     }
 
@@ -80,6 +102,10 @@ class LoginController extends Controller
 
     public function showForgotPasswordForm()
     {
+        if ($redirect = $this->redirectIfAuthenticatedAdmin()) {
+            return $redirect;
+        }
+
         return view('auth.forgot-password');
     }
 
@@ -100,6 +126,10 @@ class LoginController extends Controller
 
     public function showResetPasswordForm(Request $request, string $token)
     {
+        if ($redirect = $this->redirectIfAuthenticatedAdmin()) {
+            return $redirect;
+        }
+
         return view('auth.reset-password', [
             'token' => $token,
             'email' => $request->query('email'),
@@ -142,7 +172,7 @@ class LoginController extends Controller
 
             $user = User::where('email', $googleUser->getEmail())->first();
 
-            if (!$user) {
+            if (! $user) {
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
@@ -152,12 +182,16 @@ class LoginController extends Controller
                 ]);
             } else {
                 // Update Google ID if not set
-                if (!$user->google_id) {
+                if (! $user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
                         'avatar' => $googleUser->getAvatar(),
                     ]);
                 }
+            }
+
+            if ($user->is_admin) {
+                return redirect('/login')->with('error', 'Google sign-in is not available for admin accounts.');
             }
 
             Auth::login($user);

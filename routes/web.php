@@ -11,6 +11,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 
@@ -149,6 +150,16 @@ Route::post('/reset-password', [LoginController::class, 'resetPassword'])
 // Google OAuth Routes
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
+
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('auth')->name('admin.logout');
+    Route::get('/forgot-password', [AdminAuthController::class, 'showForgotPasswordForm'])->name('admin.password.request');
+    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLinkEmail'])->name('admin.password.email');
+    Route::get('/reset-password/{token}', [AdminAuthController::class, 'showResetPasswordForm'])->name('admin.password.reset');
+    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword'])->name('admin.password.update');
+});
 
 Route::get('/profile', [ProfileController::class, 'show'])
     ->middleware('auth')

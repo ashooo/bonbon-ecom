@@ -109,8 +109,8 @@
                         <span id="bonbon-chat-status-dot" class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-300"></span>
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-[#5A3A3A]">{{ $storeSettings?->chat_display_name ?: 'Bonbon Chat' }}</p>
-                        <p id="bonbon-chat-status-text" class="text-xs font-semibold uppercase tracking-[0.24em] text-[#C88A92]">Offline</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#C88A92]">{{ $storeSettings?->chat_display_name ?: 'Bonbon Chat' }}</p>
+                        <p id="bonbon-chat-status-text" class="text-sm font-semibold text-[#5A3A3A]">Offline</p>
                     </div>
                 </div>
                 <button id="bonbon-chat-close" type="button" class="rounded-full p-2 text-[#8C6770] transition hover:bg-[#FFF0F3]">

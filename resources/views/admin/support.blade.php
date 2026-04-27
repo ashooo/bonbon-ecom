@@ -1,6 +1,6 @@
 <div id="support-section" class="admin-section hidden">
     <div class="space-y-3">
-        <div class="grid min-h-0 gap-6 xl:h-[calc(100vh-10rem)] 2xl:grid-cols-[340px,minmax(0,1fr),320px]">
+        <div class="grid min-h-0 gap-6 xl:h-[calc(100vh-8rem)] 2xl:grid-cols-[340px,minmax(0,1fr),320px]">
             <aside class="flex min-h-0 flex-col overflow-hidden rounded-3xl bg-white shadow-soft">
                 <div class="border-b border-slate-200 px-5 py-4">
                     <div class="flex items-center justify-between gap-3">

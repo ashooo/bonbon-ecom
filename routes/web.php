@@ -133,6 +133,18 @@ Route::post('/login', [LoginController::class, 'login']);
 Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [LoginController::class, 'register']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/forgot-password', [LoginController::class, 'showForgotPasswordForm'])
+    ->middleware('guest')
+    ->name('password.request');
+Route::post('/forgot-password', [LoginController::class, 'sendResetLinkEmail'])
+    ->middleware('guest')
+    ->name('password.email');
+Route::get('/reset-password/{token}', [LoginController::class, 'showResetPasswordForm'])
+    ->middleware('guest')
+    ->name('password.reset');
+Route::post('/reset-password', [LoginController::class, 'resetPassword'])
+    ->middleware('guest')
+    ->name('password.update');
 
 // Google OAuth Routes
 Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.login');

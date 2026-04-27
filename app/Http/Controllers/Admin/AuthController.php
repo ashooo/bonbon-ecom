@@ -17,23 +17,11 @@ class AuthController extends Controller
 
     public function showLoginForm()
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         return view('admin.auth.login');
     }
 
     public function login(Request $request): RedirectResponse
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
@@ -49,9 +37,9 @@ class AuthController extends Controller
         ];
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return redirect()->route('admin.login')->withErrors([
+            return back()->withErrors([
                 'email' => self::INVALID_CREDENTIALS_MESSAGE,
-            ])->onlyInput('email');
+            ])->withInput();
         }
         $request->session()->regenerate();
 
@@ -69,23 +57,11 @@ class AuthController extends Controller
 
     public function showForgotPasswordForm()
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         return view('admin.auth.forgot-password');
     }
 
     public function sendResetLinkEmail(Request $request): RedirectResponse
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         $request->validate([
             'email' => 'required|email',
         ]);
@@ -104,12 +80,6 @@ class AuthController extends Controller
 
     public function showResetPasswordForm(Request $request, string $token)
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         return view('admin.auth.reset-password', [
             'token' => $token,
             'email' => $request->query('email'),
@@ -118,12 +88,6 @@ class AuthController extends Controller
 
     public function resetPassword(Request $request): RedirectResponse
     {
-        if (Auth::check()) {
-            return Auth::user()?->is_admin
-                ? redirect()->route('admin.dashboard')
-                : redirect('/');
-        }
-
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',

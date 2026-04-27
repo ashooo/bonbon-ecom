@@ -79,15 +79,13 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-
             $fallback = '/';
-
             return redirect()->intended($fallback)->with('success', 'Welcome back!');
         }
 
-        return redirect()->route('login')->withErrors([
-            'email' => self::INVALID_CREDENTIALS_MESSAGE,
-        ])->onlyInput('email');
+        return back()
+            ->withErrors(['email' => self::INVALID_CREDENTIALS_MESSAGE])
+            ->withInput();
     }
 
     public function logout(Request $request)

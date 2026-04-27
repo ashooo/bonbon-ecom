@@ -129,10 +129,16 @@ Route::get('/chat/attachments/{message}', [ChatController::class, 'attachment'])
 Route::get('/chat/attachments/{message}/download', [ChatController::class, 'downloadAttachment'])->name('chat.attachments.download');
 
 // Authentication Routes
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-Route::get('/register', [LoginController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [LoginController::class, 'register']);
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->middleware('guest')
+    ->name('login');
+Route::post('/login', [LoginController::class, 'login'])
+    ->middleware('guest');
+Route::get('/register', [LoginController::class, 'showRegisterForm'])
+    ->middleware('guest')
+    ->name('register');
+Route::post('/register', [LoginController::class, 'register'])
+    ->middleware('guest');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/forgot-password', [LoginController::class, 'showForgotPasswordForm'])
     ->middleware('guest')
@@ -148,17 +154,33 @@ Route::post('/reset-password', [LoginController::class, 'resetPassword'])
     ->name('password.update');
 
 // Google OAuth Routes
-Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])->name('google.login');
-Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])->name('google.callback');
+Route::get('/auth/google', [LoginController::class, 'redirectToGoogle'])
+    ->middleware('guest')
+    ->name('google.login');
+Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallback'])
+    ->middleware('guest')
+    ->name('google.callback');
 
 Route::prefix('admin')->group(function () {
-    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])
+        ->middleware('guest')
+        ->name('admin.login');
+    Route::post('/login', [AdminAuthController::class, 'login'])
+        ->middleware('guest')
+        ->name('admin.login.submit');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->middleware('auth')->name('admin.logout');
-    Route::get('/forgot-password', [AdminAuthController::class, 'showForgotPasswordForm'])->name('admin.password.request');
-    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLinkEmail'])->name('admin.password.email');
-    Route::get('/reset-password/{token}', [AdminAuthController::class, 'showResetPasswordForm'])->name('admin.password.reset');
-    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword'])->name('admin.password.update');
+    Route::get('/forgot-password', [AdminAuthController::class, 'showForgotPasswordForm'])
+        ->middleware('guest')
+        ->name('admin.password.request');
+    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLinkEmail'])
+        ->middleware('guest')
+        ->name('admin.password.email');
+    Route::get('/reset-password/{token}', [AdminAuthController::class, 'showResetPasswordForm'])
+        ->middleware('guest')
+        ->name('admin.password.reset');
+    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword'])
+        ->middleware('guest')
+        ->name('admin.password.update');
 });
 
 Route::get('/profile', [ProfileController::class, 'show'])

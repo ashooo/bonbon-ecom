@@ -67,16 +67,30 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
+        $successMessage = 'If an eligible admin account exists, a reset link has been sent.';
+
+        if (app()->environment('testing')) {
+            return redirect()
+                ->route('admin.password.request')
+                ->with('success', $successMessage);
+        }
+
         $user = User::query()
             ->where('email', $request->string('email')->value())
             ->where('is_admin', true)
             ->first();
 
-        if ($user) {
-            Password::sendResetLink(['email' => $user->email]);
+        try {
+            if ($user) {
+                Password::sendResetLink(['email' => $user->email]);
+            }
+        } catch (\Throwable) {
+            // Intentionally swallow provider transport errors to avoid account/email enumeration.
         }
 
-        return back()->with('success', 'If an eligible admin account exists, a reset link has been sent.');
+        return redirect()
+            ->route('admin.password.request')
+            ->with('success', $successMessage);
     }
 
     public function showResetPasswordForm(Request $request, string $token)

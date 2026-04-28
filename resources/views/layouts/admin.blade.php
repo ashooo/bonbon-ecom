@@ -170,6 +170,25 @@
             const sections = document.querySelectorAll('.admin-section');
             const hasSectionUi = sections.length > 0;
             const dashboardUrl = @json(route('admin.dashboard'));
+            const activeSectionInput = document.getElementById('active-admin-section');
+
+            const applySection = (section) => {
+                if (!section) return;
+
+                navLinks.forEach(l => l.classList.remove('active'));
+                const link = document.querySelector(`.nav-link[data-section="${section}"]`);
+                link?.classList.add('active');
+
+                sections.forEach(s => s.classList.add('hidden'));
+                const targetSection = document.getElementById(section + '-section');
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                }
+
+                const nextUrl = `${window.location.pathname}?section=${encodeURIComponent(section)}`;
+                window.history.replaceState({}, '', nextUrl);
+                if (activeSectionInput) activeSectionInput.value = section;
+            };
 
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
@@ -181,31 +200,17 @@
                     }
 
                     e.preventDefault();
-
-                    // Remove active class from all links
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    // Add active class to clicked link
-                    this.classList.add('active');
-
-                    // Hide all sections
-                    sections.forEach(s => s.classList.add('hidden'));
-                    // Show selected section
-                    const targetSection = document.getElementById(section + '-section');
-                    if (targetSection) {
-                        targetSection.classList.remove('hidden');
-                    }
-
-                    const nextUrl = `${window.location.pathname}?section=${encodeURIComponent(section)}`;
-                    window.history.replaceState({}, '', nextUrl);
+                    applySection(section);
                 });
             });
 
             if (hasSectionUi) {
                 const requestedSection = new URLSearchParams(window.location.search).get('section');
-                const defaultLink = document.querySelector(`[data-section="${requestedSection}"]`)
-                    || document.querySelector('[data-section="dashboard"]');
-
-                defaultLink?.click();
+                const fallbackSection = 'dashboard';
+                const validRequested = document.querySelector(`.nav-link[data-section="${requestedSection}"]`)
+                    ? requestedSection
+                    : fallbackSection;
+                applySection(validRequested);
             }
         });
     </script>

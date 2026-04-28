@@ -84,7 +84,8 @@ class LoginController extends Controller
             return redirect()->intended($fallback)->with('success', 'Welcome back!');
         }
 
-        return back()
+        return redirect()
+            ->route('login')
             ->withErrors(['email' => self::INVALID_CREDENTIALS_MESSAGE])
             ->withInput();
     }

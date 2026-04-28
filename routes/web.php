@@ -217,6 +217,13 @@ Route::delete('/notifications/{notification}', [UserNotificationController::clas
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', function (Request $request) {
+        if (! $request->filled('section')) {
+            $query = $request->query();
+            $query['section'] = 'products';
+
+            return redirect()->route('admin.dashboard', $query);
+        }
+
         $products = \App\Models\Product::with('category')->latest()->take(10)->get();
         $productSearchFilter = $request->string('product_search')->trim()->value();
         $productStatusFilter = $request->string('product_status')->value();

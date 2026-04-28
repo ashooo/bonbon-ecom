@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Category;
 use App\Models\Variant;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -52,6 +53,30 @@ class ProductController extends Controller
         }
 
         return $slug;
+    }
+
+    private function generateUniqueVariantSku(string $seed): string
+    {
+        $base = Str::upper(Str::slug($seed, '-'));
+        $base = $base !== '' ? $base : 'VARIANT';
+        $sku = $base;
+        $suffix = 1;
+
+        while (Variant::query()->where('sku', $sku)->exists()) {
+            $sku = $base . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $sku;
+    }
+
+    private function parseCsvBoolean(mixed $value, bool $default = false): bool
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function validateAndNormalizeVariants(Request $request, ?Product $product = null): array
@@ -435,5 +460,170 @@ class ProductController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function bulkUpload(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+            'mode' => 'nullable|in:create,upsert',
+        ]);
+
+        $mode = $request->string('mode')->value() ?: 'create';
+        $file = $request->file('csv_file');
+        $handle = fopen($file->getRealPath(), 'r');
+
+        if (! $handle) {
+            return $this->productManagementRedirect('Unable to read CSV file.');
+        }
+
+        $header = fgetcsv($handle);
+        if (! is_array($header)) {
+            fclose($handle);
+            return $this->productManagementRedirect('CSV file is empty.');
+        }
+
+        $headerMap = collect($header)
+            ->map(fn ($value) => Str::snake(trim((string) $value)))
+            ->values()
+            ->all();
+
+        $requiredColumns = ['name', 'price', 'category'];
+        foreach ($requiredColumns as $column) {
+            if (! in_array($column, $headerMap, true)) {
+                fclose($handle);
+                return $this->productManagementRedirect('CSV missing required column: ' . $column);
+            }
+        }
+
+        $createdCount = 0;
+        $updatedCount = 0;
+        $failedCount = 0;
+        $errors = [];
+        $rowNumber = 1;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+            if (count(array_filter($row, fn ($value) => trim((string) $value) !== '')) === 0) {
+                continue;
+            }
+
+            $record = [];
+            foreach ($headerMap as $index => $column) {
+                $record[$column] = isset($row[$index]) ? trim((string) $row[$index]) : null;
+            }
+
+            try {
+                DB::transaction(function () use ($record, $mode, &$createdCount, &$updatedCount): void {
+                    $categoryValue = (string) ($record['category'] ?? '');
+                    $category = Category::query()
+                        ->where('name', $categoryValue)
+                        ->orWhere('slug', Str::slug($categoryValue))
+                        ->first();
+
+                    if (! $category) {
+                        throw new \RuntimeException('Category not found: ' . $categoryValue);
+                    }
+
+                    $name = (string) ($record['name'] ?? '');
+                    $price = (float) ($record['price'] ?? 0);
+                    if ($name === '' || $price < 0) {
+                        throw new \RuntimeException('Invalid name or price.');
+                    }
+
+                    $status = strtolower((string) ($record['status'] ?? 'active'));
+                    if (! in_array($status, ['active', 'inactive', 'pre_order'], true)) {
+                        $status = 'active';
+                    }
+
+                    $product = null;
+                    if ($mode === 'upsert') {
+                        $product = Product::query()->where('name', $name)->first();
+                    }
+
+                    $payload = [
+                        'name' => $name,
+                        'description' => ($record['description'] ?? '') !== '' ? $record['description'] : null,
+                        'price' => $price,
+                        'sale_price' => ($record['discount_price'] ?? '') !== '' ? (float) $record['discount_price'] : null,
+                        'stock_quantity' => max(0, (int) ($record['stock_quantity'] ?? 0)),
+                        'category_id' => $category->id,
+                        'is_active' => $status !== 'inactive',
+                        'is_preorder' => $status === 'pre_order',
+                        'preorder_days' => $status === 'pre_order' ? max(0, (int) ($record['pre_order_days'] ?? 0)) : 0,
+                        'is_featured' => $this->parseCsvBoolean($record['is_featured'] ?? null),
+                        'is_best_seller' => $this->parseCsvBoolean($record['is_best_seller'] ?? null),
+                    ];
+
+                    if ($product) {
+                        if ($name !== $product->name) {
+                            $payload['slug'] = $this->generateUniqueSlug($name, $product->id);
+                        }
+                        $product->update($payload);
+                        $updatedCount++;
+                    } else {
+                        $payload['slug'] = $this->generateUniqueSlug($name);
+                        $product = Product::query()->create($payload);
+                        $createdCount++;
+                    }
+
+                    $variantName = (string) ($record['variant_name'] ?? '');
+                    $variantSku = (string) ($record['variant_sku'] ?? '');
+                    $variantStock = ($record['variant_stock_quantity'] ?? '') !== '' ? max(0, (int) $record['variant_stock_quantity']) : (int) $payload['stock_quantity'];
+                    $variantPriceAdjustment = ($record['variant_price_adjustment'] ?? '') !== '' ? (float) $record['variant_price_adjustment'] : 0.0;
+                    $variantDefault = $this->parseCsvBoolean($record['variant_is_default'] ?? null, true);
+                    $variantActive = $this->parseCsvBoolean($record['variant_is_active'] ?? null, true);
+
+                    if ($variantName === '') {
+                        $variantName = 'Default';
+                    }
+                    if ($variantSku === '') {
+                        $variantSku = $this->generateUniqueVariantSku($name . '-default');
+                    }
+
+                    $existingVariant = $product->variants()->where('sku', $variantSku)->first();
+                    if (! $existingVariant) {
+                        $existingVariant = $product->variants()->create([
+                            'name' => $variantName,
+                            'sku' => $variantSku,
+                            'price_adjustment' => $variantPriceAdjustment,
+                            'stock_quantity' => $variantStock,
+                            'display_order' => 0,
+                            'is_default' => false,
+                            'is_active' => $variantActive,
+                        ]);
+                    } else {
+                        $existingVariant->update([
+                            'name' => $variantName,
+                            'price_adjustment' => $variantPriceAdjustment,
+                            'stock_quantity' => $variantStock,
+                            'is_active' => $variantActive,
+                        ]);
+                    }
+
+                    if ($variantDefault || ! $product->variants()->where('is_default', true)->exists()) {
+                        $product->variants()->update(['is_default' => false]);
+                        $existingVariant->update(['is_default' => true, 'is_active' => true]);
+                    }
+                });
+            } catch (\Throwable $e) {
+                $failedCount++;
+                if (count($errors) < 10) {
+                    $errors[] = 'Row ' . $rowNumber . ': ' . $e->getMessage();
+                }
+            }
+        }
+
+        fclose($handle);
+
+        $summary = "Bulk upload done. Created: {$createdCount}, Updated: {$updatedCount}, Failed: {$failedCount}.";
+        if (! empty($errors)) {
+            return redirect()
+                ->route('admin.dashboard', ['section' => 'products'])
+                ->with('success', $summary)
+                ->withErrors($errors);
+        }
+
+        return $this->productManagementRedirect($summary);
     }
 }

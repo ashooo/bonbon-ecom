@@ -16,6 +16,30 @@
         @endif
 
         <div class="rounded-3xl bg-white p-6 shadow-soft">
+            <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <h2 class="mb-3 text-lg font-semibold">Bulk Upload (CSV)</h2>
+                <form method="POST" action="{{ route('admin.products.bulk-upload') }}" enctype="multipart/form-data" class="flex flex-col gap-3 lg:flex-row lg:items-end">
+                    @csrf
+                    <div class="flex-1">
+                        <label class="mb-1 block text-sm font-medium text-slate-700">CSV File</label>
+                        <input type="file" name="csv_file" accept=".csv,.txt" required class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">Mode</label>
+                        <select name="mode" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
+                            <option value="create">Create only</option>
+                            <option value="upsert">Create or update (by exact product name)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Upload CSV</button>
+                </form>
+                <p class="mt-3 text-xs text-slate-600">
+                    Required columns: <code>name</code>, <code>price</code>, <code>category</code>.
+                    Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code>, <code>variant_is_default</code>, <code>variant_is_active</code>.
+                </p>
+                <p class="mt-1 text-xs text-slate-500">If variant fields are omitted, a default variant is auto-created.</p>
+            </div>
+
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-semibold">Product List</h2>
                 <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap gap-2">

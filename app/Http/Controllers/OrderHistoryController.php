@@ -15,6 +15,17 @@ class OrderHistoryController extends Controller
         return in_array(strtolower($status), ['pending', 'confirmed'], true);
     }
 
+    private function canGuestAccessOrder(Request $request, Order $order): bool
+    {
+        if ($order->user_id !== null) {
+            return false;
+        }
+
+        $guestOrderNumbers = $this->parseGuestOrderNumbers($request);
+
+        return in_array($order->order_number, $guestOrderNumbers, true);
+    }
+
     private function parseGuestOrderNumbers(Request $request): array
     {
         $raw = $request->cookie('guest_orders', '[]');
@@ -99,6 +110,28 @@ class OrderHistoryController extends Controller
         return $this->attachGuestOrdersCookie($response, $orderNumbers);
     }
 
+    public function show(Request $request, Order $order)
+    {
+        if (Auth::check()) {
+            if ((int) $order->user_id !== (int) Auth::id()) {
+                return redirect()->route('orders.index')->withErrors([
+                    'order_view' => 'You are not allowed to view this order.',
+                ]);
+            }
+        } elseif (! $this->canGuestAccessOrder($request, $order)) {
+            return redirect()->route('orders.index')->withErrors([
+                'order_view' => 'Please find the order first before viewing details.',
+            ]);
+        }
+
+        $order->load('items.variant.product');
+
+        return view('pages.orders-show', [
+            'order' => $order,
+            'isGuestView' => ! Auth::check(),
+        ]);
+    }
+
     public function cancel(Request $request, Order $order)
     {
         if (Auth::check()) {
@@ -127,8 +160,7 @@ class OrderHistoryController extends Controller
                 ]);
             }
 
-            $guestOrderNumbers = $this->parseGuestOrderNumbers($request);
-            if (! in_array($order->order_number, $guestOrderNumbers, true)) {
+            if (! $this->canGuestAccessOrder($request, $order)) {
                 return redirect()->route('orders.index')->withErrors([
                     'order_cancel' => 'Please find the order first before cancellation.',
                 ]);

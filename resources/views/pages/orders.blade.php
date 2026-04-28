@@ -75,11 +75,31 @@
                         <div>
                             <h3 class="font-semibold">{{ $order->order_number }}</h3>
                             <p class="text-sm text-gray-600">Placed on {{ $order->created_at?->format('F j, Y h:i A') }}</p>
-                            <p class="text-sm text-gray-600">{{ ucfirst((string) $order->order_type) }} â€¢ {{ ucfirst((string) $order->status) }}</p>
+                            <p class="text-sm text-gray-600">{{ ucfirst((string) $order->order_type) }} • {{ ucfirst((string) $order->status) }}</p>
                         </div>
-                        <div class="text-left md:text-right">
+                        <div class="space-y-2 text-left md:text-right">
                             <p class="text-sm text-gray-500">Total</p>
                             <p class="text-lg font-bold">&#8369;{{ number_format($order->total, 2) }}</p>
+
+                            @if (in_array(strtolower((string) $order->status), ['pending', 'confirmed'], true))
+                                <form method="POST" action="{{ route('orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?');" class="space-y-2">
+                                    @csrf
+                                    @if ($isGuestView)
+                                        <input
+                                            type="email"
+                                            name="customer_email"
+                                            placeholder="Confirm checkout email"
+                                            class="w-full rounded-md border border-gray-300 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500 md:w-56"
+                                            required
+                                        >
+                                    @endif
+                                    <button type="submit" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 md:w-auto">
+                                        Cancel Order
+                                    </button>
+                                </form>
+                            @else
+                                <p class="text-xs text-gray-500">Cancellation unavailable for this status.</p>
+                            @endif
                         </div>
                     </div>
                 </div>

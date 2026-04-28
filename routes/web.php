@@ -120,6 +120,7 @@ Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.in
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
 Route::post('/orders/lookup', [OrderHistoryController::class, 'lookup'])->name('orders.lookup');
+Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
 
 Route::get('/customize', function () {
     return view('pages.customize');

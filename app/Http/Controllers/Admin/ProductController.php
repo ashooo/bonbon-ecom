@@ -33,6 +33,7 @@ class ProductController extends Controller
             'variant_price_adjustment',
             'variant_is_default',
             'variant_is_active',
+            'image_url',
         ];
     }
 
@@ -56,6 +57,26 @@ class ProductController extends Controller
                 '0',
                 'true',
                 'true',
+                'https://example.com/images/chocolate-cake-main.jpg',
+            ],
+            [
+                'Chocolate Cake',
+                '599',
+                'Cakes',
+                'Rich chocolate sponge with ganache',
+                '549',
+                '20',
+                'active',
+                '0',
+                'true',
+                'false',
+                'Slice',
+                'CHOCO-CAKE-SLICE',
+                '24',
+                '-300',
+                'false',
+                'true',
+                'https://example.com/images/chocolate-cake-slice.jpg',
             ],
             [
                 'Ube Cupcake Box',
@@ -68,11 +89,12 @@ class ProductController extends Controller
                 '2',
                 'false',
                 'true',
-                '',
-                '',
-                '',
-                '',
-                '',
+                'Box of 6',
+                'UBE-CUPCAKE-BOX-6',
+                '15',
+                '0',
+                'true',
+                'true',
                 '',
             ],
         ];
@@ -565,6 +587,7 @@ class ProductController extends Controller
         $failedCount = 0;
         $errors = [];
         $rowNumber = 1;
+        $records = [];
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowNumber++;
@@ -576,10 +599,24 @@ class ProductController extends Controller
             foreach ($headerMap as $index => $column) {
                 $record[$column] = isset($row[$index]) ? trim((string) $row[$index]) : null;
             }
+            $record['_row_number'] = $rowNumber;
+            $records[] = $record;
+        }
 
+        fclose($handle);
+
+        $groupedRecords = collect($records)->groupBy(function (array $record): string {
+            $nameKey = Str::lower(trim((string) ($record['name'] ?? '')));
+            $categoryKey = Str::lower(trim((string) ($record['category'] ?? '')));
+
+            return $nameKey . '|' . $categoryKey;
+        });
+
+        foreach ($groupedRecords as $groupRecords) {
             try {
-                DB::transaction(function () use ($record, $mode, &$createdCount, &$updatedCount): void {
-                    $categoryValue = (string) ($record['category'] ?? '');
+                DB::transaction(function () use ($groupRecords, $mode, &$createdCount, &$updatedCount): void {
+                    $first = $groupRecords->first();
+                    $categoryValue = (string) ($first['category'] ?? '');
                     $category = Category::query()
                         ->where('name', $categoryValue)
                         ->orWhere('slug', Str::slug($categoryValue))
@@ -589,41 +626,43 @@ class ProductController extends Controller
                         throw new \RuntimeException('Category not found: ' . $categoryValue);
                     }
 
-                    $name = (string) ($record['name'] ?? '');
-                    $price = (float) ($record['price'] ?? 0);
+                    $name = (string) ($first['name'] ?? '');
+                    $price = (float) ($first['price'] ?? 0);
                     if ($name === '' || $price < 0) {
                         throw new \RuntimeException('Invalid name or price.');
                     }
 
-                    $status = strtolower((string) ($record['status'] ?? 'active'));
+                    $status = strtolower((string) ($first['status'] ?? 'active'));
                     if (! in_array($status, ['active', 'inactive', 'pre_order'], true)) {
                         $status = 'active';
                     }
 
-                    $product = null;
-                    if ($mode === 'upsert') {
-                        $product = Product::query()->where('name', $name)->first();
+                    $existingProduct = Product::query()
+                        ->where('name', $name)
+                        ->where('category_id', $category->id)
+                        ->first();
+
+                    if ($mode === 'create' && $existingProduct) {
+                        throw new \RuntimeException('Product already exists for create mode.');
                     }
 
                     $payload = [
                         'name' => $name,
-                        'description' => ($record['description'] ?? '') !== '' ? $record['description'] : null,
+                        'description' => ($first['description'] ?? '') !== '' ? $first['description'] : null,
                         'price' => $price,
-                        'sale_price' => ($record['discount_price'] ?? '') !== '' ? (float) $record['discount_price'] : null,
-                        'stock_quantity' => max(0, (int) ($record['stock_quantity'] ?? 0)),
+                        'sale_price' => ($first['discount_price'] ?? '') !== '' ? (float) $first['discount_price'] : null,
+                        'stock_quantity' => max(0, (int) ($first['stock_quantity'] ?? 0)),
                         'category_id' => $category->id,
                         'is_active' => $status !== 'inactive',
                         'is_preorder' => $status === 'pre_order',
-                        'preorder_days' => $status === 'pre_order' ? max(0, (int) ($record['pre_order_days'] ?? 0)) : 0,
-                        'is_featured' => $this->parseCsvBoolean($record['is_featured'] ?? null),
-                        'is_best_seller' => $this->parseCsvBoolean($record['is_best_seller'] ?? null),
+                        'preorder_days' => $status === 'pre_order' ? max(0, (int) ($first['pre_order_days'] ?? 0)) : 0,
+                        'is_featured' => $this->parseCsvBoolean($first['is_featured'] ?? null),
+                        'is_best_seller' => $this->parseCsvBoolean($first['is_best_seller'] ?? null),
                     ];
 
-                    if ($product) {
-                        if ($name !== $product->name) {
-                            $payload['slug'] = $this->generateUniqueSlug($name, $product->id);
-                        }
-                        $product->update($payload);
+                    if ($existingProduct) {
+                        $existingProduct->update($payload);
+                        $product = $existingProduct;
                         $updatedCount++;
                     } else {
                         $payload['slug'] = $this->generateUniqueSlug($name);
@@ -631,54 +670,98 @@ class ProductController extends Controller
                         $createdCount++;
                     }
 
-                    $variantName = (string) ($record['variant_name'] ?? '');
-                    $variantSku = (string) ($record['variant_sku'] ?? '');
-                    $variantStock = ($record['variant_stock_quantity'] ?? '') !== '' ? max(0, (int) $record['variant_stock_quantity']) : (int) $payload['stock_quantity'];
-                    $variantPriceAdjustment = ($record['variant_price_adjustment'] ?? '') !== '' ? (float) $record['variant_price_adjustment'] : 0.0;
-                    $variantDefault = $this->parseCsvBoolean($record['variant_is_default'] ?? null, true);
-                    $variantActive = $this->parseCsvBoolean($record['variant_is_active'] ?? null, true);
+                    $processedVariantIds = [];
+                    $defaultVariantId = null;
 
-                    if ($variantName === '') {
-                        $variantName = 'Default';
-                    }
-                    if ($variantSku === '') {
-                        $variantSku = $this->generateUniqueVariantSku($name . '-default');
+                    foreach ($groupRecords as $record) {
+                        $variantName = (string) ($record['variant_name'] ?? '');
+                        $variantSku = (string) ($record['variant_sku'] ?? '');
+                        $variantStock = ($record['variant_stock_quantity'] ?? '') !== '' ? max(0, (int) $record['variant_stock_quantity']) : (int) $payload['stock_quantity'];
+                        $variantPriceAdjustment = ($record['variant_price_adjustment'] ?? '') !== '' ? (float) $record['variant_price_adjustment'] : 0.0;
+                        $variantDefault = $this->parseCsvBoolean($record['variant_is_default'] ?? null, false);
+                        $variantActive = $this->parseCsvBoolean($record['variant_is_active'] ?? null, true);
+
+                        if ($variantName === '') {
+                            $variantName = 'Default';
+                        }
+                        if ($variantSku === '') {
+                            $variantSku = $this->generateUniqueVariantSku($name . '-' . $variantName);
+                        }
+
+                        $variant = Variant::query()->where('sku', $variantSku)->first();
+                        if ($variant && (int) $variant->product_id !== (int) $product->id) {
+                            throw new \RuntimeException('Variant SKU already belongs to another product: ' . $variantSku);
+                        }
+
+                        if (! $variant) {
+                            $variant = $product->variants()->create([
+                                'name' => $variantName,
+                                'sku' => $variantSku,
+                                'price_adjustment' => $variantPriceAdjustment,
+                                'stock_quantity' => $variantStock,
+                                'display_order' => count($processedVariantIds),
+                                'is_default' => false,
+                                'is_active' => $variantActive,
+                            ]);
+                        } else {
+                            $variant->update([
+                                'name' => $variantName,
+                                'price_adjustment' => $variantPriceAdjustment,
+                                'stock_quantity' => $variantStock,
+                                'is_active' => $variantActive,
+                            ]);
+                        }
+
+                        $processedVariantIds[] = $variant->id;
+                        if ($variantDefault && ! $defaultVariantId) {
+                            $defaultVariantId = $variant->id;
+                        }
                     }
 
-                    $existingVariant = $product->variants()->where('sku', $variantSku)->first();
-                    if (! $existingVariant) {
-                        $existingVariant = $product->variants()->create([
-                            'name' => $variantName,
-                            'sku' => $variantSku,
-                            'price_adjustment' => $variantPriceAdjustment,
-                            'stock_quantity' => $variantStock,
+                    if (count($processedVariantIds) === 0) {
+                        $defaultVariant = $product->variants()->create([
+                            'name' => 'Default',
+                            'sku' => $this->generateUniqueVariantSku($name . '-default'),
+                            'price_adjustment' => 0,
+                            'stock_quantity' => (int) $payload['stock_quantity'],
                             'display_order' => 0,
-                            'is_default' => false,
-                            'is_active' => $variantActive,
+                            'is_default' => true,
+                            'is_active' => true,
                         ]);
-                    } else {
-                        $existingVariant->update([
-                            'name' => $variantName,
-                            'price_adjustment' => $variantPriceAdjustment,
-                            'stock_quantity' => $variantStock,
-                            'is_active' => $variantActive,
-                        ]);
+                        $processedVariantIds[] = $defaultVariant->id;
+                        $defaultVariantId = $defaultVariant->id;
                     }
 
-                    if ($variantDefault || ! $product->variants()->where('is_default', true)->exists()) {
-                        $product->variants()->update(['is_default' => false]);
-                        $existingVariant->update(['is_default' => true, 'is_active' => true]);
+                    $defaultVariantId = $defaultVariantId ?: $processedVariantIds[0];
+                    $product->variants()->whereIn('id', $processedVariantIds)->update(['is_default' => false]);
+                    $product->variants()->whereKey($defaultVariantId)->update(['is_default' => true, 'is_active' => true]);
+
+                    $imageUrls = $groupRecords
+                        ->map(fn ($row) => trim((string) ($row['image_url'] ?? '')))
+                        ->filter(fn ($value) => $value !== '')
+                        ->unique()
+                        ->values();
+
+                    if ($imageUrls->isNotEmpty()) {
+                        $primaryImage = (string) $imageUrls->first();
+                        $product->update(['main_image' => $primaryImage]);
+
+                        foreach ($imageUrls as $index => $imageUrl) {
+                            ProductImage::query()->updateOrCreate(
+                                ['product_id' => $product->id, 'image_url' => $imageUrl],
+                                ['is_primary' => $index === 0, 'display_order' => $index]
+                            );
+                        }
                     }
                 });
             } catch (\Throwable $e) {
                 $failedCount++;
                 if (count($errors) < 10) {
-                    $errors[] = 'Row ' . $rowNumber . ': ' . $e->getMessage();
+                    $firstRow = (int) ($groupRecords->first()['_row_number'] ?? 0);
+                    $errors[] = 'Product group starting row ' . $firstRow . ': ' . $e->getMessage();
                 }
             }
         }
-
-        fclose($handle);
 
         $summary = "Bulk upload done. Created: {$createdCount}, Updated: {$updatedCount}, Failed: {$failedCount}.";
         if (! empty($errors)) {

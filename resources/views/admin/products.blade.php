@@ -41,14 +41,15 @@
                 </form>
                 <p class="mt-3 text-xs text-slate-600">
                     Required columns: <code>name</code>, <code>price</code>, <code>category</code>.
-                    Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code>, <code>variant_is_default</code>, <code>variant_is_active</code>.
+                    Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code>, <code>variant_is_default</code>, <code>variant_is_active</code>, <code>image_url</code>.
                 </p>
-                <p class="mt-1 text-xs text-slate-500">If variant fields are omitted, a default variant is auto-created.</p>
+                <p class="mt-1 text-xs text-slate-500">Use one row per variant. Repeat the same product fields for products with multiple variants.</p>
                 <ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
                     <li><code>status</code>: <code>active</code>, <code>inactive</code>, or <code>pre_order</code></li>
                     <li><code>is_featured</code>, <code>is_best_seller</code>, <code>variant_is_default</code>, <code>variant_is_active</code>: use <code>true</code> or <code>false</code></li>
-                    <li>In <code>upsert</code> mode, matching is by exact product <code>name</code></li>
+                    <li>In <code>upsert</code> mode, matching is by exact <code>name</code> + <code>category</code></li>
                     <li>Category matches by category <code>name</code> or generated <code>slug</code></li>
+                    <li><code>image_url</code> can be repeated across rows; unique URLs are attached as main/gallery images</li>
                 </ul>
             </div>
 

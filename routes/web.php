@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\StoreSetting;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\Variant;
+use App\Models\InventoryMovement;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 
 Route::get('/', function () {
     $featuredProducts = collect();
@@ -319,6 +322,70 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'search' => $userSearchFilter,
         ];
 
+        $inventorySearchFilter = $request->string('inventory_search')->trim()->value();
+        $inventoryStatusFilter = $request->string('inventory_status')->value();
+        $lowStockThreshold = 10;
+
+        $inventoryQuery = Variant::query()
+            ->with(['product.category'])
+            ->where('is_active', true)
+            ->orderBy('stock_quantity')
+            ->orderBy('id');
+
+        if ($inventorySearchFilter !== '') {
+            $inventoryQuery->where(function ($query) use ($inventorySearchFilter) {
+                $query->where('name', 'like', '%' . $inventorySearchFilter . '%')
+                    ->orWhere('sku', 'like', '%' . $inventorySearchFilter . '%')
+                    ->orWhereHas('product', function ($productQuery) use ($inventorySearchFilter) {
+                        $productQuery->where('name', 'like', '%' . $inventorySearchFilter . '%');
+                    });
+            });
+        }
+
+        if ($inventoryStatusFilter !== '' && $inventoryStatusFilter !== 'all') {
+            if ($inventoryStatusFilter === 'out_of_stock') {
+                $inventoryQuery->where('stock_quantity', '<=', 0);
+            } elseif ($inventoryStatusFilter === 'low_stock') {
+                $inventoryQuery->whereBetween('stock_quantity', [1, $lowStockThreshold]);
+            } elseif ($inventoryStatusFilter === 'in_stock') {
+                $inventoryQuery->where('stock_quantity', '>', $lowStockThreshold);
+            }
+        }
+
+        $inventoryItems = $inventoryQuery->paginate(12, ['*'], 'inventory_page')->withQueryString();
+        $inventoryCounts = [
+            'all' => Variant::where('is_active', true)->count(),
+            'out_of_stock' => Variant::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
+            'low_stock' => Variant::where('is_active', true)->whereBetween('stock_quantity', [1, $lowStockThreshold])->count(),
+            'in_stock' => Variant::where('is_active', true)->where('stock_quantity', '>', $lowStockThreshold)->count(),
+        ];
+        $inventoryFilters = [
+            'search' => $inventorySearchFilter,
+            'status' => $inventoryStatusFilter === '' ? 'all' : $inventoryStatusFilter,
+        ];
+
+        $lowStockVariants = Variant::query()
+            ->with('product')
+            ->where('is_active', true)
+            ->whereBetween('stock_quantity', [1, $lowStockThreshold])
+            ->orderBy('stock_quantity')
+            ->take(5)
+            ->get();
+
+        $outOfStockVariants = Variant::query()
+            ->with('product')
+            ->where('is_active', true)
+            ->where('stock_quantity', '<=', 0)
+            ->orderBy('name')
+            ->take(5)
+            ->get();
+
+        $recentInventoryMovements = InventoryMovement::query()
+            ->with(['variant.product', 'actor'])
+            ->latest()
+            ->take(10)
+            ->get();
+
         $productFilters = [
             'search' => $productSearchFilter,
             'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
@@ -336,6 +403,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'users',
             'userCounts',
             'userFilters',
+            'inventoryItems',
+            'inventoryCounts',
+            'inventoryFilters',
+            'lowStockVariants',
+            'outOfStockVariants',
+            'recentInventoryMovements',
             'productFilters'
         ));
     })->name('admin.dashboard');
@@ -376,6 +449,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::patch('/users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::patch('/users/{user}/restore', [AdminUserController::class, 'restore'])->withTrashed()->name('admin.users.restore');
+
+    Route::get('/inventory', [AdminInventoryController::class, 'index'])->name('admin.inventory.index');
+    Route::patch('/inventory/{variant}/adjust', [AdminInventoryController::class, 'adjust'])->name('admin.inventory.adjust');
 
     Route::get('/chats', [AdminChatController::class, 'index'])->name('admin.chat.index');
     Route::get('/chats/data', [AdminChatController::class, 'data'])->name('admin.chat.data');

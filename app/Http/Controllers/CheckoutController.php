@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Variant;
@@ -206,7 +207,20 @@ class CheckoutController extends Controller
                     'special_instructions' => $item->special_instructions,
                 ]);
 
-                $variant->decrement('stock_quantity', $item->quantity);
+                $previousStock = (int) $variant->stock_quantity;
+                $newStock = max(0, $previousStock - (int) $item->quantity);
+                $variant->update(['stock_quantity' => $newStock]);
+
+                InventoryMovement::create([
+                    'variant_id' => $variant->id,
+                    'product_id' => $variant->product_id,
+                    'acted_by_user_id' => Auth::id(),
+                    'type' => 'order_deduction',
+                    'quantity_change' => -1 * (int) $item->quantity,
+                    'previous_stock' => $previousStock,
+                    'new_stock' => $newStock,
+                    'reason' => 'Order ' . $order->order_number,
+                ]);
             }
 
             $cart->items()->delete();

@@ -44,4 +44,9 @@ class Variant extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class)->latest();
+    }
 }

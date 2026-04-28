@@ -74,6 +74,11 @@ class Product extends Model
         return $this->hasMany(Variant::class)->orderBy('display_order');
     }
 
+    public function inventoryMovements()
+    {
+        return $this->hasMany(InventoryMovement::class)->latest();
+    }
+
     // Cart items relationship
     public function cartItems()
     {

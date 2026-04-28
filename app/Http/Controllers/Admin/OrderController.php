@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\UserNotification;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,32 @@ class OrderController extends Controller
         $order->update([
             'status' => $data['status'],
         ]);
+
+        if ($previousStatus !== 'cancelled' && $data['status'] === 'cancelled') {
+            $order->loadMissing('items.variant');
+
+            foreach ($order->items as $item) {
+                if (! $item->variant) {
+                    continue;
+                }
+
+                $previousStock = (int) $item->variant->stock_quantity;
+                $newStock = $previousStock + (int) $item->quantity;
+
+                $item->variant->update(['stock_quantity' => $newStock]);
+
+                InventoryMovement::create([
+                    'variant_id' => $item->variant->id,
+                    'product_id' => $item->variant->product_id,
+                    'acted_by_user_id' => $request->user()->id,
+                    'type' => 'order_restore',
+                    'quantity_change' => (int) $item->quantity,
+                    'previous_stock' => $previousStock,
+                    'new_stock' => $newStock,
+                    'reason' => 'Admin cancelled order ' . $order->order_number,
+                ]);
+            }
+        }
 
         if ($order->user_id && $previousStatus !== $data['status']) {
             UserNotification::create([

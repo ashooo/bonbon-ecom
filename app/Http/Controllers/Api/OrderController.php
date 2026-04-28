@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Cart;
+use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Http\Controllers\Controller;
@@ -139,7 +140,20 @@ class OrderController extends Controller
 
                 $variant = $item->variant ?: $item->product?->variants()->find($variantId);
                 if ($variant) {
-                    $variant->decrement('stock_quantity', $item->quantity);
+                    $previousStock = (int) $variant->stock_quantity;
+                    $newStock = max(0, $previousStock - (int) $item->quantity);
+                    $variant->update(['stock_quantity' => $newStock]);
+
+                    InventoryMovement::create([
+                        'variant_id' => $variant->id,
+                        'product_id' => $variant->product_id,
+                        'acted_by_user_id' => Auth::id(),
+                        'type' => 'order_deduction',
+                        'quantity_change' => -1 * (int) $item->quantity,
+                        'previous_stock' => $previousStock,
+                        'new_stock' => $newStock,
+                        'reason' => 'Order ' . $order->order_number,
+                    ]);
                 }
             }
 
@@ -190,7 +204,20 @@ class OrderController extends Controller
 
         foreach ($order->items as $item) {
             if ($item->variant) {
-                $item->variant->increment('stock_quantity', $item->quantity);
+                $previousStock = (int) $item->variant->stock_quantity;
+                $newStock = $previousStock + (int) $item->quantity;
+                $item->variant->update(['stock_quantity' => $newStock]);
+
+                InventoryMovement::create([
+                    'variant_id' => $item->variant->id,
+                    'product_id' => $item->variant->product_id,
+                    'acted_by_user_id' => Auth::id(),
+                    'type' => 'order_restore',
+                    'quantity_change' => (int) $item->quantity,
+                    'previous_stock' => $previousStock,
+                    'new_stock' => $newStock,
+                    'reason' => 'Cancelled order ' . $order->order_number,
+                ]);
             }
         }
 

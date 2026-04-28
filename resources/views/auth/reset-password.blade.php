@@ -7,7 +7,7 @@
             Create a new password for your account.
         </p>
 
-        <form method="POST" action="{{ route('password.update') }}" class="space-y-6">
+        <form method="PO " action="{{ route('password.update') }}" class="space-y-6">
             @csrf
 
             <input type="hidden" name="token" value="{{ $token }}">

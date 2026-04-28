@@ -8,9 +8,12 @@ use App\Models\ChatAutoReply;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\ChatPresence;
+use App\Models\UserNotification;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -100,7 +103,8 @@ class ChatController extends Controller
 
         $this->touchPresence($conversation);
         $this->markConversationRead($conversation);
-        event(new ChatConversationUpdated($conversation->fresh(), 'message'));
+        $this->createUserNotification($conversation);
+        $this->broadcastConversationUpdate($conversation->fresh(), 'message');
 
         return response()->json([
             'conversation' => $this->serializeConversation($conversation->fresh(), true),
@@ -115,7 +119,7 @@ class ChatController extends Controller
         ]);
 
         $this->touchPresence($conversation);
-        event(new ChatConversationUpdated($conversation->fresh(), 'typing'));
+        $this->broadcastConversationUpdate($conversation->fresh(), 'typing');
 
         return response()->json(['ok' => true]);
     }
@@ -125,7 +129,7 @@ class ChatController extends Controller
         $this->touchPresence($conversation);
 
         if ($conversation) {
-            event(new ChatConversationUpdated($conversation->fresh(), 'presence'));
+            $this->broadcastConversationUpdate($conversation->fresh(), 'presence');
         }
 
         return response()->json(['ok' => true]);
@@ -179,6 +183,37 @@ class ChatController extends Controller
                 'last_seen_at' => now(),
             ]
         );
+    }
+
+    private function createUserNotification(ChatConversation $conversation): void
+    {
+        if (! $conversation->user_id) {
+            return;
+        }
+
+        UserNotification::create([
+            'user_id' => $conversation->user_id,
+            'type' => 'chat_reply',
+            'title' => 'New message from seller',
+            'body' => 'The seller replied to your chat. Tap to open the conversation.',
+            'url' => route('assistant'),
+            'data' => [
+                'conversation_id' => $conversation->id,
+            ],
+        ]);
+    }
+
+    private function broadcastConversationUpdate(ChatConversation $conversation, string $context): void
+    {
+        try {
+            event(new ChatConversationUpdated($conversation, $context));
+        } catch (BroadcastException $exception) {
+            Log::warning('Admin chat broadcast skipped because the realtime server is unavailable.', [
+                'conversation_id' => $conversation->id,
+                'context' => $context,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function markConversationRead(ChatConversation $conversation): void

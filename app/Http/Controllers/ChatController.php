@@ -7,9 +7,11 @@ use App\Models\ChatAutoReply;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\ChatPresence;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -118,7 +120,7 @@ class ChatController extends Controller
 
         $this->touchPresence($request, $conversation, 'customer');
         $this->sendAutomaticReplies($conversation, $message);
-        event(new ChatConversationUpdated($conversation->fresh(), 'message'));
+        $this->broadcastConversationUpdate($conversation->fresh(), 'message');
 
         return response()->json([
             'conversation' => $this->serializeConversation($conversation->fresh(), 'customer'),
@@ -140,7 +142,7 @@ class ChatController extends Controller
         ]);
 
         $this->touchPresence($request, $conversation, 'customer');
-        event(new ChatConversationUpdated($conversation->fresh(), 'typing'));
+        $this->broadcastConversationUpdate($conversation->fresh(), 'typing');
 
         return response()->json(['ok' => true]);
     }
@@ -154,7 +156,7 @@ class ChatController extends Controller
         }
 
         $this->touchPresence($request, $conversation, 'customer');
-        event(new ChatConversationUpdated($conversation->fresh(), 'presence'));
+        $this->broadcastConversationUpdate($conversation->fresh(), 'presence');
 
         return response()->json(['ok' => true]);
     }
@@ -223,6 +225,19 @@ class ChatController extends Controller
                 'last_seen_at' => now(),
             ]
         );
+    }
+
+    private function broadcastConversationUpdate(ChatConversation $conversation, string $context): void
+    {
+        try {
+            event(new ChatConversationUpdated($conversation, $context));
+        } catch (BroadcastException $exception) {
+            Log::warning('Chat broadcast skipped because the realtime server is unavailable.', [
+                'conversation_id' => $conversation->id,
+                'context' => $context,
+                'message' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function authorizeMessageAccess(Request $request, ChatMessage $message): void

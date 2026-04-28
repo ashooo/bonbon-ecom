@@ -57,6 +57,33 @@ class User extends Authenticatable
         return $this->hasMany(ChatMessage::class);
     }
 
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class)->latest();
+    }
+
+    public function unreadUserNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class)
+            ->whereNull('read_at')
+            ->whereNull('archived_at')
+            ->latest();
+    }
+
+    public function activeUserNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class)
+            ->whereNull('archived_at')
+            ->latest();
+    }
+
+    public function archivedUserNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class)
+            ->whereNotNull('archived_at')
+            ->latest();
+    }
+
     public function cart()
     {
         return $this->hasOne(Cart::class);

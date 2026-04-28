@@ -11,6 +11,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -186,6 +187,25 @@ Route::prefix('admin')->group(function () {
 Route::get('/profile', [ProfileController::class, 'show'])
     ->middleware('auth')
     ->name('profile');
+
+Route::get('/notifications', [UserNotificationController::class, 'index'])
+    ->middleware('auth')
+    ->name('notifications.index');
+Route::post('/notifications/read-all', [UserNotificationController::class, 'readAll'])
+    ->middleware('auth')
+    ->name('notifications.read-all');
+Route::get('/notifications/{notification}', [UserNotificationController::class, 'open'])
+    ->middleware('auth')
+    ->name('notifications.open');
+Route::post('/notifications/{notification}/archive', [UserNotificationController::class, 'archive'])
+    ->middleware('auth')
+    ->name('notifications.archive');
+Route::post('/notifications/{notification}/restore', [UserNotificationController::class, 'restore'])
+    ->middleware('auth')
+    ->name('notifications.restore');
+Route::delete('/notifications/{notification}', [UserNotificationController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('notifications.destroy');
 
 // Admin Routes
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {

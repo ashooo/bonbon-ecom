@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\UserNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -41,9 +42,27 @@ class OrderController extends Controller
             'status' => 'required|in:pending,confirmed,ready,completed,cancelled',
         ]);
 
+        $previousStatus = $order->status;
+
         $order->update([
             'status' => $data['status'],
         ]);
+
+        if ($order->user_id && $previousStatus !== $data['status']) {
+            UserNotification::create([
+                'user_id' => $order->user_id,
+                'type' => 'order_status',
+                'title' => 'Order status updated',
+                'body' => 'Your order ' . $order->order_number . ' is now ' . ucfirst($data['status']) . '.',
+                'url' => route('profile') . '#order-history',
+                'data' => [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'previous_status' => $previousStatus,
+                    'current_status' => $data['status'],
+                ],
+            ]);
+        }
 
         $query = array_filter([
             'section' => 'orders',

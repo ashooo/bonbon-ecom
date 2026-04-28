@@ -14,6 +14,70 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
+    private function bulkTemplateHeaders(): array
+    {
+        return [
+            'name',
+            'price',
+            'category',
+            'description',
+            'discount_price',
+            'stock_quantity',
+            'status',
+            'pre_order_days',
+            'is_featured',
+            'is_best_seller',
+            'variant_name',
+            'variant_sku',
+            'variant_stock_quantity',
+            'variant_price_adjustment',
+            'variant_is_default',
+            'variant_is_active',
+        ];
+    }
+
+    private function bulkTemplateRows(): array
+    {
+        return [
+            [
+                'Chocolate Cake',
+                '599',
+                'Cakes',
+                'Rich chocolate sponge with ganache',
+                '549',
+                '20',
+                'active',
+                '0',
+                'true',
+                'false',
+                'Whole',
+                'CHOCO-CAKE-WHOLE',
+                '12',
+                '0',
+                'true',
+                'true',
+            ],
+            [
+                'Ube Cupcake Box',
+                '299',
+                'Cupcakes',
+                '6-piece ube cupcake box',
+                '',
+                '15',
+                'pre_order',
+                '2',
+                'false',
+                'true',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ],
+        ];
+    }
+
     private function productManagementRedirect(string $message)
     {
         return redirect()
@@ -625,5 +689,45 @@ class ProductController extends Controller
         }
 
         return $this->productManagementRedirect($summary);
+    }
+
+    public function downloadBulkTemplateCsv()
+    {
+        $lines = [];
+        $lines[] = implode(',', $this->bulkTemplateHeaders());
+
+        foreach ($this->bulkTemplateRows() as $row) {
+            $escaped = array_map(function ($value) {
+                $escapedValue = str_replace('"', '""', (string) $value);
+                return '"' . $escapedValue . '"';
+            }, $row);
+            $lines[] = implode(',', $escaped);
+        }
+
+        $content = implode("\n", $lines) . "\n";
+
+        return response($content, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="product-bulk-upload-template.csv"',
+        ]);
+    }
+
+    public function downloadBulkTemplateExcel()
+    {
+        $separator = "\t";
+        $lines = [];
+        $lines[] = implode($separator, $this->bulkTemplateHeaders());
+
+        foreach ($this->bulkTemplateRows() as $row) {
+            $safeRow = array_map(fn ($value) => str_replace(["\r", "\n", "\t"], ' ', (string) $value), $row);
+            $lines[] = implode($separator, $safeRow);
+        }
+
+        $content = implode("\n", $lines) . "\n";
+
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="product-bulk-upload-template.xls"',
+        ]);
     }
 }

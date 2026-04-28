@@ -17,7 +17,13 @@
 
         <div class="rounded-3xl bg-white p-6 shadow-soft">
             <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <h2 class="mb-3 text-lg font-semibold">Bulk Upload (CSV)</h2>
+                <div class="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <h2 class="text-lg font-semibold">Bulk Upload (CSV)</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('admin.products.bulk-upload.template.csv') }}" class="rounded-xl bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-300">Download CSV Template</a>
+                        <a href="{{ route('admin.products.bulk-upload.template.xls') }}" class="rounded-xl bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-300">Download Excel Template</a>
+                    </div>
+                </div>
                 <form method="POST" action="{{ route('admin.products.bulk-upload') }}" enctype="multipart/form-data" class="flex flex-col gap-3 lg:flex-row lg:items-end">
                     @csrf
                     <div class="flex-1">
@@ -38,6 +44,12 @@
                     Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code>, <code>variant_is_default</code>, <code>variant_is_active</code>.
                 </p>
                 <p class="mt-1 text-xs text-slate-500">If variant fields are omitted, a default variant is auto-created.</p>
+                <ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
+                    <li><code>status</code>: <code>active</code>, <code>inactive</code>, or <code>pre_order</code></li>
+                    <li><code>is_featured</code>, <code>is_best_seller</code>, <code>variant_is_default</code>, <code>variant_is_active</code>: use <code>true</code> or <code>false</code></li>
+                    <li>In <code>upsert</code> mode, matching is by exact product <code>name</code></li>
+                    <li>Category matches by category <code>name</code> or generated <code>slug</code></li>
+                </ul>
             </div>
 
             <div class="flex items-center justify-between mb-6">

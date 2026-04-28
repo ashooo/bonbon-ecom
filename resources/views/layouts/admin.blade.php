@@ -49,7 +49,13 @@
 
             <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
                 <div class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">Main Menu</div>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white active" data-section="products">
+                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white active" data-section="dashboard">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h8v8H3V3zm10 0h8v5h-8V3zM3 13h5v8H3v-8zm7 4h11v4H10v-4z"></path></svg>
+                    </span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="products">
                     <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </span>
@@ -194,7 +200,7 @@
             if (hasSectionUi) {
                 const requestedSection = new URLSearchParams(window.location.search).get('section');
                 const defaultLink = document.querySelector(`[data-section="${requestedSection}"]`)
-                    || document.querySelector('[data-section="products"]');
+                    || document.querySelector('[data-section="dashboard"]');
 
                 defaultLink?.click();
             }

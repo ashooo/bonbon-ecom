@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\User;
 use App\Models\Variant;
 use App\Models\InventoryMovement;
+use Carbon\Carbon;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
@@ -219,7 +220,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', function (Request $request) {
         if (! $request->filled('section')) {
             $query = $request->query();
-            $query['section'] = 'products';
+            $query['section'] = 'dashboard';
 
             return redirect()->route('admin.dashboard', $query);
         }
@@ -289,6 +290,76 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $orderFilters = [
             'status' => $statusFilter === '' ? 'all' : $statusFilter,
             'search' => $searchFilter,
+        ];
+
+        $today = Carbon::today();
+        $monthStart = Carbon::now()->startOfMonth();
+        $last7DaysStart = Carbon::today()->subDays(6);
+
+        $todayRevenue = (float) Order::query()
+            ->whereDate('created_at', $today)
+            ->whereIn('status', ['confirmed', 'ready', 'completed'])
+            ->sum('total');
+
+        $monthRevenue = (float) Order::query()
+            ->whereBetween('created_at', [$monthStart, Carbon::now()])
+            ->whereIn('status', ['confirmed', 'ready', 'completed'])
+            ->sum('total');
+
+        $todayOrdersCount = Order::query()
+            ->whereDate('created_at', $today)
+            ->count();
+
+        $activeCustomersCount = User::query()
+            ->whereHas('orders', function ($query) use ($monthStart) {
+                $query->whereBetween('created_at', [$monthStart, Carbon::now()]);
+            })
+            ->count();
+
+        $topProducts = \App\Models\Product::query()
+            ->selectRaw('products.id as product_id, products.name, SUM(order_items.quantity) as units_sold, SUM(order_items.subtotal) as sales_total')
+            ->join('product_variants as variants', 'variants.product_id', '=', 'products.id')
+            ->join('order_items', 'order_items.variant_id', '=', 'variants.id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('orders.status', ['confirmed', 'ready', 'completed'])
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('units_sold')
+            ->take(5)
+            ->get();
+
+        $dailyRevenueMap = Order::query()
+            ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders_count')
+            ->where('created_at', '>=', $last7DaysStart)
+            ->whereIn('status', ['confirmed', 'ready', 'completed'])
+            ->groupBy('day')
+            ->orderBy('day')
+            ->get()
+            ->keyBy('day');
+
+        $revenueTrend = collect(range(0, 6))->map(function ($index) use ($last7DaysStart, $dailyRevenueMap) {
+            $day = $last7DaysStart->copy()->addDays($index);
+            $key = $day->toDateString();
+            $row = $dailyRevenueMap->get($key);
+
+            return [
+                'date' => $key,
+                'label' => $day->format('D'),
+                'revenue' => $row ? (float) $row->revenue : 0.0,
+                'orders_count' => $row ? (int) $row->orders_count : 0,
+            ];
+        });
+
+        $maxRevenuePoint = (float) $revenueTrend->max('revenue');
+
+        $dashboardStats = [
+            'today_revenue' => $todayRevenue,
+            'month_revenue' => $monthRevenue,
+            'today_orders_count' => $todayOrdersCount,
+            'active_customers_count' => $activeCustomersCount,
+            'pending_orders_count' => (int) ($orderCounts['pending'] ?? 0),
+            'ready_orders_count' => (int) ($orderCounts['ready'] ?? 0),
+            'completed_orders_count' => (int) ($orderCounts['completed'] ?? 0),
+            'max_revenue_point' => $maxRevenuePoint,
         ];
 
         $userStatusFilter = $request->string('user_status')->value();
@@ -409,6 +480,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'orders',
             'orderCounts',
             'orderFilters',
+            'dashboardStats',
+            'topProducts',
+            'revenueTrend',
             'users',
             'userCounts',
             'userFilters',

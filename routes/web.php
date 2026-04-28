@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use App\Models\StoreSetting;
 use App\Models\Order;
+use App\Models\User;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 
 Route::get('/', function () {
     $featuredProducts = collect();
@@ -276,6 +278,47 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'status' => $statusFilter === '' ? 'all' : $statusFilter,
             'search' => $searchFilter,
         ];
+
+        $userStatusFilter = $request->string('user_status')->value();
+        $userSearchFilter = $request->string('user_search')->trim()->value();
+
+        $usersQuery = User::query()
+            ->withTrashed()
+            ->where('is_admin', false)
+            ->withCount('orders')
+            ->latest();
+
+        if ($userStatusFilter !== '' && $userStatusFilter !== 'all') {
+            if ($userStatusFilter === 'deleted') {
+                $usersQuery->onlyTrashed();
+            } else {
+                $usersQuery->whereNull('deleted_at');
+                $usersQuery->where('is_active', $userStatusFilter === 'active');
+            }
+        } else {
+            $usersQuery->whereNull('deleted_at');
+        }
+
+        if ($userSearchFilter !== '') {
+            $usersQuery->where(function ($query) use ($userSearchFilter) {
+                $query->where('name', 'like', '%' . $userSearchFilter . '%')
+                    ->orWhere('email', 'like', '%' . $userSearchFilter . '%')
+                    ->orWhere('phone', 'like', '%' . $userSearchFilter . '%');
+            });
+        }
+
+        $users = $usersQuery->paginate(12, ['*'], 'user_page')->withQueryString();
+        $userCounts = [
+            'all' => User::where('is_admin', false)->count(),
+            'active' => User::where('is_admin', false)->where('is_active', true)->count(),
+            'inactive' => User::where('is_admin', false)->where('is_active', false)->count(),
+            'deleted' => User::onlyTrashed()->where('is_admin', false)->count(),
+        ];
+        $userFilters = [
+            'status' => $userStatusFilter === '' ? 'all' : $userStatusFilter,
+            'search' => $userSearchFilter,
+        ];
+
         $productFilters = [
             'search' => $productSearchFilter,
             'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
@@ -290,6 +333,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'orders',
             'orderCounts',
             'orderFilters',
+            'users',
+            'userCounts',
+            'userFilters',
             'productFilters'
         ));
     })->name('admin.dashboard');
@@ -323,6 +369,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
+
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->withTrashed()->name('admin.users.show');
+    Route::patch('/users/{user}', [AdminUserController::class, 'update'])->withTrashed()->name('admin.users.update');
+    Route::patch('/users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('admin.users.status.update');
+    Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
+    Route::patch('/users/{user}/restore', [AdminUserController::class, 'restore'])->withTrashed()->name('admin.users.restore');
 
     Route::get('/chats', [AdminChatController::class, 'index'])->name('admin.chat.index');
     Route::get('/chats/data', [AdminChatController::class, 'data'])->name('admin.chat.data');

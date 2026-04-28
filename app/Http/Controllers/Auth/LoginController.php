@@ -75,6 +75,7 @@ class LoginController extends Controller
             'email' => $email,
             'password' => $request->input('password'),
             'is_admin' => false,
+            'is_active' => true,
         ];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -190,6 +191,9 @@ class LoginController extends Controller
 
             if ($user->is_admin) {
                 return redirect('/login')->with('error', 'Google sign-in is not available for admin accounts.');
+            }
+            if (! $user->is_active) {
+                return redirect('/login')->with('error', 'Your account is currently inactive. Please contact support.');
             }
 
             Auth::login($user);

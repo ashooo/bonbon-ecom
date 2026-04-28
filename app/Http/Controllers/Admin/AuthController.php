@@ -34,6 +34,7 @@ class AuthController extends Controller
             'email' => $email,
             'password' => $request->input('password'),
             'is_admin' => true,
+            'is_active' => true,
         ];
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {

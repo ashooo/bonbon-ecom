@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -30,6 +31,7 @@ class User extends Authenticatable
         'phone',
         'dob',
         'is_admin',
+        'is_active',
     ];
 
     public function addresses()
@@ -45,6 +47,16 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function statusAudits(): HasMany
+    {
+        return $this->hasMany(UserStatusAudit::class)->latest();
+    }
+
+    public function performedStatusAudits(): HasMany
+    {
+        return $this->hasMany(UserStatusAudit::class, 'acted_by_user_id')->latest();
     }
 
     public function chatConversations(): HasMany
@@ -129,6 +141,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'dob' => 'date',
             'is_admin' => 'boolean',
+            'is_active' => 'boolean',
+            'deleted_at' => 'datetime',
         ];
     }
 }

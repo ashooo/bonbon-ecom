@@ -194,6 +194,9 @@
                     if (targetSection) {
                         targetSection.classList.remove('hidden');
                     }
+
+                    const nextUrl = `${window.location.pathname}?section=${encodeURIComponent(section)}`;
+                    window.history.replaceState({}, '', nextUrl);
                 });
             });
 

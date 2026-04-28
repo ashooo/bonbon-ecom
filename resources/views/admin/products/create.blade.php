@@ -232,7 +232,17 @@
         const container = document.getElementById('variants-container');
         const addBtn = document.getElementById('add-variant-btn');
         const template = document.getElementById('variant-template');
-        const oldVariants = @json(old('variants', [['name' => '', 'sku' => '', 'price_adjustment' => 0, 'stock_quantity' => 0, 'is_default' => 1, 'is_active' => 1]]));
+        @php
+            $defaultVariants = old('variants', [[
+                'name' => '',
+                'sku' => '',
+                'price_adjustment' => 0,
+                'stock_quantity' => 0,
+                'is_default' => 1,
+                'is_active' => 1,
+            ]]);
+        @endphp
+        const oldVariants = @json($defaultVariants);
 
         const renumber = () => {
             const rows = container.querySelectorAll('.variant-row');

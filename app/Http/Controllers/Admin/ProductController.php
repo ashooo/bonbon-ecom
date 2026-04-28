@@ -774,6 +774,11 @@ class ProductController extends Controller
         return $this->productManagementRedirect($summary);
     }
 
+    public function showBulkUploadForm()
+    {
+        return view('admin.products.bulk-upload');
+    }
+
     public function downloadBulkTemplateCsv()
     {
         $lines = [];

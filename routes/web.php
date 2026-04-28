@@ -510,6 +510,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/categories-data', [\App\Http\Controllers\Admin\CategoryController::class, 'getCategories'])->name('admin.categories.data');
 
     // Product Routes
+    Route::get('/products/bulk-upload', [\App\Http\Controllers\Admin\ProductController::class, 'showBulkUploadForm'])->name('admin.products.bulk-upload.form');
+    Route::post('/products/bulk-upload', [\App\Http\Controllers\Admin\ProductController::class, 'bulkUpload'])->name('admin.products.bulk-upload');
+    Route::get('/products/bulk-upload/template.csv', [\App\Http\Controllers\Admin\ProductController::class, 'downloadBulkTemplateCsv'])->name('admin.products.bulk-upload.template.csv');
+    Route::get('/products/bulk-upload/template.xls', [\App\Http\Controllers\Admin\ProductController::class, 'downloadBulkTemplateExcel'])->name('admin.products.bulk-upload.template.xls');
     Route::resource('products', \App\Http\Controllers\Admin\ProductController::class)->names([
         'index' => 'admin.products.index',
         'create' => 'admin.products.create',
@@ -521,9 +525,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     ]);
     Route::delete('/products/images/{image}', [\App\Http\Controllers\Admin\ProductController::class, 'deleteImage'])->name('admin.products.images.delete');
     Route::post('/products/images/order', [\App\Http\Controllers\Admin\ProductController::class, 'updateImageOrder'])->name('admin.products.images.order');
-    Route::post('/products/bulk-upload', [\App\Http\Controllers\Admin\ProductController::class, 'bulkUpload'])->name('admin.products.bulk-upload');
-    Route::get('/products/bulk-upload/template.csv', [\App\Http\Controllers\Admin\ProductController::class, 'downloadBulkTemplateCsv'])->name('admin.products.bulk-upload.template.csv');
-    Route::get('/products/bulk-upload/template.xls', [\App\Http\Controllers\Admin\ProductController::class, 'downloadBulkTemplateExcel'])->name('admin.products.bulk-upload.template.xls');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');

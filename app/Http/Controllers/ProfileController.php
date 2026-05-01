@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -53,6 +54,21 @@ class ProfileController extends Controller
         $user->save();
 
         return redirect()->route('profile')->with('success', 'Your profile has been updated successfully.');
+    }
+
+    public function deletePicture()
+    {
+        $user = Auth::user();
+
+        if ($user->profile_picture) {
+            if (Storage::disk('public')->exists($user->profile_picture)) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            $user->update(['profile_picture' => null]);
+        }
+
+        return redirect()->route('profile')->with('success', 'Profile picture removed successfully.');
     }
 
     public function storeAddress(Request $request)
@@ -218,5 +234,33 @@ class ProfileController extends Controller
         ]);
 
         return redirect()->route('profile')->with('success', 'Your reorder has been placed. Order ' . $newOrder->order_number . ' created.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        // If user has a password set (not just Google login), require current password
+        $hasPassword = !empty($user->password);
+
+        $rules = [
+            'password' => 'required|string|min:8|confirmed',
+        ];
+
+        if ($hasPassword && !$user->google_id) {
+            $rules['current_password'] = ['required', function ($attribute, $value, $fail) use ($user) {
+                if (!Hash::check($value, $user->password)) {
+                    $fail('The provided password does not match your current password.');
+                }
+            }];
+        }
+
+        $request->validate($rules);
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('profile')->with('success', 'Password updated successfully.');
     }
 }

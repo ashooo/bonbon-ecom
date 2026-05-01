@@ -1,7 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-    @php $showRegister = $showRegister ?? false; @endphp
+    @php 
+        // Auto-detect if we should show register based on errors or previous input
+        $showRegister = $showRegister ?? (
+            $errors->has('first_name') || 
+            $errors->has('last_name') || 
+            $errors->has('password_confirmation') || 
+            old('first_name') || 
+            request()->is('register')
+        ); 
+    @endphp
     <style>
         #login-form input[type="email"],
         #login-form input[type="password"],
@@ -22,7 +31,7 @@
             transition: background-color 9999s ease-in-out 0s;
         }
     </style>
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 {{ $showRegister ? 'hidden' : '' }}" id="login-card">
         <h1 class="text-3xl font-bold text-center mb-8">Welcome Back</h1>
 
         @if (session('success'))
@@ -36,7 +45,7 @@
             @csrf
             <!-- Email -->
             <div>
-                <label for="email" class="mb-2 block text-sm font-medium text-[#E6B7BE]">Email Address</label>
+                <label for="email" class="mb-2 block text-sm font-medium text-[#5A3A3A]">Email Address</label>
                 <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
                 @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -45,7 +54,7 @@
 
             <!-- Password -->
             <div>
-                <label for="password" class="mb-2 block text-sm font-medium text-[#E6B7BE]">Password</label>
+                <label for="password" class="mb-2 block text-sm font-medium text-[#5A3A3A]">Password</label>
                 <input type="password" id="password" name="password" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -89,7 +98,7 @@
 
         <!-- Register Link -->
         <div class="mt-6 text-center">
-            <p class="text-gray-600">Don't have an account? <a href="/register" class="text-pink-600 hover:text-pink-700 font-semibold">Sign up</a></p>
+            <p class="text-gray-600">Don't have an account? <a href="/register" class="text-pink-600 hover:text-[#5A3A3A] font-semibold">Sign up</a></p>
         </div>
 
         <!-- Forgot Password -->
@@ -107,35 +116,47 @@
             <!-- Name -->
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                    <input type="text" id="first-name" name="first_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <label for="first-name" class="mb-2 block text-sm font-medium text-pink-600/60">First Name</label>
+                    <input type="text" id="first-name" name="first_name" value="{{ old('first_name') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('first_name') border-red-500 @enderror">
+                    @error('first_name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
                 <div>
-                    <label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                    <input type="text" id="last-name" name="last_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <label for="last-name" class="mb-2 block text-sm font-medium text-pink-600/60">Last Name</label>
+                    <input type="text" id="last-name" name="last_name" value="{{ old('last_name') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('last_name') border-red-500 @enderror">
+                    @error('last_name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 
             <!-- Email -->
             <div>
-                <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                <input type="email" id="register-email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                <label for="register-email" class="mb-2 block text-sm font-medium text-pink-600/60">Email Address</label>
+                <input type="email" id="register-email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('email') border-red-500 @enderror">
+                @error('email')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- Password -->
             <div>
-                <label for="register-password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                <input type="password" id="register-password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                <label for="register-password" class="mb-2 block text-sm font-medium text-pink-600/60">Password</label>
+                <input type="password" id="register-password" name="password" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('password') border-red-500 @enderror">
+                @error('password')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- Confirm Password -->
             <div>
-                <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                <input type="password" id="confirm-password" name="password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                <label for="confirm-password" class="mb-2 block text-sm font-medium text-pink-600/60">Confirm Password</label>
+                <input type="password" id="confirm-password" name="password_confirmation" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
             </div>
 
             <!-- Register Button -->
-            <button type="submit" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+            <button type="submit" class="w-full bg-[#E6B7BE] dark:bg-[#8B5A63] hover:bg-[#D9A0A8] dark:hover:bg-[#A67680] text-[#5A3A3A] dark:text-[#F5F5F5] font-bold py-3 px-6 rounded-lg transition duration-300">
                 Create Account
             </button>
         </form>
@@ -148,21 +169,23 @@
 
     <script>
         // Toggle between login and register forms
-        const loginForm = document.getElementById('login-form');
+        const loginCard = document.getElementById('login-card');
         const registerForm = document.getElementById('register-form');
         const registerLink = document.querySelector('a[href="/register"]');
         const loginLink = registerForm.querySelector('a[href="/login"]');
 
         registerLink.addEventListener('click', (e) => {
             e.preventDefault();
-            loginForm.classList.add('hidden');
+            loginCard.classList.add('hidden');
             registerForm.classList.remove('hidden');
+            history.pushState(null, '', '/register');
         });
 
         loginLink.addEventListener('click', (e) => {
             e.preventDefault();
             registerForm.classList.add('hidden');
-            loginForm.classList.remove('hidden');
+            loginCard.classList.remove('hidden');
+            history.pushState(null, '', '/login');
         });
     </script>
 @endsection

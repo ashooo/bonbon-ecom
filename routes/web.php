@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Models\StoreSetting;
 use App\Models\Order;
 use App\Models\User;
@@ -170,6 +171,21 @@ Route::get('/auth/google/callback', [LoginController::class, 'handleGoogleCallba
     ->middleware('guest')
     ->name('google.callback');
 
+// Email Verification Routes
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/')->with('success', 'Your email has been verified!');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent');
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])
         ->middleware('guest')
@@ -193,26 +209,29 @@ Route::prefix('admin')->group(function () {
 });
 
 Route::get('/profile', [ProfileController::class, 'show'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile');
+Route::delete('/profile/picture', [ProfileController::class, 'deletePicture'])
+    ->middleware(['auth', 'verified'])
+    ->name('profile.picture.delete');
 
 Route::get('/notifications', [UserNotificationController::class, 'index'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.index');
 Route::post('/notifications/read-all', [UserNotificationController::class, 'readAll'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.read-all');
 Route::get('/notifications/{notification}', [UserNotificationController::class, 'open'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.open');
 Route::post('/notifications/{notification}/archive', [UserNotificationController::class, 'archive'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.archive');
 Route::post('/notifications/{notification}/restore', [UserNotificationController::class, 'restore'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.restore');
 Route::delete('/notifications/{notification}', [UserNotificationController::class, 'destroy'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('notifications.destroy');
 
 // Admin Routes
@@ -550,33 +569,37 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 });
 
 Route::post('/profile', [ProfileController::class, 'update'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.update');
 
 Route::post('/profile/address', [ProfileController::class, 'storeAddress'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.address.store');
 
 Route::put('/profile/address/{address}', [ProfileController::class, 'updateAddress'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.address.update');
 
 Route::delete('/profile/address/{address}', [ProfileController::class, 'deleteAddress'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.address.delete');
 
 Route::post('/profile/payment-method', [ProfileController::class, 'storePaymentMethod'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.payment.store');
 
 Route::put('/profile/payment-method/{paymentMethod}', [ProfileController::class, 'updatePaymentMethod'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.payment.update');
 
 Route::delete('/profile/payment-method/{paymentMethod}', [ProfileController::class, 'deletePaymentMethod'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.payment.delete');
 
 Route::post('/profile/order/{order}/reorder', [ProfileController::class, 'reorder'])
-    ->middleware('auth')
+    ->middleware(['auth', 'verified'])
     ->name('profile.order.reorder');
+
+Route::put('/profile/password', [ProfileController::class, 'updatePassword'])
+    ->middleware(['auth', 'verified'])
+    ->name('profile.password.update');

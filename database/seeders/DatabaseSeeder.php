@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Admin User',
             'password' => Hash::make('12345678'),
             'is_admin' => true,
+            'email_verified_at' => now(),
         ]);
 
         User::updateOrCreate([
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
         ], [
             'name' => 'Test User',
             'password' => Hash::make('12345678'),
+            'email_verified_at' => now(),
         ]);
 
         User::updateOrCreate([
@@ -37,6 +39,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Customer Demo',
             'password' => Hash::make('12345678'),
             'phone' => '09991234567',
+            'email_verified_at' => now(),
         ]);
 
         $this->call([

@@ -30,14 +30,36 @@
                 <aside class="lg:col-span-1 border-b border-gray-200 lg:border-b-0 lg:border-r lg:border-gray-200 bg-gray-50/60">
                     <div class="p-6 lg:p-8">
                         <div class="text-center mb-8">
-                            <div class="w-28 h-28 rounded-full overflow-hidden mx-auto mb-4 bg-pink-100">
-                                <img src="{{ $user->profile_image_url }}" alt="" class="w-full h-full object-cover">
+                            <div class="relative group w-28 h-28 mx-auto mb-4">
+                                <div class="w-28 h-28 rounded-full overflow-hidden bg-pink-100 shadow-inner">
+                                    <img src="{{ $user->profile_image_url }}" alt="Profile Picture" class="w-full h-full object-cover">
+                                </div>
+                                
+                                @if($user->profile_picture)
+                                    <form method="POST" action="{{ route('profile.picture.delete') }}" class="absolute -top-1 -right-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition duration-200" title="Remove Profile Picture">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
 
-                            <h2 class="text-xl font-bold">{{ $user->name }}</h2>
+                            <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
                             <p class="text-gray-600">{{ $user->email }}</p>
-                            @if ($user->phone)
-                                <p class="text-sm text-gray-500">{{ $user->phone }}</p>
+                            @if ($user->google_id)
+                                <div class="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12.48 10.92v3.28h4.74c-.2 1.2-.92 2.22-1.94 2.92v2.44h3.14c1.84-1.68 2.9-4.16 2.9-7.08 0-.58-.06-1.14-.18-1.56H12.48z" fill="#4285F4"></path>
+                                        <path d="M12 21c2.44 0 4.5-.8 6.02-2.18l-3.14-2.44c-.82.56-1.88.88-2.88.88-2.22 0-4.12-1.5-4.78-3.52H4.12v2.52C5.62 18.78 8.6 21 12 21z" fill="#34A853"></path>
+                                        <path d="M7.22 13.74c-.16-.5-.26-1.04-.26-1.74s.1-1.24.26-1.74V7.74H4.12c-.54 1.08-.86 2.3-.86 3.6s.32 2.52.86 3.6l3.1-2.46z" fill="#FBBC05"></path>
+                                        <path d="M12 6.38c1.32 0 2.5.46 3.44 1.34l2.58-2.58C16.5 3.6 14.44 3 12 3 8.6 3 5.62 5.22 4.12 7.74l3.1 2.46c.66-2.02 2.56-3.52 4.78-3.52z" fill="#EA4335"></path>
+                                    </svg>
+                                    Connected via Google
+                                </div>
                             @endif
                         </div>
 
@@ -46,6 +68,7 @@
                             <button type="button" data-tab="order-history" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Order History</button>
                             <button type="button" data-tab="payment-methods" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Payment Methods</button>
                             <button type="button" data-tab="addresses" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Addresses</button>
+                            <button type="button" data-tab="security" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Security & Verification</button>
                         </nav>
                     </div>
                 </aside>
@@ -368,6 +391,48 @@
                         </form>
                     </div>
                     </section>
+
+                    <!-- Security & Verification Section -->
+                    <section id="security" class="tab-section hidden">
+                        <div class="space-y-8">
+                            <!-- Change Password -->
+                            <div>
+                                <h3 class="text-xl font-bold mb-4">Change Password</h3>
+                                <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-6">
+                                    @csrf
+                                    @method('PUT')
+
+                                    @if(!$user->google_id || !empty($user->password))
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                            <input type="password" name="current_password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                            @error('current_password')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endif
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                            <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                            @error('password')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                            <input type="password" name="password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="bg-[#8B5A63] hover:bg-[#E6B7BE] text-[#F5F5F5] hover:text-[#5A3A3A] font-bold py-3 px-8 rounded-lg transition duration-300">
+                                        Update Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
                 </main>
             </div>
         </div>
@@ -400,7 +465,10 @@
             });
         });
 
-        const defaultTab = window.location.hash.replace('#', '') || 'personal-info';
+        const defaultTab = window.location.hash.replace('#', '') || 
+            @if($errors->has('current_password') || $errors->has('password')) 'security' 
+            @elseif($errors->hasAny(['first_name', 'last_name', 'email', 'phone'])) 'personal-info'
+            @else 'personal-info' @endif;
         showTab(defaultTab);
 
         document.querySelectorAll('[data-action="toggle-order"]').forEach((button) => {

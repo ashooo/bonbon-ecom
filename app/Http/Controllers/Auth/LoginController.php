@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class LoginController extends Controller
 {
@@ -56,9 +58,12 @@ class LoginController extends Controller
             'name' => trim($request->input('first_name') . ' ' . $request->input('last_name')),
             'email' => $request->input('email'),
             'password' => Hash::make($request->input('password')),
+            'is_active' => true,
         ]);
 
-        return redirect()->route('login')->with('success', 'Account created successfully! Please log in with your credentials.');
+        $user->sendEmailVerificationNotification();
+
+        return redirect()->route('login')->with('success', 'Account created! Please check your email to verify your account before logging in.');
     }
 
     public function login(Request $request)
@@ -177,17 +182,19 @@ class LoginController extends Controller
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
+                    'avatar' => $this->downloadGoogleAvatar($googleUser->getAvatar(), $googleUser->getId()),
                     'password' => Hash::make(uniqid()), // Random password for Google users
+                    'is_active' => true,
+                    'email_verified_at' => now(),
                 ]);
             } else {
-                // Update Google ID if not set
-                if (! $user->google_id) {
-                    $user->update([
-                        'google_id' => $googleUser->getId(),
-                        'avatar' => $googleUser->getAvatar(),
-                    ]);
-                }
+                // Update Google data if changed
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $this->downloadGoogleAvatar($googleUser->getAvatar(), $googleUser->getId()),
+                    'name' => $googleUser->getName(), // Sync name too
+                    'email_verified_at' => $user->email_verified_at ?? now(), // Auto-verify if not already verified
+                ]);
             }
 
             if ($user->is_admin) {
@@ -213,5 +220,24 @@ class LoginController extends Controller
 
             return redirect('/login')->with('error', 'Something went wrong with Google login. Please try again.');
         }
+    }
+
+    /**
+     * Download Google avatar and return local path
+     */
+    private function downloadGoogleAvatar($url, $googleId)
+    {
+        try {
+            $response = Http::get($url);
+            if ($response->successful()) {
+                $filename = 'profile_pictures/google_' . $googleId . '.jpg';
+                Storage::disk('public')->put($filename, $response->body());
+                return $filename;
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to download Google avatar: ' . $e->getMessage());
+        }
+
+        return $url; // Fallback to URL if download fails
     }
 }

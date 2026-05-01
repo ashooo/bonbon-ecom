@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
@@ -32,6 +32,16 @@ class User extends Authenticatable
         'dob',
         'is_admin',
         'is_active',
+    ];
+
+    /**
+     * The model's default values for attributes.
+     *
+     * @var array
+     */
+    protected $attributes = [
+        'is_admin' => false,
+        'is_active' => true,
     ];
 
     public function addresses()
@@ -113,10 +123,15 @@ class User extends Authenticatable
         }
 
         if ($this->avatar) {
-            return $this->avatar;
+            // Check if it's already a full URL (legacy or download failed)
+            if (filter_var($this->avatar, FILTER_VALIDATE_URL)) {
+                return $this->avatar;
+            }
+            // Otherwise treat it as a local path in storage
+            return asset('storage/' . $this->avatar);
         }
 
-        return 'https://via.placeholder.com/150?text=Profile';
+        return asset('images/default-profile.jpg');
     }
 
     /**

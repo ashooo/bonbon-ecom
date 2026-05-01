@@ -94,6 +94,10 @@ class CheckoutController extends Controller
         $tax = $subtotal * 0.1;
         $total = $subtotal + $delivery + $tax;
 
+        $savedAddresses = Auth::check()
+            ? Auth::user()->addresses()->latest()->get()
+            : collect();
+
         $response = response()->view('pages.checkout', compact(
             'cart',
             'items',
@@ -103,7 +107,8 @@ class CheckoutController extends Controller
             'total',
             'maxPreOrderDays',
             'minFulfillmentDate',
-            'minFulfillmentTime'
+            'minFulfillmentTime',
+            'savedAddresses'
         ));
 
         if ($this->guestCartToken) {

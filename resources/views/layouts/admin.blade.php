@@ -98,11 +98,6 @@
             <header class="relative border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex-1 flex flex-col gap-4 sm:flex-row sm:items-center">
-                        <form class="flex w-full max-w-xl items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
-                            <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"></path></svg>
-                            <input type="text" placeholder="Search products, orders, users" class="ml-3 w-full bg-transparent outline-none text-sm text-slate-700" />
-                        </form>
-
                         <div class="flex items-center gap-3">
                             <div class="rounded-2xl bg-slate-50 px-4 py-2 text-sm text-slate-600 shadow-sm">
                                 <span id="admin-clock">--:-- --</span>

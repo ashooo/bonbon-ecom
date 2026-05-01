@@ -47,14 +47,36 @@ class Product extends Model
         parent::boot();
 
         static::creating(function ($product) {
-            $product->slug = Str::slug($product->name);
+            if (blank($product->slug)) {
+                $product->slug = static::generateUniqueSlug($product->name);
+            }
         });
 
         static::updating(function ($product) {
-            if ($product->isDirty('name')) {
-                $product->slug = Str::slug($product->name);
+            if ($product->isDirty('name') && ! $product->isDirty('slug')) {
+                $product->slug = static::generateUniqueSlug($product->name, $product->id);
             }
         });
+    }
+
+    private static function generateUniqueSlug(string $name, ?int $ignoreProductId = null): string
+    {
+        $base = Str::slug($name);
+        $seed = $base !== '' ? $base : 'product';
+        $slug = $seed;
+        $suffix = 1;
+
+        while (
+            static::query()
+                ->where('slug', $slug)
+                ->when($ignoreProductId, fn ($query) => $query->where('id', '!=', $ignoreProductId))
+                ->exists()
+        ) {
+            $slug = $seed . '-' . $suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 
     // Category relationship

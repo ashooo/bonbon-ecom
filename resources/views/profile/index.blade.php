@@ -1,0 +1,495 @@
+@extends('layouts.app')
+
+@section('content')
+    @php
+        $nameParts = explode(' ', $user->name);
+        $firstName = $nameParts[0] ?? '';
+        $lastName = count($nameParts) > 1 ? implode(' ', array_slice($nameParts, 1)) : '';
+    @endphp
+
+    <div class="max-w-6xl mx-auto">
+
+        @if (session('success'))
+            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div class="overflow-hidden rounded-2xl bg-white shadow-md">
+            <div class="grid grid-cols-1 lg:grid-cols-4 items-start">
+                <aside class="lg:col-span-1 border-b border-gray-200 lg:border-b-0 lg:border-r lg:border-gray-200 bg-gray-50/60">
+                    <div class="p-6 lg:p-8">
+                        <div class="text-center mb-8">
+                            <div class="relative group w-28 h-28 mx-auto mb-4">
+                                <div class="w-28 h-28 rounded-full overflow-hidden bg-pink-100 shadow-inner">
+                                    <img src="{{ $user->profile_image_url }}" alt="Profile Picture" class="w-full h-full object-cover">
+                                </div>
+                                
+                                @if($user->profile_picture)
+                                    <form method="POST" action="{{ route('profile.picture.delete') }}" class="absolute -top-1 -right-1">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition duration-200" title="Remove Profile Picture">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+
+                            <h2 class="text-xl font-bold text-gray-900">{{ $user->name }}</h2>
+                            <p class="text-gray-600">{{ $user->email }}</p>
+                            @if ($user->google_id)
+                                <div class="mt-2 flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600">
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12.48 10.92v3.28h4.74c-.2 1.2-.92 2.22-1.94 2.92v2.44h3.14c1.84-1.68 2.9-4.16 2.9-7.08 0-.58-.06-1.14-.18-1.56H12.48z" fill="#4285F4"></path>
+                                        <path d="M12 21c2.44 0 4.5-.8 6.02-2.18l-3.14-2.44c-.82.56-1.88.88-2.88.88-2.22 0-4.12-1.5-4.78-3.52H4.12v2.52C5.62 18.78 8.6 21 12 21z" fill="#34A853"></path>
+                                        <path d="M7.22 13.74c-.16-.5-.26-1.04-.26-1.74s.1-1.24.26-1.74V7.74H4.12c-.54 1.08-.86 2.3-.86 3.6s.32 2.52.86 3.6l3.1-2.46z" fill="#FBBC05"></path>
+                                        <path d="M12 6.38c1.32 0 2.5.46 3.44 1.34l2.58-2.58C16.5 3.6 14.44 3 12 3 8.6 3 5.62 5.22 4.12 7.74l3.1 2.46c.66-2.02 2.56-3.52 4.78-3.52z" fill="#EA4335"></path>
+                                    </svg>
+                                    Connected via Google
+                                </div>
+                            @endif
+                        </div>
+
+                        <nav class="space-y-2">
+                            <button type="button" data-tab="personal-info" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Personal Information</button>
+                            <button type="button" data-tab="order-history" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Order History</button>
+                            <button type="button" data-tab="payment-methods" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Payment Methods</button>
+                            <button type="button" data-tab="addresses" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Addresses</button>
+                            <button type="button" data-tab="security" class="tab-link block w-full rounded-xl border border-transparent px-4 py-3 text-left font-medium text-gray-700 transition hover:bg-pink-50 hover:text-pink-700">Security & Verification</button>
+                        </nav>
+                    </div>
+                </aside>
+
+                <main class="lg:col-span-3 p-6 lg:p-8">
+                    <section id="personal-info" class="tab-section">
+                    <h3 class="text-xl font-bold mb-4">Personal Information</h3>
+                    <form method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data" class="space-y-6">
+                        @csrf
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    value="{{ old('first_name', $firstName) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    value="{{ old('last_name', $lastName) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value="{{ old('email', $user->email) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value="{{ old('phone', $user->phone) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                >
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                                <input
+                                    type="date"
+                                    name="dob"
+                                    value="{{ old('dob', $user->dob?->format('Y-m-d')) }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+                                <input
+                                    type="file"
+                                    name="profile_picture"
+                                    accept="image/*"
+                                    class="w-full text-sm text-gray-700"
+                                >
+                            </div>
+                        </div>
+
+                        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">
+                            Save Personal Information
+                        </button>
+                    </form>
+                    </section>
+
+                    <section id="order-history" class="tab-section hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold">Order History</h3>
+                        <span class="text-sm text-gray-500">Showing {{ $orders->count() }} most recent orders</span>
+                    </div>
+
+                    @forelse ($orders as $order)
+                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <h4 class="font-semibold">{{ $order->order_number }}</h4>
+                                    <p class="text-sm text-gray-600">Placed on {{ $order->placed_at?->format('F j, Y') ?? 'N/A' }}</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $order->status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                        {{ $order->status }}
+                                    </span>
+                                    <p class="text-lg font-bold">₱{{ number_format($order->total_amount, 2) }}</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                <button type="button" data-action="toggle-order" data-target="order-details-{{ $order->id }}" class="text-pink-600 hover:text-pink-700 text-sm">View Details</button>
+                                <form method="POST" action="{{ route('profile.order.reorder', $order) }}">
+                                    @csrf
+                                    <button type="submit" class="text-pink-600 hover:text-pink-700 text-sm">Reorder</button>
+                                </form>
+                            </div>
+
+                            <div id="order-details-{{ $order->id }}" class="order-details mt-4 hidden rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                <p class="text-sm text-gray-700">{{ $order->description ?? 'No additional details available.' }}</p>
+                                <p class="mt-2 text-sm text-gray-600">Order created at: {{ $order->created_at->format('F j, Y h:i A') }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">
+                            You have no orders yet. Your recent purchases will appear here.
+                        </div>
+                    @endforelse
+                    </section>
+
+                    <section id="payment-methods" class="tab-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Payment Methods</h3>
+
+                    <div class="space-y-4 mb-6">
+                        @forelse ($paymentMethods as $method)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm text-gray-600">{{ $method->card_brand }} •••• {{ $method->last_four }}</p>
+                                        <p class="text-base font-semibold">{{ $method->card_holder_name }}</p>
+                                        <p class="text-sm text-gray-500">Expires {{ sprintf('%02d', $method->expiry_month) }}/{{ $method->expiry_year }}</p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" data-action="toggle-payment" data-target="payment-edit-{{ $method->id }}" class="text-pink-600 hover:text-pink-700 text-sm">Edit</button>
+                                        <form method="POST" action="{{ route('profile.payment.delete', $method) }}" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <form id="payment-edit-{{ $method->id }}" class="payment-edit-form mt-4 hidden space-y-4" method="POST" action="{{ route('profile.payment.update', $method) }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Card Brand</label>
+                                            <input type="text" name="card_brand" value="{{ old('card_brand', $method->card_brand) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Card Holder</label>
+                                            <input type="text" name="card_holder_name" value="{{ old('card_holder_name', $method->card_holder_name) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Month</label>
+                                            <input type="number" name="expiry_month" value="{{ old('expiry_month', $method->expiry_month) }}" min="1" max="12" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Year</label>
+                                            <input type="number" name="expiry_year" value="{{ old('expiry_year', $method->expiry_year) }}" min="{{ date('Y') }}" max="{{ date('Y') + 20 }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <input type="checkbox" name="is_default" value="1" {{ $method->is_default ? 'checked' : '' }}>
+                                        <label class="text-sm text-gray-700">Set as default payment method</label>
+                                    </div>
+                                    <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded transition duration-300">Save</button>
+                                </form>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">No payment methods saved yet.</div>
+                        @endforelse
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold mb-4">Add New Payment Method</h4>
+                        <form method="POST" action="{{ route('profile.payment.store') }}" class="space-y-4">
+                            @csrf
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Card Brand</label>
+                                    <input type="text" name="card_brand" value="{{ old('card_brand') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Card Holder Name</label>
+                                    <input type="text" name="card_holder_name" value="{{ old('card_holder_name') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Card Number</label>
+                                    <input type="text" name="card_number" value="{{ old('card_number') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Month</label>
+                                        <input type="number" name="expiry_month" value="{{ old('expiry_month') }}" min="1" max="12" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Year</label>
+                                        <input type="number" name="expiry_year" value="{{ old('expiry_year') }}" min="{{ date('Y') }}" max="{{ date('Y') + 20 }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" name="is_default" value="1" {{ old('is_default') ? 'checked' : '' }}>
+                                <label class="text-sm text-gray-700">Set as default payment method</label>
+                            </div>
+                            <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">Save Payment Method</button>
+                        </form>
+                    </div>
+                    </section>
+
+                    <section id="addresses" class="tab-section hidden">
+                    <h3 class="text-xl font-bold mb-4">Addresses</h3>
+
+                    <div class="space-y-4 mb-6">
+                        @forelse ($addresses as $address)
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                    <div>
+                                        <p class="font-semibold">{{ $address->label }}</p>
+                                        <p class="text-sm text-gray-600">{{ $address->line1 }} {{ $address->line2 ? ', ' . $address->line2 : '' }}</p>
+                                        <p class="text-sm text-gray-600">{{ $address->city }}, {{ $address->state }} {{ $address->postal_code }}</p>
+                                        <p class="text-sm text-gray-600">{{ $address->country }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <button type="button" data-action="toggle-address" data-target="address-edit-{{ $address->id }}" class="text-pink-600 hover:text-pink-700 text-sm">Edit</button>
+                                        <form method="POST" action="{{ route('profile.address.delete', $address) }}" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <form id="address-edit-{{ $address->id }}" class="address-edit-form mt-4 hidden space-y-4" method="POST" action="{{ route('profile.address.update', $address) }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Label</label>
+                                            <input type="text" name="label" value="{{ old('label', $address->label) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
+                                            <input type="text" name="postal_code" value="{{ old('postal_code', $address->postal_code) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Line 1</label>
+                                        <input type="text" name="line1" value="{{ old('line1', $address->line1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Line 2</label>
+                                        <input type="text" name="line2" value="{{ old('line2', $address->line2) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                                            <input type="text" name="city" value="{{ old('city', $address->city) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                                            <input type="text" name="state" value="{{ old('state', $address->state) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                                        <input type="text" name="country" value="{{ old('country', $address->country) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    </div>
+                                    <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">Save Address</button>
+                                </form>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">No saved addresses yet.</div>
+                        @endforelse
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-semibold mb-4">Add New Address</h4>
+                        <form method="POST" action="{{ route('profile.address.store') }}" class="space-y-4">
+                            @csrf
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Label</label>
+                                    <input type="text" name="label" value="{{ old('label', 'Home') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Postal Code</label>
+                                    <input type="text" name="postal_code" value="{{ old('postal_code') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Line 1</label>
+                                <input type="text" name="line1" value="{{ old('line1') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Line 2</label>
+                                <input type="text" name="line2" value="{{ old('line2') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">City</label>
+                                    <input type="text" name="city" value="{{ old('city') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
+                                    <input type="text" name="state" value="{{ old('state') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                                <input type="text" name="country" value="{{ old('country', 'Philippines') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                            </div>
+                            <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-6 rounded transition duration-300">Add Address</button>
+                        </form>
+                    </div>
+                    </section>
+
+                    <!-- Security & Verification Section -->
+                    <section id="security" class="tab-section hidden">
+                        <div class="space-y-8">
+                            <!-- Change Password -->
+                            <div>
+                                <h3 class="text-xl font-bold mb-4">Change Password</h3>
+                                <form method="POST" action="{{ route('profile.password.update') }}" class="space-y-6">
+                                    @csrf
+                                    @method('PUT')
+
+                                    @if(!$user->google_id || !empty($user->password))
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                                            <input type="password" name="current_password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                            @error('current_password')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endif
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                            <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                            @error('password')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                                            <input type="password" name="password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="bg-[#8B5A63] hover:bg-[#E6B7BE] text-[#F5F5F5] hover:text-[#5A3A3A] font-bold py-3 px-8 rounded-lg transition duration-300">
+                                        Update Password
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-link');
+        const sections = document.querySelectorAll('.tab-section');
+
+        function showTab(tabId) {
+            sections.forEach((section) => {
+                section.classList.toggle('hidden', section.id !== tabId);
+            });
+
+            tabs.forEach((button) => {
+                button.classList.toggle('bg-pink-50', button.dataset.tab === tabId);
+                button.classList.toggle('border-pink-200', button.dataset.tab === tabId);
+                button.classList.toggle('text-pink-700', button.dataset.tab === tabId);
+                button.classList.toggle('font-semibold', button.dataset.tab === tabId);
+                button.classList.toggle('border-transparent', button.dataset.tab !== tabId);
+                button.classList.toggle('text-gray-700', button.dataset.tab !== tabId);
+                button.classList.toggle('font-medium', button.dataset.tab !== tabId);
+            });
+        }
+
+        tabs.forEach((button) => {
+            button.addEventListener('click', () => {
+                showTab(button.dataset.tab);
+                history.replaceState(null, '', '#'+button.dataset.tab);
+            });
+        });
+
+        const defaultTab = window.location.hash.replace('#', '') || 
+            @if($errors->has('current_password') || $errors->has('password')) 'security' 
+            @elseif($errors->hasAny(['first_name', 'last_name', 'email', 'phone'])) 'personal-info'
+            @else 'personal-info' @endif;
+        showTab(defaultTab);
+
+        document.querySelectorAll('[data-action="toggle-order"]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = document.getElementById(button.dataset.target);
+                if (target) target.classList.toggle('hidden');
+            });
+        });
+
+        document.querySelectorAll('[data-action="toggle-address"]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = document.getElementById(button.dataset.target);
+                if (target) target.classList.toggle('hidden');
+            });
+        });
+
+        document.querySelectorAll('[data-action="toggle-payment"]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const target = document.getElementById(button.dataset.target);
+                if (target) target.classList.toggle('hidden');
+            });
+        });
+    </script>
+@endsection

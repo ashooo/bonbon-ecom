@@ -172,6 +172,30 @@
                     </svg>
                 </button>
             </div>
+
+            <div class="mt-4 rounded-[1.6rem] border border-[#F1DADF] bg-[#FFF7F8] p-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <button
+                        type="button"
+                        id="bonbon-chat-mode-live"
+                        data-chat-mode="live"
+                        class="bonbon-chat-mode-toggle rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition"
+                    >
+                        Live Chat
+                    </button>
+                    <button
+                        type="button"
+                        id="bonbon-chat-mode-ai"
+                        data-chat-mode="ai"
+                        class="bonbon-chat-mode-toggle rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition"
+                    >
+                        AI Chat
+                    </button>
+                </div>
+                <p id="bonbon-chat-mode-description" class="px-2 pt-3 text-xs leading-6 text-[#9E7680]">
+                    Chat with Bonbon Support in real time.
+                </p>
+            </div>
         </div>
 
         <div id="bonbon-chat-thread" class="min-h-0 flex-1 overflow-y-auto px-4 py-5">
@@ -290,6 +314,9 @@
             const typingIndicator = document.getElementById('bonbon-chat-typing-indicator');
             const statusDot = document.getElementById('bonbon-chat-status-dot');
             const statusText = document.getElementById('bonbon-chat-status-text');
+            const liveModeButton = document.getElementById('bonbon-chat-mode-live');
+            const aiModeButton = document.getElementById('bonbon-chat-mode-ai');
+            const modeDescription = document.getElementById('bonbon-chat-mode-description');
             let typingTimer = null;
             let typingState = false;
             let currentMessagesHash = '';
@@ -299,10 +326,16 @@
             let heartbeatTimer = null;
             let currentChannelName = null;
             let currentConversation = null;
+            let currentMode = window.sessionStorage.getItem('bonbon-chat-mode') === 'ai' ? 'ai' : 'live';
+            let aiMessages = [];
+            let aiMessageSequence = 0;
+            let aiReplyTimer = null;
+            const aiStorageKey = 'bonbon-chat-ai-messages-v1';
 
             const routes = {
                 session: @json(route('chat.session')),
                 send: @json(route('chat.messages.store')),
+                aiSend: @json(route('chat.ai-message')),
                 typing: @json(route('chat.typing')),
                 presence: @json(route('chat.presence')),
             };
@@ -328,6 +361,193 @@
             const isNearBottom = () => thread.scrollHeight - thread.scrollTop - thread.clientHeight < 120;
             const scrollToBottom = () => {
                 thread.scrollTop = thread.scrollHeight;
+            };
+
+            const getTimeStampParts = (date = new Date()) => {
+                const fullTimestamp = date.toLocaleString([], {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                });
+
+                const timestamp = date.toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                });
+
+                return {
+                    created_at: date.toISOString(),
+                    timestamp,
+                    full_timestamp: fullTimestamp,
+                };
+            };
+
+            const buildAiMessage = ({ senderType, body, receiptLabel = 'Seen', products = [] }) => {
+                aiMessageSequence += 1;
+                const now = getTimeStampParts();
+
+                return {
+                    id: `ai-${aiMessageSequence}`,
+                    sender_type: senderType,
+                    sender_name: senderType === 'customer' ? 'You' : 'Bonbon AI',
+                    body,
+                    products,
+                    attachment_url: null,
+                    attachment_download_url: null,
+                    attachment_view_url: null,
+                    attachment_name: null,
+                    attachment_mime: null,
+                    attachment_size: null,
+                    is_image: false,
+                    created_at: now.created_at,
+                    timestamp: now.timestamp,
+                    full_timestamp: now.full_timestamp,
+                    is_mine: senderType === 'customer',
+                    receipt_label: receiptLabel,
+                };
+            };
+
+            const renderAiProductCards = (products = []) => {
+                if (!Array.isArray(products) || !products.length) {
+                    return '';
+                }
+
+                const tokenField = csrf ? `<input type="hidden" name="_token" value="${escapeHtml(csrf)}">` : '';
+
+                return `
+                    <div class="mt-3 grid gap-3">
+                        ${products.map((product) => `
+                            <div class="overflow-hidden rounded-[1.5rem] border border-[#F0DCE1] bg-white shadow-sm">
+                                <a href="${product.product_url}" class="flex items-stretch gap-3 p-3 transition hover:bg-[#FFF8F9]">
+                                    <img
+                                        src="${escapeHtml(product.image_url || ('https://via.placeholder.com/140x140?text=' + encodeURIComponent(product.name)))}"
+                                        alt="${escapeHtml(product.name)}"
+                                        class="h-24 w-24 rounded-[1.1rem] object-cover"
+                                    >
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p class="text-sm font-semibold text-[#5A3A3A]">${escapeHtml(product.name)}</p>
+                                                <p class="mt-1 text-xs text-[#9E7680]">${escapeHtml(product.category || 'BonBon Product')}</p>
+                                            </div>
+                                            <span class="rounded-full bg-[#FFF1F4] px-3 py-1 text-xs font-semibold text-[#B75C75]">PHP ${escapeHtml(product.formatted_price)}</span>
+                                        </div>
+                                        <p class="mt-2 text-xs leading-5 text-[#7F5B64]">${escapeHtml(product.description || '')}</p>
+                                    </div>
+                                </a>
+                                <div class="flex flex-wrap gap-2 border-t border-[#F5E6E8] px-3 py-3">
+                                    <a href="${product.product_url}" class="rounded-full border border-[#E7C7CF] bg-white px-4 py-2 text-xs font-semibold text-[#7A5252] transition hover:bg-[#FFF4F6]">View Product</a>
+                                    <form method="POST" action="${product.add_to_cart_url}" class="inline-flex">
+                                        ${tokenField}
+                                        <input type="hidden" name="product_id" value="${escapeHtml(String(product.product_id))}">
+                                        ${product.variant_id ? `<input type="hidden" name="variant_id" value="${escapeHtml(String(product.variant_id))}">` : ''}
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="rounded-full bg-[#5A3A3A] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#7A5252]">Add to Cart</button>
+                                    </form>
+                                    <a href="${product.checkout_url}" class="rounded-full bg-[#C94F7C] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#b8456e]">Checkout</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            };
+
+            const saveAiMessages = () => {
+                window.sessionStorage.setItem(aiStorageKey, JSON.stringify(aiMessages));
+            };
+
+            const loadAiMessages = () => {
+                try {
+                    const stored = JSON.parse(window.sessionStorage.getItem(aiStorageKey) ?? '[]');
+                    aiMessages = Array.isArray(stored) ? stored : [];
+                    aiMessageSequence = aiMessages.length;
+                } catch (error) {
+                    aiMessages = [];
+                    aiMessageSequence = 0;
+                }
+            };
+
+            const getAiReply = (input) => {
+                const text = (input ?? '').toLowerCase();
+
+                if (text.includes('delivery') || text.includes('ship') || text.includes('shipping')) {
+                    return "Bonbon AI here. Delivery availability depends on your location and the order schedule. For exact delivery coverage and fees, switch to Live Chat and our team can confirm it for you.";
+                }
+
+                if (text.includes('same day') || text.includes('today')) {
+                    return "For same-day requests, the fastest route is Live Chat so support can check stock and production timing right away.";
+                }
+
+                if (text.includes('custom') || text.includes('peg') || text.includes('design')) {
+                    return "Yes, Bonbon can handle custom cake requests and peg inspirations. You can send your peg in Live Chat so the support team can review it properly.";
+                }
+
+                if (text.includes('price') || text.includes('hm') || text.includes('cost') || text.includes('how much')) {
+                    return "Prices vary by product, size, and customizations. If you already know the item you want, Live Chat is best for an exact quote.";
+                }
+
+                if (text.includes('best seller') || text.includes('popular')) {
+                    return "Our best sellers are usually the most visually appealing celebration cakes and easy-to-order favorites. You can also browse the featured products section for quick picks.";
+                }
+
+                if (text.includes('payment') || text.includes('gcash') || text.includes('cod')) {
+                    return "Payment options can depend on the checkout setup currently enabled by the store. For the most accurate answer, switch to Live Chat and support can confirm what is available.";
+                }
+
+                if (text.includes('hello') || text.includes('hi') || text.includes('hey')) {
+                    return "Hi! You can ask me quick questions here, or switch to Live Chat if you want a real Bonbon support reply.";
+                }
+
+                return "I can help with quick store questions, but for exact order details, custom requests, or delivery confirmation, please switch to Live Chat so Bonbon Support can assist you directly.";
+            };
+
+            const renderModeButtons = () => {
+                [liveModeButton, aiModeButton].forEach((button) => {
+                    if (!button) {
+                        return;
+                    }
+
+                    const active = button.dataset.chatMode === currentMode;
+                    button.className = `bonbon-chat-mode-toggle rounded-[1.1rem] px-4 py-3 text-sm font-semibold transition ${
+                        active
+                            ? 'bg-[#5A3A3A] text-white shadow-sm'
+                            : 'bg-white text-[#7A5252] hover:bg-[#FFF1F4]'
+                    }`;
+                });
+
+                if (!modeDescription) {
+                    return;
+                }
+
+                modeDescription.textContent = currentMode === 'ai'
+                    ? 'Get quick automated answers from Bonbon AI.'
+                    : 'Chat with Bonbon Support in real time.';
+            };
+
+            const renderCurrentMode = () => {
+                renderModeButtons();
+
+                if (currentMode === 'ai') {
+                    resetConversationSubscription();
+                    stopHeartbeat();
+                    typingIndicator.classList.add('hidden');
+                    statusDot.className = 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-amber-400';
+                    statusText.textContent = 'AI instant replies';
+                    messageInput.placeholder = 'Ask Bonbon AI...';
+                    attachmentInput.disabled = true;
+                    attachmentInput.value = '';
+                    renderComposerAttachment(null);
+                    uploadName.textContent = 'AI chat is text-only. Switch to Live Chat to send files.';
+                    renderMessages(aiMessages);
+                    return;
+                }
+
+                messageInput.placeholder = 'Message Bonbon Support...';
+                attachmentInput.disabled = false;
+                sync();
+                startHeartbeat();
             };
 
             const subscribeToConversation = (channelName) => {
@@ -377,11 +597,18 @@
                 document.body.classList.add('chat-open');
 
                 if (!hasLoaded) {
-                    sync();
+                    if (currentMode === 'ai') {
+                        renderCurrentMode();
+                    } else {
+                        sync();
+                        startHeartbeat();
+                    }
                     hasLoaded = true;
+                } else if (currentMode === 'ai') {
+                    renderCurrentMode();
+                } else {
+                    startHeartbeat();
                 }
-
-                startHeartbeat();
             };
 
             const closePanel = () => {
@@ -481,7 +708,7 @@
                 }
 
                 thread.innerHTML = messages.map((message) => {
-                    if (message.sender_type === 'system') {
+                    if (message.sender_type === 'system' && !message.products?.length) {
                         return `
                             <div data-message-id="${message.id}" class="mb-5 flex justify-center">
                                 <div class="max-w-xl rounded-full bg-[#FCEDEF] px-4 py-2 text-center text-xs font-medium text-[#8C6770]">
@@ -501,6 +728,7 @@
                             <div class="max-w-[90%]">
                                 <div class="${bubble} ${radius} px-4 py-3 shadow-sm">
                                     ${message.body ? `<div class="whitespace-pre-wrap text-sm leading-7">${escapeHtml(message.body)}</div>` : ''}
+                                    ${message.sender_type === 'assistant' ? renderAiProductCards(message.products || []) : ''}
                                     ${formatAttachment(message)}
                                 </div>
                                 <div class="mt-1 flex ${message.is_mine ? 'justify-end' : 'justify-start'} gap-2 px-1 text-[11px] ${meta}">
@@ -522,6 +750,10 @@
             const renderConversation = (conversation) => {
                 currentConversation = conversation;
 
+                 if (currentMode === 'ai') {
+                    return;
+                }
+
                 if (!conversation) {
                     statusDot.className = 'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-slate-300';
                     statusText.textContent = 'Offline';
@@ -537,6 +769,11 @@
             };
 
             const sync = async (resubscribe = true) => {
+                if (currentMode === 'ai') {
+                    renderCurrentMode();
+                    return;
+                }
+
                 try {
                     const response = await fetch(routes.session, { headers: buildHeaders() });
                     const payload = await response.json();
@@ -552,6 +789,10 @@
             };
 
             const sendTyping = async (isTyping) => {
+                if (currentMode === 'ai') {
+                    return;
+                }
+
                 if (typingState === isTyping) {
                     return;
                 }
@@ -566,6 +807,72 @@
 
             sendForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                const body = messageInput.value.trim();
+
+                if (currentMode === 'ai') {
+                    if (!body) {
+                        uploadName.textContent = 'Write a message before sending.';
+                        return;
+                    }
+
+                    const customerMessage = buildAiMessage({
+                        senderType: 'customer',
+                        body,
+                        receiptLabel: 'Seen',
+                    });
+
+                    aiMessages = [...aiMessages, customerMessage];
+                    saveAiMessages();
+                    renderMessages(aiMessages);
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    uploadName.textContent = 'AI chat is text-only. Switch to Live Chat to send files.';
+                    typingIndicator.textContent = 'Bonbon AI is thinking...';
+                    typingIndicator.classList.remove('hidden');
+                    scrollToBottom();
+
+                    const history = aiMessages.slice(-8).map((message) => ({
+                        role: message.is_mine ? 'user' : 'assistant',
+                        content: message.body ?? '',
+                    }));
+
+                    try {
+                        const response = await fetch(routes.aiSend, {
+                            method: 'POST',
+                            headers: buildHeaders(true),
+                            body: JSON.stringify({
+                                body,
+                                history,
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Unable to reach Bonbon AI.');
+                        }
+
+                        const payload = await response.json();
+                        const aiReply = buildAiMessage({
+                            senderType: 'assistant',
+                            body: payload.message?.body ?? 'Bonbon AI could not answer that just now.',
+                            receiptLabel: '',
+                            products: payload.message?.products ?? [],
+                        });
+
+                        typingIndicator.classList.add('hidden');
+                        typingIndicator.textContent = 'Bonbon Support is typing...';
+                        aiMessages = [...aiMessages, aiReply];
+                        saveAiMessages();
+                        renderMessages(aiMessages);
+                        scrollToBottom();
+                    } catch (error) {
+                        typingIndicator.classList.add('hidden');
+                        typingIndicator.textContent = 'Bonbon Support is typing...';
+                        uploadName.textContent = 'Bonbon AI is unavailable right now. Please try again or switch to Live Chat.';
+                    }
+
+                    return;
+                }
+
                 const formData = new FormData(sendForm);
 
                 try {
@@ -610,6 +917,9 @@
             document.querySelectorAll('.bonbon-quick-prompt').forEach((button) => {
                 button.addEventListener('click', () => {
                     openPanel();
+                    if (currentMode === 'live') {
+                        renderCurrentMode();
+                    }
                     messageInput.value = button.dataset.prompt ?? '';
                     messageInput.focus();
                     messageInput.dispatchEvent(new Event('input'));
@@ -619,11 +929,16 @@
             messageInput.addEventListener('input', () => {
                 messageInput.style.height = 'auto';
                 messageInput.style.height = `${Math.min(messageInput.scrollHeight, 160)}px`;
-                void sendTyping(messageInput.value.trim().length > 0);
+
+                if (currentMode === 'live') {
+                    void sendTyping(messageInput.value.trim().length > 0);
+                }
 
                 window.clearTimeout(typingTimer);
                 typingTimer = window.setTimeout(() => {
-                    void sendTyping(false);
+                    if (currentMode === 'live') {
+                        void sendTyping(false);
+                    }
                 }, 1800);
             });
 
@@ -673,14 +988,35 @@
             backdrop.addEventListener('click', closePanel);
             window.addEventListener('bonbon-chat:open', openPanel);
 
-            window.addEventListener('beforeunload', () => {
-                fetch(routes.typing, {
-                    method: 'POST',
-                    headers: buildHeaders(true),
-                    body: JSON.stringify({ is_typing: false }),
-                    keepalive: true,
+            [liveModeButton, aiModeButton].forEach((button) => {
+                button?.addEventListener('click', () => {
+                    const nextMode = button.dataset.chatMode === 'ai' ? 'ai' : 'live';
+                    if (currentMode === nextMode) {
+                        return;
+                    }
+
+                    currentMode = nextMode;
+                    window.sessionStorage.setItem('bonbon-chat-mode', currentMode);
+                    window.clearTimeout(aiReplyTimer);
+                    typingIndicator.classList.add('hidden');
+                    typingIndicator.textContent = 'Bonbon Support is typing...';
+                    renderCurrentMode();
                 });
             });
+
+            window.addEventListener('beforeunload', () => {
+                if (currentMode === 'live') {
+                    fetch(routes.typing, {
+                        method: 'POST',
+                        headers: buildHeaders(true),
+                        body: JSON.stringify({ is_typing: false }),
+                        keepalive: true,
+                    });
+                }
+            });
+
+            loadAiMessages();
+            renderModeButtons();
 
             @if (request()->routeIs('assistant'))
                 openPanel();

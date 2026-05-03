@@ -6,6 +6,12 @@
                 <p>Email: {{ $storeSettings?->footer_email ?: 'exceeed12@gmail.com' }}</p>
                 <p>Phone: {{ $storeSettings?->footer_phone ?: '0917 357 7557' }}</p>
                 <p>Address: {{ $storeSettings?->footer_address ?: 'Paranaque, Philippines' }}</p>
+                @if($storeSettings?->footer_hours)
+                    <div class="mt-4 pt-4 border-t border-[#E6B7BE]">
+                        <p class="font-semibold mb-2">Store Hours:</p>
+                        <p class="text-sm whitespace-pre-line">{{ $storeSettings->footer_hours }}</p>
+                    </div>
+                @endif
             </div>
 
             <div>

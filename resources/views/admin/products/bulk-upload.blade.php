@@ -60,6 +60,7 @@
         <ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
             <li>One row = one variant</li>
             <li>Repeat product fields for extra variants of the same product</li>
+            <li>New category names in the file are created automatically and will appear in the category list</li>
             <li><code>status</code>: <code>active</code>, <code>inactive</code>, or <code>pre_order</code></li>
             <li>Boolean fields: use <code>true</code> or <code>false</code></li>
             <li><code>image_url</code> values are attached to product images (first becomes main image)</li>

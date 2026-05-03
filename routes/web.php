@@ -133,6 +133,7 @@ Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
 Route::get('/chat/session', [ChatController::class, 'session'])->name('chat.session');
 Route::post('/chat/profile', [ChatController::class, 'updateProfile'])->name('chat.profile');
 Route::post('/chat/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+Route::post('/chat/ai-message', [ChatController::class, 'aiMessage'])->name('chat.ai-message');
 Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
 Route::post('/chat/presence', [ChatController::class, 'presence'])->name('chat.presence');
 Route::get('/chat/attachments/{message}', [ChatController::class, 'attachment'])->name('chat.attachments.show');

@@ -165,6 +165,35 @@ class ProductController extends Controller
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
+    private function resolveBulkUploadCategory(string $categoryValue): Category
+    {
+        $normalizedName = trim($categoryValue);
+        $slug = Str::slug($normalizedName);
+
+        if ($normalizedName === '') {
+            throw new \RuntimeException('Category is required.');
+        }
+
+        $category = Category::query()
+            ->where('name', $normalizedName)
+            ->orWhere('slug', $slug)
+            ->first();
+
+        if ($category) {
+            if (! $category->is_active) {
+                $category->update(['is_active' => true]);
+            }
+
+            return $category;
+        }
+
+        return Category::query()->create([
+            'name' => $normalizedName,
+            'slug' => $slug !== '' ? $slug : 'category',
+            'is_active' => true,
+        ]);
+    }
+
     private function validateAndNormalizeVariants(Request $request, ?Product $product = null): array
     {
         $variants = $request->input('variants', []);
@@ -617,14 +646,7 @@ class ProductController extends Controller
                 DB::transaction(function () use ($groupRecords, $mode, &$createdCount, &$updatedCount): void {
                     $first = $groupRecords->first();
                     $categoryValue = (string) ($first['category'] ?? '');
-                    $category = Category::query()
-                        ->where('name', $categoryValue)
-                        ->orWhere('slug', Str::slug($categoryValue))
-                        ->first();
-
-                    if (! $category) {
-                        throw new \RuntimeException('Category not found: ' . $categoryValue);
-                    }
+                    $category = $this->resolveBulkUploadCategory($categoryValue);
 
                     $name = (string) ($first['name'] ?? '');
                     $price = (float) ($first['price'] ?? 0);

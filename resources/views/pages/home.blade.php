@@ -55,5 +55,62 @@
         </div>
     </section>
 
+    <section class="mb-12">
+        <h2 class="text-3xl font-bold text-center mb-8">From our Facebook</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+    
+    <!-- Facebook Post 1 -->
+    <div class="bg-white rounded-2xl shadow p-3">
+        <iframe 
+            src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FBonbonsPHofficial%2Fposts%2Fpfbid02Rad9TxY2VaWsC9EsFk5kg8MfW5Rontikdq5avuy2euJGS7HknLRBcc7bD6xPnyRBl&show_text=true" 
+            class="w-full h-[450px] rounded-xl"
+            style="border:none;overflow:hidden"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
 
+    <!-- Facebook Post 2 -->
+    <div class="bg-white rounded-2xl shadow p-3">
+        <iframe 
+            src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FBonbonsPHofficial%2Fposts%2Fpfbid0246ePcV8CtGokCKtNkuTgdCNEKCxnN5sL9CrCCnZn6DJCF7WG5wkNzpjwJ9VEhVfDl&show_text=true" 
+            class="w-full h-[450px] rounded-xl"
+            style="border:none;overflow:hidden"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+
+    <!-- Facebook Post 3 -->
+    <div class="bg-white rounded-2xl shadow p-3">
+        <iframe 
+            src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FBonbonsPHofficial%2Fposts%2Fpfbid0kHqzRrbZJ3kxFeqRQLXnVhiMyud8XCM2FfSkvYEE3dzfRRhUW8QW1Xthhs3dAajol&show_text=true" 
+            class="w-full h-[450px] rounded-xl"
+            style="border:none;overflow:hidden"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+
+    <!-- Facebook Post 4 -->
+    <div class="bg-white rounded-2xl shadow p-3">
+        <iframe 
+            src="https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2FBonbonsPHofficial%2Fposts%2Fpfbid02SGbS8u8SSG3VZ1kz1KHk7ZVfVKonZ5wwWJjchuX6bD6FM1En4Fj3V3h4S3kyufpHl&show_text=true" 
+            class="w-full h-[450px] rounded-xl"
+            style="border:none;overflow:hidden"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+        </iframe>
+    </div>
+
+</div>
+    </section>
 @endsection

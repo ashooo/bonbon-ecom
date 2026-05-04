@@ -57,7 +57,7 @@
                     </button>
                 </form>
 
-                <form method="GET" action="{{ route('admin.orders.export') }}" class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]">
+                <form method="GET" action="{{ route('admin.orders.export') }}" class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto_auto]">
                     <div>
                         <label for="orders_export_start_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Date</label>
                         <input id="orders_export_start_date" type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
@@ -65,6 +65,14 @@
                     <div>
                         <label for="orders_export_end_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">End Date</label>
                         <input id="orders_export_end_date" type="date" name="end_date" value="{{ now()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
+                    </div>
+                    <div>
+                        <label for="orders_export_format" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Format</label>
+                        <select id="orders_export_format" name="format" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                        </select>
                     </div>
                     <div class="flex items-end">
                         <button type="submit" class="w-full rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700">

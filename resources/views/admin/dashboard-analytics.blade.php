@@ -6,7 +6,7 @@
                 <h1 class="text-3xl font-bold">Analytics Dashboard</h1>
                 <p class="mt-1 text-sm text-slate-500">Last 7 days + live totals</p>
             </div>
-            <form method="GET" action="{{ route('admin.reports.export') }}" class="grid grid-cols-1 gap-2 rounded-3xl bg-white p-4 shadow-soft sm:grid-cols-[1fr_1fr_auto_auto]">
+            <form method="GET" action="{{ route('admin.reports.export') }}" class="grid grid-cols-1 gap-2 rounded-3xl bg-white p-4 shadow-soft sm:grid-cols-[1fr_1fr_auto_auto_auto]">
                 <div>
                     <label for="report_start_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Date</label>
                     <input id="report_start_date" type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
@@ -20,6 +20,14 @@
                     <select id="report_group_by" name="group_by" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
                         <option value="day">Day</option>
                         <option value="month">Month</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="report_export_format" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Format</label>
+                    <select id="report_export_format" name="format" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                        <option value="csv">CSV</option>
+                        <option value="excel">Excel</option>
+                        <option value="pdf">PDF</option>
                     </select>
                 </div>
                 <div class="flex items-end">

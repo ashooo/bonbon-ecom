@@ -42,19 +42,45 @@
                 </div>
             @endif
 
-            <form method="GET" action="{{ route('admin.orders.index') }}" class="mb-6 flex flex-col gap-3 md:flex-row">
-                <input type="hidden" name="status" value="{{ $orderFilters['status'] ?? 'all' }}">
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ $orderFilters['search'] ?? '' }}"
-                    placeholder="Search by order number, name, or email"
-                    class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
-                >
-                <button type="submit" class="rounded-2xl bg-slate-700 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-                    Search
-                </button>
-            </form>
+            <div class="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_auto]">
+                <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-col gap-3 md:flex-row">
+                    <input type="hidden" name="status" value="{{ $orderFilters['status'] ?? 'all' }}">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ $orderFilters['search'] ?? '' }}"
+                        placeholder="Search by order number, name, or email"
+                        class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                    >
+                    <button type="submit" class="rounded-2xl bg-slate-700 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                        Search
+                    </button>
+                </form>
+
+                <form method="GET" action="{{ route('admin.orders.export') }}" class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto_auto]">
+                    <div>
+                        <label for="orders_export_start_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Date</label>
+                        <input id="orders_export_start_date" type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
+                    </div>
+                    <div>
+                        <label for="orders_export_end_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">End Date</label>
+                        <input id="orders_export_end_date" type="date" name="end_date" value="{{ now()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
+                    </div>
+                    <div>
+                        <label for="orders_export_format" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Format</label>
+                        <select id="orders_export_format" name="format" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700">
+                            Export Orders
+                        </button>
+                    </div>
+                </form>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -142,6 +168,25 @@
                                             View Details
                                         </a>
 
+                                        @if ($order->invoice)
+                                            <div class="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    class="js-admin-print-invoice text-xs font-semibold text-pink-600 hover:text-pink-800 hover:underline"
+                                                    data-print-url="{{ route('admin.invoices.print', $order->invoice) }}"
+                                                    data-track-url="{{ route('admin.invoices.track-print', $order->invoice) }}"
+                                                >
+                                                    Print Invoice
+                                                </button>
+                                                <a
+                                                    href="{{ route('admin.invoices.download', $order->invoice) }}"
+                                                    class="text-xs font-semibold text-slate-600 hover:text-slate-800 hover:underline"
+                                                >
+                                                    Download
+                                                </a>
+                                            </div>
+                                        @endif
+
                                         <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="flex items-center gap-2">
                                             @csrf
                                             @method('PATCH')
@@ -187,6 +232,26 @@
                 const interactive = event.target.closest('a, button, form, select, input, textarea, label');
                 if (interactive) return;
                 window.location.href = row.dataset.orderUrl;
+            });
+        });
+
+        document.querySelectorAll('.js-admin-print-invoice').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+                try {
+                    await fetch(button.dataset.trackUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrf,
+                            'Accept': 'application/json',
+                        },
+                    });
+                } catch (error) {
+                    console.warn('Invoice print tracking failed.', error);
+                }
+
+                window.open(button.dataset.printUrl, '_blank', 'noopener');
             });
         });
     })();

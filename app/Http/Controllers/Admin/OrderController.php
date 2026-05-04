@@ -25,7 +25,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['items.variant.product', 'user']);
+        $order->load(['items.variant.product', 'user', 'invoice']);
 
         $backQuery = array_filter([
             'section' => 'orders',

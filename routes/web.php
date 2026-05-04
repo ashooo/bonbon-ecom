@@ -133,6 +133,7 @@ Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
 Route::get('/chat/session', [ChatController::class, 'session'])->name('chat.session');
 Route::post('/chat/profile', [ChatController::class, 'updateProfile'])->name('chat.profile');
 Route::post('/chat/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+Route::post('/chat/ai-message', [ChatController::class, 'aiMessage'])->name('chat.ai-message');
 Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
 Route::post('/chat/presence', [ChatController::class, 'presence'])->name('chat.presence');
 Route::get('/chat/attachments/{message}', [ChatController::class, 'attachment'])->name('chat.attachments.show');
@@ -282,7 +283,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $searchFilter = $request->string('search')->trim()->value();
 
         $ordersQuery = Order::query()
-            ->with(['items.variant.product', 'user'])
+            ->with(['items.variant.product', 'user', 'invoice'])
             ->latest();
 
         if ($statusFilter !== '' && $statusFilter !== 'all') {
@@ -546,8 +547,14 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/products/images/order', [\App\Http\Controllers\Admin\ProductController::class, 'updateImageOrder'])->name('admin.products.images.order');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders-export', [\App\Http\Controllers\Admin\ExportController::class, 'orders'])->name('admin.orders.export');
+    Route::get('/reports-export', [\App\Http\Controllers\Admin\ExportController::class, 'reports'])->name('admin.reports.export');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
+
+    Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\Admin\InvoiceController::class, 'print'])->name('admin.invoices.print');
+    Route::post('/invoices/{invoice}/track-print', [\App\Http\Controllers\Admin\InvoiceController::class, 'trackPrint'])->name('admin.invoices.track-print');
+    Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('admin.invoices.download');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->withTrashed()->name('admin.users.show');

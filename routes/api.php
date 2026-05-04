@@ -31,5 +31,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
         Route::put('/orders/{order}/cancel', [OrderController::class, 'cancel']);
+
+        Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Api\InvoiceController::class, 'download'])->name('api.invoices.download');
     });
 });

@@ -112,6 +112,18 @@
                     </div>
 
                     <div>
+                        <label for="footer_hours" class="block text-sm font-medium text-slate-700 mb-2">Store Hours</label>
+                        <textarea
+                            id="footer_hours"
+                            name="footer_hours"
+                            rows="3"
+                            placeholder="e.g., Mon-Fri: 9:00 AM - 6:00 PM&#10;Sat-Sun: 10:00 AM - 5:00 PM"
+                            class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                        >{{ old('footer_hours', $settings?->footer_hours ?? $storeSettings?->footer_hours ?? '') }}</textarea>
+                        <p class="mt-2 text-xs text-slate-500">Display your store operating hours. You can use line breaks to separate days.</p>
+                    </div>
+
+                    <div>
                         <label for="copyright_text" class="block text-sm font-medium text-slate-700 mb-2">Copyright Text</label>
                         <input
                             id="copyright_text"

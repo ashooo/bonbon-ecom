@@ -52,6 +52,11 @@ class Order extends Model
         return $this->belongsTo(Address::class, 'address_id');
     }
 
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     // Backward-compatible aliases used in current profile page.
     public function getTotalAmountAttribute()
     {

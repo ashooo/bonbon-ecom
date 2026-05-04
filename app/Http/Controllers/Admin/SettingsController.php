@@ -20,6 +20,7 @@ class SettingsController extends Controller
             'footer_email' => 'nullable|email|max:255',
             'footer_phone' => 'nullable|string|max:255',
             'footer_address' => 'nullable|string|max:255',
+            'footer_hours' => 'nullable|string|max:1000',
             'copyright_text' => 'nullable|string|max:255',
         ]);
 

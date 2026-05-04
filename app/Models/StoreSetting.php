@@ -15,6 +15,7 @@ class StoreSetting extends Model
         'footer_email',
         'footer_phone',
         'footer_address',
+        'footer_hours',
         'copyright_text',
     ];
 

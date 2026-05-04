@@ -7,6 +7,7 @@ use App\Models\ChatAutoReply;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\ChatPresence;
+use App\Services\StoreChatbotService;
 use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,11 @@ use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
+    public function __construct(
+        private readonly StoreChatbotService $storeChatbotService
+    ) {
+    }
+
     public function show(Request $request)
     {
         $conversation = $this->resolveConversation($request, false);
@@ -182,6 +188,44 @@ class ChatController extends Controller
             $message->attachment_path,
             $message->attachment_name
         );
+    }
+
+    public function aiMessage(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'body' => 'required|string|max:4000',
+            'history' => 'nullable|array|max:12',
+            'history.*.role' => 'required_with:history|string|max:20',
+            'history.*.content' => 'required_with:history|string|max:4000',
+        ]);
+
+        $result = $this->storeChatbotService->reply(
+            $data['body'],
+            $data['history'] ?? []
+        );
+
+        return response()->json([
+            'message' => [
+                'id' => 'ai-' . Str::uuid(),
+                'sender_type' => 'assistant',
+                'sender_name' => 'Bonbon AI',
+                'body' => $result['reply'],
+                'products' => $result['products'],
+                'attachment_url' => null,
+                'attachment_download_url' => null,
+                'attachment_view_url' => null,
+                'attachment_name' => null,
+                'attachment_mime' => null,
+                'attachment_size' => null,
+                'is_image' => false,
+                'created_at' => now()->toIso8601String(),
+                'timestamp' => now()->format('g:i A'),
+                'full_timestamp' => now()->format('M j, Y g:i A'),
+                'is_mine' => false,
+                'receipt_label' => '',
+                'restricted' => $result['restricted'],
+            ],
+        ]);
     }
 
     private function resolveConversation(Request $request, bool $createIfMissing): ?ChatConversation

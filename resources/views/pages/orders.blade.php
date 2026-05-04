@@ -90,6 +90,7 @@
                                 View Details
                             </a>
 
+
                             @if (in_array($status, ['pending', 'confirmed'], true))
                                 <form method="POST" action="{{ route('orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?');" class="space-y-2">
                                     @csrf

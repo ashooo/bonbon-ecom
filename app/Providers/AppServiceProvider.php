@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
 use App\Models\StoreSetting;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('storeSettings', $storeSettings);
+        });
+
+        Order::created(function (Order $order) {
+            $invoiceService = app(\App\Services\InvoiceService::class);
+            $invoiceService->generateInvoice($order);
         });
     }
 }

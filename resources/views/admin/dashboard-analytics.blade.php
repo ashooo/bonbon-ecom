@@ -1,9 +1,33 @@
 <!-- Dashboard Section -->
 <div id="dashboard-section" class="admin-section hidden">
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
-            <h1 class="text-3xl font-bold">Analytics Dashboard</h1>
-            <span class="rounded-2xl bg-slate-200 px-4 py-2 text-sm text-slate-700">Last 7 days + live totals</span>
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold">Analytics Dashboard</h1>
+                <p class="mt-1 text-sm text-slate-500">Last 7 days + live totals</p>
+            </div>
+            <form method="GET" action="{{ route('admin.reports.export') }}" class="grid grid-cols-1 gap-2 rounded-3xl bg-white p-4 shadow-soft sm:grid-cols-[1fr_1fr_auto_auto]">
+                <div>
+                    <label for="report_start_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Date</label>
+                    <input id="report_start_date" type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
+                </div>
+                <div>
+                    <label for="report_end_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">End Date</label>
+                    <input id="report_end_date" type="date" name="end_date" value="{{ now()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100" required>
+                </div>
+                <div>
+                    <label for="report_group_by" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Group By</label>
+                    <select id="report_group_by" name="group_by" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
+                        <option value="day">Day</option>
+                        <option value="month">Month</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full rounded-xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700">
+                        Export Reports
+                    </button>
+                </div>
+            </form>
         </div>
 
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -55,7 +55,7 @@ class OrderHistoryController extends Controller
     public function index(Request $request)
     {
         if (Auth::check()) {
-            $orders = Auth::user()->orders()->latest()->get();
+            $orders = Auth::user()->orders()->with('invoice')->latest()->get();
 
             return view('pages.orders', [
                 'orders' => $orders,
@@ -68,6 +68,7 @@ class OrderHistoryController extends Controller
 
         if (! empty($orderNumbers)) {
             $orders = Order::query()
+                ->with('invoice')
                 ->whereNull('user_id')
                 ->whereIn('order_number', $orderNumbers)
                 ->latest()
@@ -124,7 +125,7 @@ class OrderHistoryController extends Controller
             ]);
         }
 
-        $order->load('items.variant.product');
+        $order->load(['items.variant.product', 'invoice']);
 
         return view('pages.orders-show', [
             'order' => $order,

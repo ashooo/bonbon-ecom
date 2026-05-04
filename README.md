@@ -181,3 +181,18 @@ php artisan view:clear
 ```bash
 php artisan migrate:fresh --seed
 ```
+
+
+### Admin Routes
+- `GET /admin/invoices/{invoice}/print` - Display invoice in browser
+- `POST /admin/invoices/{invoice}/track-print` - Record print event
+- `GET /admin/invoices/{invoice}/download` - Download invoice file
+
+### API Routes (Authenticated Users)
+- `GET /api/v1/invoices/{invoice}/download` - Download own invoice
+
+### Database
+- `invoices` table tracks PDF paths and print counts
+- Foreign key relationship with `orders` table
+- Automatic cascade delete when order is deleted
+

@@ -18,7 +18,9 @@
                 <p class="text-sm text-gray-600">Order Details</p>
                 <h1 class="text-3xl font-bold">{{ $order->order_number }}</h1>
             </div>
-            <a href="{{ route('orders.index') }}" class="inline-flex items-center rounded-2xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Back to Orders</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('orders.index') }}" class="inline-flex items-center rounded-2xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Back to Orders</a>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
@@ -65,6 +67,19 @@
                         <div class="flex justify-between gap-4 border-t border-gray-200 pt-3 text-base font-semibold"><span>Total</span><span>&#8369;{{ number_format((float) $order->total, 2) }}</span></div>
                     </div>
                 </div>
+
+                @if (! $isGuestView && $order->invoice)
+                    <div class="rounded-3xl bg-white p-6 shadow-md">
+                        <h2 class="mb-4 text-xl font-semibold">Invoice</h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between gap-4"><span class="text-gray-500">Available</span><span>Ready</span></div>
+                            <div class="flex justify-between gap-4"><span class="text-gray-500">Last Downloaded</span><span>{{ $order->invoice->last_printed_at?->format('M d, Y h:i A') ?? 'Not yet' }}</span></div>
+                            <a href="{{ route('api.invoices.download', $order->invoice) }}" class="block rounded-xl bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-pink-700">
+                                Download Invoice
+                            </a>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="rounded-3xl bg-white p-6 shadow-md">
                     <h2 class="mb-4 text-xl font-semibold">Customer</h2>

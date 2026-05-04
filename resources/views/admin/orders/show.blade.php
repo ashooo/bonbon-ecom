@@ -18,12 +18,30 @@
                 <p class="text-sm text-slate-500">Order Details</p>
                 <h1 class="text-3xl font-bold">{{ $order->order_number }}</h1>
             </div>
-            <a
-                href="{{ route('admin.dashboard', $backQuery) }}"
-                class="inline-flex items-center rounded-2xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-                Back to Orders
-            </a>
+            <div class="flex flex-wrap gap-2">
+                @if ($order->invoice)
+                    <button
+                        type="button"
+                        class="js-admin-print-invoice inline-flex items-center rounded-2xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700"
+                        data-print-url="{{ route('admin.invoices.print', $order->invoice) }}"
+                        data-track-url="{{ route('admin.invoices.track-print', $order->invoice) }}"
+                    >
+                        Print Invoice
+                    </button>
+                    <a
+                        href="{{ route('admin.invoices.download', $order->invoice) }}"
+                        class="inline-flex items-center rounded-2xl bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+                    >
+                        Download Invoice
+                    </a>
+                @endif
+                <a
+                    href="{{ route('admin.dashboard', $backQuery) }}"
+                    class="inline-flex items-center rounded-2xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                >
+                    Back to Orders
+                </a>
+            </div>
         </div>
 
         @if (session('success'))
@@ -89,6 +107,32 @@
                     </div>
                 </div>
 
+                @if ($order->invoice)
+                    <div class="rounded-3xl bg-white p-6 shadow-soft">
+                        <h2 class="mb-4 text-xl font-semibold">Invoice</h2>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between gap-4"><span class="text-slate-500">Prints</span><span>{{ $order->invoice->print_count }}</span></div>
+                            <div class="flex justify-between gap-4"><span class="text-slate-500">Last Printed</span><span>{{ $order->invoice->last_printed_at?->format('M d, Y h:i A') ?? 'Not yet' }}</span></div>
+                            <div class="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2">
+                                <button
+                                    type="button"
+                                    class="js-admin-print-invoice rounded-xl bg-pink-600 px-3 py-2 text-sm font-semibold text-white hover:bg-pink-700"
+                                    data-print-url="{{ route('admin.invoices.print', $order->invoice) }}"
+                                    data-track-url="{{ route('admin.invoices.track-print', $order->invoice) }}"
+                                >
+                                    Print
+                                </button>
+                                <a
+                                    href="{{ route('admin.invoices.download', $order->invoice) }}"
+                                    class="rounded-xl bg-slate-100 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                                >
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="rounded-3xl bg-white p-6 shadow-soft">
                     <h2 class="mb-4 text-xl font-semibold">Customer</h2>
                     <div class="space-y-2 text-sm">
@@ -132,3 +176,29 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            document.querySelectorAll('.js-admin-print-invoice').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+                    try {
+                        await fetch(button.dataset.trackUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json',
+                            },
+                        });
+                    } catch (error) {
+                        console.warn('Invoice print tracking failed.', error);
+                    }
+
+                    window.open(button.dataset.printUrl, '_blank', 'noopener');
+                });
+            });
+        })();
+    </script>
+@endpush

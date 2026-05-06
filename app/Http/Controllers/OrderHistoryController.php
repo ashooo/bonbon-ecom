@@ -125,7 +125,7 @@ class OrderHistoryController extends Controller
             ]);
         }
 
-        $order->load(['items.variant.product', 'invoice']);
+        $order->load(['items.variant.product', 'invoice', 'statusHistory']);
 
         return view('pages.orders-show', [
             'order' => $order,

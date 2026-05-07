@@ -99,6 +99,8 @@
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between gap-4"><span class="text-slate-500">Status</span><span class="rounded-full px-2 py-1 text-xs font-semibold {{ $statusClass }}">{{ ucfirst($status) }}</span></div>
                         <div class="flex justify-between gap-4"><span class="text-slate-500">Type</span><span>{{ ucfirst((string) $order->order_type) }}</span></div>
+                        <div class="flex justify-between gap-4"><span class="text-slate-500">Payment Method</span><span>{{ (string) $order->payment_method === 'paymongo' ? 'QRPH' : strtoupper((string) $order->payment_method) }}</span></div>
+                        <div class="flex justify-between gap-4"><span class="text-slate-500">Payment Status</span><span>{{ ucfirst((string) $order->payment_status) }}</span></div>
                         <div class="flex justify-between gap-4"><span class="text-slate-500">Placed</span><span>{{ $order->created_at?->format('M d, Y h:i A') }}</span></div>
                         <div class="flex justify-between gap-4"><span class="text-slate-500">Fulfillment</span><span>{{ $order->fulfillment_date?->format('M d, Y') }} {{ $order->fulfillment_time ? \Illuminate\Support\Str::of($order->fulfillment_time)->substr(0, 5) : '' }}</span></div>
                         <div class="flex justify-between gap-4"><span class="text-slate-500">Subtotal</span><span>&#8369;{{ number_format((float) $order->subtotal, 2) }}</span></div>
@@ -133,16 +135,32 @@
                     </div>
                 @endif
 
+                @php
+                    $displayDeliveryAddress = null;
+
+                    if ((string) $order->order_type === 'pickup') {
+                        $displayDeliveryAddress = 'BonBons PH';
+                    } elseif ($order->delivery_address) {
+                        $displayDeliveryAddress = trim((string) $order->delivery_address);
+
+                        if (filter_var($displayDeliveryAddress, FILTER_VALIDATE_URL)) {
+                            $path = urldecode((string) parse_url($displayDeliveryAddress, PHP_URL_PATH));
+                            $displayDeliveryAddress = str_replace('/maps/place/', '', trim($path, '/'));
+                            $displayDeliveryAddress = str_replace('+', ' ', $displayDeliveryAddress);
+                        }
+                    }
+                @endphp
+
                 <div class="rounded-3xl bg-white p-6 shadow-soft">
                     <h2 class="mb-4 text-xl font-semibold">Customer</h2>
                     <div class="space-y-2 text-sm">
                         <p class="font-medium">{{ $order->customer_name }}</p>
                         <p>{{ $order->customer_email }}</p>
                         <p>{{ $order->customer_phone }}</p>
-                        @if ($order->delivery_address)
+                        @if ($displayDeliveryAddress)
                             <div class="mt-3 rounded-2xl bg-slate-50 p-3">
                                 <p class="text-xs uppercase tracking-wide text-slate-500">Delivery Address</p>
-                                <p class="mt-1">{{ $order->delivery_address }}</p>
+                                <p class="mt-1">{{ $displayDeliveryAddress }}</p>
                             </div>
                         @endif
                         @if ($order->special_instructions)

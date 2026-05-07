@@ -40,14 +40,14 @@ class InvoiceController extends Controller
     {
         $invoice->loadMissing('order');
 
-        $path = $invoice->pdf_path;
+        $path = $this->invoiceService->ensureInvoicePdf($invoice, true);
 
         if ($path && Storage::disk('local')->exists($path)) {
             $invoice->incrementPrintCount();
 
             return Storage::disk('local')->download(
                 $path,
-                'invoice-' . $invoice->order->order_number . '.html'
+                'receipt-' . $invoice->order->order_number . '.pdf'
             );
         }
 

@@ -323,7 +323,14 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Line 1</label>
-                                        <input type="text" name="line1" value="{{ old('line1', $address->line1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        <input id="edit-line1-{{ $address->id }}" type="text" name="line1" value="{{ old('line1', $address->line1) }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                        <button type="button" data-action="open-address-map" data-line1-target="edit-line1-{{ $address->id }}" class="mt-2 inline-flex items-center gap-2 rounded-full bg-pink-50 px-3 py-1.5 text-xs font-semibold text-pink-700 transition hover:bg-pink-100">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                            Pin home delivery location
+                                        </button>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Line 2</label>
@@ -367,7 +374,14 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Line 1</label>
-                                <input type="text" name="line1" value="{{ old('line1') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                <input id="new-address-line1" type="text" name="line1" value="{{ old('line1') }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                <button type="button" data-action="open-address-map" data-line1-target="new-address-line1" class="mt-2 inline-flex items-center gap-2 rounded-full bg-pink-50 px-3 py-1.5 text-xs font-semibold text-pink-700 transition hover:bg-pink-100">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Pin home delivery location
+                                </button>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Line 2</label>
@@ -438,6 +452,41 @@
         </div>
     </div>
 
+    <div id="address-map-modal" class="fixed inset-0 z-[9999] hidden">
+        <div id="address-map-backdrop" class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="absolute inset-3 md:inset-6 lg:inset-10 z-10 flex flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b border-[#F5E6E8] px-6 py-4">
+                <h3 class="text-base font-bold text-[#5A3A3A]">Pin Home Delivery Address</h3>
+                <button type="button" id="address-map-close" class="flex h-10 w-10 items-center justify-center rounded-full bg-[#F9EFF1] text-[#5A3A3A] hover:bg-[#F0D5DB]">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="border-b border-[#F5E6E8] bg-[#FFF9FA] px-6 py-3">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="address-map-search" placeholder="Search place or address..." class="w-full rounded-xl border border-[#F5E6E8] px-4 py-3 text-sm text-[#5A3A3A] focus:border-[#C88A92] focus:outline-none focus:ring-2 focus:ring-[#C88A92]/20">
+                    <button type="button" id="address-map-locate" class="inline-flex items-center gap-1 rounded-xl border border-[#EED9DE] bg-white px-3 py-3 text-xs font-semibold text-[#5A3A3A] hover:bg-[#F9EFF1]">
+                        <svg class="h-4 w-4 text-[#C88A92]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0013 3.06V1h-2v2.06A8.994 8.994 0 003.06 11H1v2h2.06A8.994 8.994 0 0011 20.94V23h2v-2.06A8.994 8.994 0 0020.94 13H23v-2h-2.06z"></path>
+                        </svg>
+                        Use GPS
+                    </button>
+                </div>
+            </div>
+            <div id="address-map-picker" class="relative min-h-0 flex-1"></div>
+            <div class="border-t border-[#F5E6E8] px-6 py-4">
+                <p id="address-map-selected" class="mb-3 text-sm text-[#8C6770]">Move pin to choose location</p>
+                <button type="button" id="address-map-confirm" class="w-full rounded-full bg-[#5A3A3A] py-3 text-sm font-bold text-white hover:bg-[#7A5252]">
+                    Use This Location
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
     <script>
         const tabs = document.querySelectorAll('.tab-link');
         const sections = document.querySelectorAll('.tab-section');
@@ -491,5 +540,192 @@
                 if (target) target.classList.toggle('hidden');
             });
         });
+
+        (function () {
+            const mapModal = document.getElementById('address-map-modal');
+            const mapBackdrop = document.getElementById('address-map-backdrop');
+            const closeMapBtn = document.getElementById('address-map-close');
+            const confirmMapBtn = document.getElementById('address-map-confirm');
+            const selectedAddressEl = document.getElementById('address-map-selected');
+            const searchInput = document.getElementById('address-map-search');
+            const locateBtn = document.getElementById('address-map-locate');
+            const openButtons = document.querySelectorAll('[data-action="open-address-map"]');
+
+            if (!mapModal || !confirmMapBtn || openButtons.length === 0 || typeof L === 'undefined') return;
+
+            let map = null;
+            let marker = null;
+            let targetInput = null;
+            let selectedAddress = '';
+            let selectedComponents = null;
+
+            const defaultCenter = [14.4585, 120.9829];
+
+            const composeLine1 = (addr) => {
+                const segments = [
+                    addr.house_number,
+                    addr.road,
+                    addr.neighbourhood,
+                    addr.suburb,
+                    addr.village,
+                ].filter(Boolean);
+
+                if (segments.length > 0) {
+                    return segments.join(', ');
+                }
+
+                return null;
+            };
+
+            const extractAddressComponents = (addr) => ({
+                line1: composeLine1(addr) ?? null,
+                line2: addr.quarter ?? addr.hamlet ?? null,
+                city: addr.city ?? addr.town ?? addr.municipality ?? addr.village ?? null,
+                state: addr.state ?? addr.region ?? addr.province ?? null,
+                postalCode: addr.postcode ?? null,
+                country: addr.country ?? null,
+            });
+
+            const updateSelectedAddress = async (lat, lng) => {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=en`);
+                    const result = await response.json();
+                    selectedComponents = extractAddressComponents(result?.address ?? {});
+                    selectedAddress = (result && (result.display_name || result.name)) || `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`;
+                } catch (error) {
+                    selectedComponents = null;
+                    selectedAddress = `Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}`;
+                }
+
+                if (selectedAddressEl) {
+                    selectedAddressEl.textContent = selectedAddress;
+                }
+            };
+
+            const initMap = () => {
+                if (map) return;
+
+                map = L.map('address-map-picker', {
+                    zoomControl: true,
+                }).setView(defaultCenter, 14);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19,
+                }).addTo(map);
+
+                marker = L.marker(defaultCenter, { draggable: true }).addTo(map);
+
+                marker.on('dragend', () => {
+                    const point = marker.getLatLng();
+                    updateSelectedAddress(point.lat, point.lng);
+                });
+
+                map.on('click', (event) => {
+                    marker.setLatLng(event.latlng);
+                    updateSelectedAddress(event.latlng.lat, event.latlng.lng);
+                });
+
+                updateSelectedAddress(defaultCenter[0], defaultCenter[1]);
+            };
+
+            const openMap = (input) => {
+                targetInput = input;
+                mapModal.classList.remove('hidden');
+                initMap();
+
+                const currentValue = (targetInput?.value || '').trim();
+                if (currentValue) {
+                    selectedAddress = currentValue;
+                    if (selectedAddressEl) {
+                        selectedAddressEl.textContent = currentValue;
+                    }
+                }
+
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 120);
+
+                if (navigator.geolocation && map && marker) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        map.flyTo([lat, lng], 17, { duration: 1.1 });
+                        marker.setLatLng([lat, lng]);
+                        updateSelectedAddress(lat, lng);
+                    });
+                }
+            };
+
+            const closeMap = () => {
+                mapModal.classList.add('hidden');
+                searchInput.value = '';
+            };
+
+            openButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const targetId = button.dataset.line1Target;
+                    const input = targetId ? document.getElementById(targetId) : null;
+                    if (!input) return;
+                    openMap(input);
+                });
+            });
+
+            closeMapBtn?.addEventListener('click', closeMap);
+            mapBackdrop?.addEventListener('click', closeMap);
+
+            confirmMapBtn.addEventListener('click', () => {
+                if (targetInput && selectedAddress) {
+                    const parentForm = targetInput.closest('form');
+                    const line1Field = parentForm?.querySelector('input[name="line1"]');
+                    const line2Field = parentForm?.querySelector('input[name="line2"]');
+                    const cityField = parentForm?.querySelector('input[name="city"]');
+                    const stateField = parentForm?.querySelector('input[name="state"]');
+                    const postalField = parentForm?.querySelector('input[name="postal_code"]');
+                    const countryField = parentForm?.querySelector('input[name="country"]');
+
+                    line1Field.value = selectedComponents?.line1 || selectedAddress;
+                    if (line2Field && selectedComponents?.line2) line2Field.value = selectedComponents.line2;
+                    if (cityField && selectedComponents?.city) cityField.value = selectedComponents.city;
+                    if (stateField && selectedComponents?.state) stateField.value = selectedComponents.state;
+                    if (postalField && selectedComponents?.postalCode) postalField.value = selectedComponents.postalCode;
+                    if (countryField && selectedComponents?.country) countryField.value = selectedComponents.country;
+                }
+                closeMap();
+            });
+
+            locateBtn?.addEventListener('click', () => {
+                if (!navigator.geolocation || !map || !marker) return;
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    map.flyTo([lat, lng], 17, { duration: 1.1 });
+                    marker.setLatLng([lat, lng]);
+                    updateSelectedAddress(lat, lng);
+                });
+            });
+
+            searchInput?.addEventListener('keydown', async (event) => {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+
+                const query = searchInput.value.trim();
+                if (!query || !map || !marker) return;
+
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&countrycodes=ph&limit=1`);
+                    const results = await response.json();
+                    if (!Array.isArray(results) || results.length === 0) return;
+
+                    const lat = parseFloat(results[0].lat);
+                    const lng = parseFloat(results[0].lon);
+                    map.flyTo([lat, lng], 17, { duration: 1.1 });
+                    marker.setLatLng([lat, lng]);
+                    updateSelectedAddress(lat, lng);
+                } catch (error) {
+                    console.warn('Address map search failed.', error);
+                }
+            });
+        })();
     </script>
 @endsection

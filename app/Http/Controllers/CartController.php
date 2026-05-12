@@ -13,6 +13,36 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     private ?string $guestCartToken = null;
+    private const CUSTOMIZATION_PRICE_ADJUSTMENTS = [
+        'size' => [
+            '6' => 0,
+            '8' => 250,
+            '10' => 500,
+            '12' => 850,
+        ],
+        'layers' => [
+            '1' => 0,
+            '2' => 180,
+            '3' => 320,
+            '4' => 480,
+        ],
+        'frosting' => [
+            'buttercream' => 0,
+            'whipped' => 80,
+            'fondant' => 220,
+            'ganache' => 160,
+        ],
+        'topper' => [
+            'none' => 0,
+            'name' => 120,
+            'acrylic' => 200,
+            'edible_print' => 180,
+        ],
+        'rush' => [
+            'no' => 0,
+            'yes' => 350,
+        ],
+    ];
 
     private function resolveGuestCartToken(Request $request): string
     {
@@ -83,7 +113,18 @@ class CartController extends Controller
             'product_id' => 'required|exists:products,id',
             'variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'nullable|integer|min:1',
-            'special_instructions' => 'nullable|string|max:255',
+            'special_instructions' => 'nullable|string|max:2000',
+            'customization' => 'nullable|array',
+            'customization.sponge' => 'nullable|string|max:100',
+            'customization.filling' => 'nullable|string|max:100',
+            'customization.frosting' => 'nullable|string|max:100',
+            'customization.layers' => 'nullable|in:1,2,3,4',
+            'customization.shape' => 'nullable|string|max:100',
+            'customization.size' => 'nullable|in:6,8,10,12',
+            'customization.theme' => 'nullable|string|max:100',
+            'customization.message' => 'nullable|string|max:120',
+            'customization.topper' => 'nullable|in:none,name,acrylic,edible_print',
+            'customization.rush' => 'nullable|in:no,yes',
         ]);
 
         $cart = $this->getCart($request);
@@ -97,11 +138,15 @@ class CartController extends Controller
             ]);
         }
 
-        $unitPrice = (float) $product->price;
+        $basePrice = (float) $product->effective_price;
+        $customizationPayload = $this->sanitizeCustomizationPayload((array) $request->input('customization', []));
+        $customizationAdjustment = $this->calculateCustomizationAdjustment($customizationPayload);
+        $unitPrice = $basePrice + (float) $variant?->price_adjustment + $customizationAdjustment;
 
         $existingItem = $cart->items()
             ->where('product_id', $product->id)
             ->where('variant_id', $variant?->id)
+            ->where('customization_payload', json_encode($customizationPayload))
             ->first();
 
         if ($existingItem) {
@@ -114,10 +159,51 @@ class CartController extends Controller
                 'unit_price' => $unitPrice,
                 'quantity' => $quantity,
                 'special_instructions' => $request->input('special_instructions'),
+                'customization_payload' => $customizationPayload,
             ]);
         }
 
         return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
+    }
+
+    private function sanitizeCustomizationPayload(array $raw): array
+    {
+        $allowedKeys = ['sponge', 'filling', 'frosting', 'layers', 'shape', 'size', 'theme', 'message', 'topper', 'rush'];
+        $payload = [];
+
+        foreach ($allowedKeys as $key) {
+            $value = $raw[$key] ?? null;
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $payload[$key] = $trimmed;
+        }
+
+        ksort($payload);
+
+        return $payload;
+    }
+
+    private function calculateCustomizationAdjustment(array $payload): float
+    {
+        $adjustment = 0.0;
+
+        foreach (self::CUSTOMIZATION_PRICE_ADJUSTMENTS as $key => $options) {
+            $selected = $payload[$key] ?? null;
+            if (! is_string($selected)) {
+                continue;
+            }
+
+            $adjustment += (float) ($options[$selected] ?? 0);
+        }
+
+        return $adjustment;
     }
 
     public function updateQuantity(CartItem $item, Request $request)

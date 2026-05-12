@@ -16,10 +16,12 @@ class CartItem extends Model
         'quantity',
         'unit_price',
         'special_instructions',
+        'customization_payload',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
+        'customization_payload' => 'array',
     ];
 
     public function cart()

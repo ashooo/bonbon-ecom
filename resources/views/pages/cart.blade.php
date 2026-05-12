@@ -22,6 +22,13 @@
                                 @if ($item->variant?->name)
                                     <p class="text-gray-600">{{ $item->variant->name }}</p>
                                 @endif
+                                @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        @foreach($item->customization_payload as $key => $value)
+                                            <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+                                        @endforeach
+                                    </p>
+                                @endif
                                 <p class="text-pink-600 font-bold">&#8369;{{ number_format($item->unit_price, 2) }}</p>
                             </div>
                             <div class="flex items-center space-x-2">

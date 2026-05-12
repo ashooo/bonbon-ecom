@@ -15,6 +15,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CustomizeController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
@@ -129,9 +130,7 @@ Route::post('/orders/lookup', [OrderHistoryController::class, 'lookup'])->name('
 Route::get('/orders/{order}', [OrderHistoryController::class, 'show'])->name('orders.show');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
 
-Route::get('/customize', function () {
-    return view('pages.customize');
-});
+Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');
 
 Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
 Route::get('/chat/session', [ChatController::class, 'session'])->name('chat.session');

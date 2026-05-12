@@ -5,10 +5,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::created(function (Order $order): void {
+            if ($order->status) {
+                $order->recordStatusTransition(null, (string) $order->status);
+            }
+        });
+
+        static::updated(function (Order $order): void {
+            if (! $order->wasChanged('status')) {
+                return;
+            }
+
+            $order->recordStatusTransition(
+                $order->getOriginal('status'),
+                (string) $order->status
+            );
+        });
+    }
 
     protected $fillable = [
         'order_number',
@@ -55,6 +76,21 @@ class Order extends Model
     public function invoice()
     {
         return $this->hasOne(Invoice::class);
+    }
+
+    public function statusHistory()
+    {
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('changed_at');
+    }
+
+    private function recordStatusTransition(?string $fromStatus, string $toStatus): void
+    {
+        $this->statusHistory()->create([
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'changed_by_user_id' => Auth::id(),
+            'changed_at' => now(),
+        ]);
     }
 
     // Backward-compatible aliases used in current profile page.

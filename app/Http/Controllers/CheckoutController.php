@@ -210,6 +210,7 @@ class CheckoutController extends Controller
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->quantity * $item->unit_price,
                     'special_instructions' => $item->special_instructions,
+                    'customization_payload' => $item->customization_payload,
                 ]);
 
                 $previousStock = (int) $variant->stock_quantity;

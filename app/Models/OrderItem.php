@@ -16,11 +16,13 @@ class OrderItem extends Model
         'unit_price',
         'subtotal',
         'special_instructions',
+        'customization_payload',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'customization_payload' => 'array',
     ];
 
     public function order()

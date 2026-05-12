@@ -196,12 +196,20 @@
                             <input type="text" data-name="sku" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Price Adj.</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Price</label>
                             <input type="number" step="0.01" data-name="price_adjustment" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
                             <input type="number" min="0" data-name="stock_quantity" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Image</label>
+                            <input type="file" data-name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <div class="mt-2 hidden items-center gap-2 text-xs text-gray-500" data-image-preview-wrap>
+                                <img src="" alt="Variant image" class="h-12 w-12 rounded object-cover" data-image-preview>
+                                <span>Current image</span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-3">
                             <label class="inline-flex items-center gap-2 text-xs">
@@ -275,6 +283,7 @@
             'sku' => $variant->sku,
             'price_adjustment' => $variant->price_adjustment,
             'stock_quantity' => $variant->stock_quantity,
+            'image_url' => $variant->image_url,
             'is_default' => (bool) $variant->is_default,
             'is_active' => (bool) $variant->is_active,
         ];
@@ -337,6 +346,13 @@
         clone.querySelector('[data-name="sku"]').value = data.sku ?? '';
         clone.querySelector('[data-name="price_adjustment"]').value = data.price_adjustment ?? 0;
         clone.querySelector('[data-name="stock_quantity"]').value = data.stock_quantity ?? 0;
+        const previewWrap = clone.querySelector('[data-image-preview-wrap]');
+        const previewImage = clone.querySelector('[data-image-preview]');
+        if (previewWrap && previewImage && data.image_url) {
+            previewImage.src = data.image_url;
+            previewWrap.classList.remove('hidden');
+            previewWrap.classList.add('flex');
+        }
         clone.querySelector('[data-name="is_default"]').value = data.is_default ? '1' : '0';
         clone.querySelector('[data-name="is_active"]').value = (data.is_active ?? 1) ? '1' : '0';
         clone.querySelector('[data-default-radio]').checked = !!data.is_default;

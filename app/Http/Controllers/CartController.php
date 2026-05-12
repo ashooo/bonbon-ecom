@@ -97,7 +97,7 @@ class CartController extends Controller
             ]);
         }
 
-        $unitPrice = (float) $product->price;
+        $unitPrice = $variant ? (float) $variant->price_adjustment : (float) $product->effective_price;
 
         $existingItem = $cart->items()
             ->where('product_id', $product->id)

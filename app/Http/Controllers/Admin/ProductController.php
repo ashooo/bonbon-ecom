@@ -266,6 +266,7 @@ class ProductController extends Controller
                 'sku' => $sku,
                 'price_adjustment' => (float) ($variant['price_adjustment'] ?? 0),
                 'stock_quantity' => max(0, (int) ($variant['stock_quantity'] ?? 0)),
+                'image' => $request->file("variants.$index.image"),
                 'is_default' => filter_var($variant['is_default'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'is_active' => ! isset($variant['is_active']) || filter_var($variant['is_active'], FILTER_VALIDATE_BOOLEAN),
             ];
@@ -311,6 +312,10 @@ class ProductController extends Controller
                 'display_order' => $order,
                 'is_active' => $variant['is_active'],
             ];
+
+            if (! empty($variant['image'])) {
+                $payload['image_path'] = $variant['image']->store('products/variants', 'public');
+            }
 
             if (! empty($variant['id'])) {
                 $variantModel = $product->variants()->whereKey($variant['id'])->first();
@@ -380,6 +385,7 @@ class ProductController extends Controller
             'variants.*.sku' => 'nullable|string|max:100',
             'variants.*.price_adjustment' => 'nullable|numeric',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
+            'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'variants.*.is_default' => 'nullable|boolean',
             'variants.*.is_active' => 'nullable|boolean',
             'variants.*.remove' => 'nullable|boolean',
@@ -463,6 +469,7 @@ class ProductController extends Controller
             'variants.*.sku' => 'nullable|string|max:100',
             'variants.*.price_adjustment' => 'nullable|numeric',
             'variants.*.stock_quantity' => 'nullable|integer|min:0',
+            'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'variants.*.is_default' => 'nullable|boolean',
             'variants.*.is_active' => 'nullable|boolean',
             'variants.*.remove' => 'nullable|boolean',

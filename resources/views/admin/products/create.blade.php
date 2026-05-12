@@ -156,12 +156,16 @@
                             <input type="text" data-name="sku" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Price Adj.</label>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Price</label>
                             <input type="number" step="0.01" data-name="price_adjustment" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
                             <input type="number" min="0" data-name="stock_quantity" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Image</label>
+                            <input type="file" data-name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div class="flex items-center gap-3">
                             <label class="inline-flex items-center gap-2 text-xs">
@@ -235,12 +239,13 @@
         @php
             $defaultVariants = old('variants', [[
                 'name' => '',
-                'sku' => '',
-                'price_adjustment' => 0,
-                'stock_quantity' => 0,
-                'is_default' => 1,
-                'is_active' => 1,
-            ]]);
+            'sku' => '',
+            'price_adjustment' => 0,
+            'stock_quantity' => 0,
+            'image' => null,
+            'is_default' => 1,
+            'is_active' => 1,
+        ]]);
         @endphp
         const oldVariants = @json($defaultVariants);
 

@@ -573,24 +573,25 @@
             };
 
             const renderInsidePreview = () => {
-                const layers = Number(layersSelect.value || 1);
                 const sponge = spongeSelect.value || 'Vanilla';
                 const filling = fillingSelect.value || 'Vanilla Cream';
                 const spongeColor = spongeTone[sponge] || '#f5d7a5';
                 const fillingColor = fillingTone[filling] || '#f6f0dc';
-                const totalHeight = 54;
-                const topY = 12;
-                const rowHeight = totalHeight / Math.max(1, layers);
-                const fillHeight = Math.max(3, rowHeight * 0.22);
-                const spongeHeight = Math.max(6, rowHeight - fillHeight);
+                const fillingLineColor = darkenHex(fillingColor, 0.72);
+                const frameY = 10;
+                const frameH = 58;
+                const bodyX = 22;
+                const bodyW = 76;
+                const bodyY = frameY + 4;
+                const bodyH = frameH - 8;
                 let markup = '';
-                for (let i = 0; i < layers; i++) {
-                    const y = topY + i * rowHeight;
-                    markup += `<rect x="22" y="${y.toFixed(2)}" width="76" height="${spongeHeight.toFixed(2)}" rx="2" fill="${spongeColor}"></rect>`;
-                    if (i < layers - 1) {
-                        markup += `<rect x="22" y="${(y + spongeHeight).toFixed(2)}" width="76" height="${fillHeight.toFixed(2)}" rx="2" fill="${fillingColor}"></rect>`;
-                    }
-                }
+                const thinFillH = 2.4;
+                const thin1Y = bodyY + (bodyH * 0.34) - (thinFillH / 2);
+                const thin2Y = bodyY + (bodyH * 0.68) - (thinFillH / 2);
+
+                markup += `<rect x="${bodyX}" y="${bodyY.toFixed(2)}" width="${bodyW}" height="${bodyH.toFixed(2)}" rx="2" fill="${spongeColor}"></rect>`;
+                markup += `<rect x="${bodyX}" y="${thin1Y.toFixed(2)}" width="${bodyW}" height="${thinFillH.toFixed(2)}" rx="1" fill="${fillingLineColor}"></rect>`;
+                markup += `<rect x="${bodyX}" y="${thin2Y.toFixed(2)}" width="${bodyW}" height="${thinFillH.toFixed(2)}" rx="1" fill="${fillingLineColor}"></rect>`;
                 cakeInsideLayersEl.innerHTML = markup;
                 cakeInsideLabelEl.textContent = `${sponge} + ${filling}`;
             };
@@ -657,7 +658,7 @@
                 const heightMap = { '6': 26, '8': 30, '10': 34, '12': 38 };
                 const baseWidth = baseWidthAtSix * Number(sizeScaleMap[sizeSelect.value] || 1);
                 const layerHeight = heightMap[sizeSelect.value] || 36;
-                const [toneTop, toneBottom] = frostingTone[frostingSelect.value] || frostingTone.buttercream;
+                const [toneTop, toneBottom] = frostingTone[frostingSelect.value] || frostingTone.ivory;
                 const shape = shapeSelect.value;
                 const dripMode = dripSelect.value || 'none';
                 const tierGap = Number(tierGapByShape[shape] ?? 4);
@@ -706,6 +707,7 @@
                 const shadowY = baseTierY + (scaledLayerHeight * 2);
                 const shadowRx = Math.max(92, baseTierWidth * 0.78);
                 const shadowRy = Math.max(26, shadowRx * 0.4);
+                cakeShadowEl.setAttribute('opacity', '0.5');
                 cakeShadowEl.setAttribute('cx', String(baseCenterX));
                 cakeShadowEl.setAttribute('cy', String(shadowY));
                 cakeShadowEl.setAttribute('rx', String(shadowRx));

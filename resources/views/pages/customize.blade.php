@@ -1,6 +1,36 @@
 @extends('layouts.app')
 
 @section('content')
+    <style>
+        .color-pill {
+            appearance: none;
+            -webkit-appearance: none;
+            border-radius: 1rem;
+            overflow: hidden;
+            padding: 0;
+        }
+        .color-pill::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border-radius: inherit;
+        }
+        .color-pill::-webkit-color-swatch {
+            border: none;
+            border-radius: inherit;
+        }
+        .color-pill::-moz-color-swatch {
+            border: none;
+            border-radius: inherit;
+        }
+        .custom-frosting-swatch {
+            --custom-color: #6a4638;
+            background: radial-gradient(
+                circle at center,
+                #f7f7f7 0 42%,
+                var(--custom-color) 43% 66%,
+                #f7f7f7 67% 100%
+            );
+        }
+    </style>
     <section class="mb-8 rounded-[2rem] border border-[#F3D7DD] bg-gradient-to-br from-white via-[#FFF8F9] to-[#FDF0F3] p-8 shadow-[0_20px_45px_rgba(90,58,58,0.12)] md:p-10">
         <p class="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-pink-600">Cake Builder</p>
         <h1 class="text-4xl font-bold text-[#5A3A3A] md:text-5xl">Build Your Dream Cake</h1>
@@ -15,12 +45,11 @@
                 <section class="rounded-3xl border border-[#F3D7DD] bg-white p-5 shadow-lg">
                     <div class="mb-3 flex items-center justify-between">
                         <h2 class="text-xl font-bold text-[#5A3A3A]">Build Steps</h2>
-                        <span id="builder-step-label" class="text-sm font-semibold text-pink-600">Step 1 of 3</span>
+                        <span id="builder-step-label" class="text-sm font-semibold text-pink-600">Step 1 of 2</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 text-xs font-semibold md:text-sm">
+                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold md:text-sm">
                         <div id="step-pill-1" class="rounded-xl bg-pink-600 px-3 py-2 text-center text-white">Structure</div>
                         <div id="step-pill-2" class="rounded-xl bg-[#F7E7EB] px-3 py-2 text-center text-[#7A5252]">Toppings & Text</div>
-                        <div id="step-pill-3" class="rounded-xl bg-[#F7E7EB] px-3 py-2 text-center text-[#7A5252]">Finish</div>
                     </div>
                 </section>
 
@@ -72,6 +101,7 @@
                         <div class="md:col-span-2">
                             <label class="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[#7a7474]">Frosting Color (+PHP 10)</label>
                             <input id="builder-frosting" type="hidden" name="customization[frosting]" value="ivory">
+                            <input id="builder-frosting-custom-hidden" type="hidden" name="customization[frosting_custom]" value="">
                             <div class="flex flex-wrap items-center gap-3" id="builder-frosting-swatches">
                                 <button type="button" data-frosting="white" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#f2f2f2]" aria-label="White frosting"></button>
                                 <button type="button" data-frosting="ivory" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#e9e2cf]" aria-label="Ivory frosting"></button>
@@ -80,8 +110,10 @@
                                 <button type="button" data-frosting="powder_blue" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d6e1ea]" aria-label="Powder blue frosting"></button>
                                 <button type="button" data-frosting="chocolate" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#4a2f1f]" aria-label="Chocolate frosting"></button>
                                 <button type="button" data-frosting="mocha" class="frosting-swatch h-11 w-11 rounded-full border-2 border-[#ec5a61] bg-[#6a4638] text-white" aria-label="Mocha frosting">✓</button>
-                                <button type="button" data-frosting="lavender" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d7b2ef] text-white" aria-label="Lavender frosting">+</button>
+                                <button type="button" data-frosting="lavender" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d7b2ef]" aria-label="Lavender frosting"></button>
+                                <button id="builder-frosting-custom-btn" type="button" data-frosting="custom" class="custom-frosting-swatch frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] text-xl font-bold leading-none text-[#7A5252]" aria-label="Custom frosting color">+</button>
                             </div>
+                            <input id="builder-frosting-custom" type="color" value="#6a4638" class="sr-only" tabindex="-1" aria-hidden="true">
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Drip</label>
@@ -113,44 +145,73 @@
 
                 <section data-step="2" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg hidden">
                     <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Toppings & Text</h2>
-                    <p class="mb-4 text-sm text-[#7A5252]">Top view editor: add flat toppings and personalize text placement.</p>
+                    <p class="mb-4 text-sm text-[#7A5252]">Add flat toppings and personalize text placement, then check it in the Live Preview tabs.</p>
 
-                    <div class="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                        <div class="overflow-hidden rounded-3xl border border-[#F3D7DD] bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef] p-4">
-                            <svg id="cake-top-svg" class="mx-auto h-[320px] w-full max-w-sm" viewBox="0 0 320 320" aria-label="Cake top view">
-                                <g id="cake-top-base"></g>
-                                <g id="cake-top-toppings"></g>
-                                <text id="cake-top-message-preview" x="160" y="165" text-anchor="middle" font-size="16" font-weight="700" fill="#7A3444"></text>
-                            </svg>
-                        </div>
-                        <div class="space-y-4">
+                    <div class="space-y-4">
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Message on cake</label>
-                                <input id="builder-message" name="customization[message]" maxlength="120" placeholder="Message on cake" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                                <textarea id="builder-message" name="customization[message]" maxlength="50" rows="3" placeholder="Message on cake" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3"></textarea>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topping shape</label>
-                                <select id="builder-topping-shape" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
-                                    <option value="dot">Dot</option>
-                                    <option value="heart">Heart</option>
-                                    <option value="flower">Flower</option>
-                                    <option value="star">Star</option>
-                                </select>
+                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Text color</label>
+                                <input id="builder-text-color" type="color" value="#7a3444" class="color-pill h-11 w-full cursor-pointer rounded-2xl border border-[#F3D7DB] bg-white p-0">
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topping shapes</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] p-2">
+                                        <div class="mb-2 text-center text-lg">●</div>
+                                        <div class="flex gap-2">
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg border border-[#F3D7DB] bg-white py-1 text-sm font-bold text-[#7A5252]" data-shape="dot" data-action="remove">-</button>
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg bg-[#F06292] py-1 text-sm font-bold text-white" data-shape="dot" data-action="add">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] p-2">
+                                        <div class="mb-2 text-center text-lg">♥</div>
+                                        <div class="flex gap-2">
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg border border-[#F3D7DB] bg-white py-1 text-sm font-bold text-[#7A5252]" data-shape="heart" data-action="remove">-</button>
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg bg-[#F06292] py-1 text-sm font-bold text-white" data-shape="heart" data-action="add">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] p-2">
+                                        <div class="mb-2 text-center text-lg">✿</div>
+                                        <div class="flex gap-2">
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg border border-[#F3D7DB] bg-white py-1 text-sm font-bold text-[#7A5252]" data-shape="flower" data-action="remove">-</button>
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg bg-[#F06292] py-1 text-sm font-bold text-white" data-shape="flower" data-action="add">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] p-2">
+                                        <div class="mb-2 text-center text-lg">★</div>
+                                        <div class="flex gap-2">
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg border border-[#F3D7DB] bg-white py-1 text-sm font-bold text-[#7A5252]" data-shape="star" data-action="remove">-</button>
+                                            <button type="button" class="shape-adjust flex-1 rounded-lg bg-[#F06292] py-1 text-sm font-bold text-white" data-shape="star" data-action="add">+</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topping color</label>
-                                <input id="builder-topping-color" type="color" value="#ff7eac" class="h-11 w-full cursor-pointer rounded-2xl border border-[#F3D7DB] bg-white px-2">
+                                <input id="builder-topping-color" type="color" value="#ff7eac" class="color-pill h-11 w-full cursor-pointer rounded-2xl border border-[#F3D7DB] bg-white p-0">
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Quick toppings</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="sprinkles">Sprinkles</button>
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="sprinkles_choco">Chocolate Sprinkles</button>
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="sprinkles_white">White Sprinkles</button>
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="chips">Chocolate Chips</button>
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="nuts">Nuts</button>
+                                    <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="pearls">Pearl Candy</button>
+                                </div>
                             </div>
                             <div class="flex gap-2">
-                                <button id="builder-add-topping" type="button" class="flex-1 rounded-2xl bg-[#F06292] px-4 py-3 text-sm font-bold text-white hover:bg-[#d84f7f]">Add topping</button>
-                                <button id="builder-clear-toppings" type="button" class="rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3 text-sm font-semibold text-[#7A5252]">Clear</button>
+                                <button id="builder-clear-toppings" type="button" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3 text-sm font-semibold text-[#7A5252]">Clear</button>
                             </div>
-                            <p class="text-xs text-[#8f6a73]">Each click adds one flat SVG piece around the top view.</p>
-                        </div>
+                            <p class="text-xs text-[#8f6a73]">Use + / - per shape to add or remove toppings.</p>
                     </div>
                 </section>
 
-                <section data-step="3" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg hidden">
+                <section data-step="2" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg hidden">
                     <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Finish</h2>
                     <div class="grid gap-4 md:grid-cols-2">
                         <label class="flex items-center gap-3 rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
@@ -164,7 +225,7 @@
                 </section>
 
                 <div class="flex gap-3">
-                    <button id="builder-prev-step" type="button" class="hidden rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-6 py-4 text-base font-bold text-[#7A5252]">Back</button>
+                    <button id="builder-prev-step" type="button" class="rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-6 py-4 text-base font-bold text-[#7A5252] disabled:cursor-not-allowed disabled:opacity-50">Back</button>
                     <button id="builder-next-step" type="button" class="w-full rounded-2xl bg-pink-500 px-6 py-4 text-lg font-bold text-white hover:bg-pink-600">Next: Toppings</button>
                     <button id="builder-submit" class="hidden w-full rounded-2xl bg-pink-600 px-6 py-4 text-lg font-bold text-white hover:bg-pink-700">Add Custom Cake to Cart</button>
                 </div>
@@ -172,24 +233,37 @@
 
             <aside class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg h-fit xl:sticky xl:top-24">
                 <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Live Preview</h2>
+                <div class="mb-3 grid grid-cols-2 gap-2">
+                    <button id="preview-tab-front" type="button" class="rounded-xl border border-[#ec5a61] bg-[#FDECEF] px-3 py-2 text-sm font-semibold text-[#5A3A3A]">Front View</button>
+                    <button id="preview-tab-top" type="button" class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-sm font-semibold text-[#7A5252]">Top View</button>
+                </div>
                 <div class="relative mb-6 overflow-hidden rounded-3xl border border-[#F3D7DD] bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef] p-4">
-                    <div class="absolute right-3 top-3 z-20 w-32 rounded-2xl border border-[#ecc9d1] bg-white/95 p-2 shadow-md">
-                        <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A5252]">Inside View</p>
-                        <svg id="cake-inside-svg" class="h-20 w-full" viewBox="0 0 120 82" aria-label="Cake inside preview">
-                            <rect x="18" y="10" width="84" height="58" rx="10" fill="#f7d6a5" stroke="#c99c6f" stroke-width="1.2"></rect>
-                            <g id="cake-inside-layers"></g>
+                    <div id="preview-panel-front">
+                        <div class="absolute right-3 top-3 z-20 w-32 rounded-2xl border border-[#ecc9d1] bg-white/95 p-2 shadow-md">
+                            <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A5252]">Inside View</p>
+                            <svg id="cake-inside-svg" class="h-20 w-full" viewBox="0 0 120 82" aria-label="Cake inside preview">
+                                <rect x="18" y="10" width="84" height="58" rx="10" fill="#f7d6a5" stroke="#c99c6f" stroke-width="1.2"></rect>
+                                <g id="cake-inside-layers"></g>
+                            </svg>
+                            <p id="cake-inside-label" class="mt-1 truncate text-[10px] font-semibold text-[#7A5252]"></p>
+                        </div>
+                        <svg id="cake-svg" class="mx-auto h-[330px] w-full max-w-sm" viewBox="0 0 400 420" aria-label="Cake preview">
+                            <ellipse id="cake-shadow" cx="200" cy="370" rx="145" ry="50" fill="#dcb1bf" opacity="0.5"></ellipse>
+                            <g id="cake-layers"></g>
+                            <text id="cake-message-preview" x="200" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#7A3444"></text>
+                            <g id="cake-topper" style="display:none;">
+                                <rect x="145" y="58" width="110" height="24" rx="12" fill="#ffffff" opacity="0.94"></rect>
+                                <text id="cake-topper-text" x="200" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4252"></text>
+                            </g>
                         </svg>
-                        <p id="cake-inside-label" class="mt-1 truncate text-[10px] font-semibold text-[#7A5252]"></p>
                     </div>
-                    <svg id="cake-svg" class="mx-auto h-[330px] w-full max-w-sm" viewBox="0 0 400 420" aria-label="Cake preview">
-                        <ellipse id="cake-shadow" cx="200" cy="370" rx="145" ry="50" fill="#dcb1bf" opacity="0.5"></ellipse>
-                        <g id="cake-layers"></g>
-                        <text id="cake-message-preview" x="200" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#7A3444"></text>
-                        <g id="cake-topper" style="display:none;">
-                            <rect x="145" y="58" width="110" height="24" rx="12" fill="#ffffff" opacity="0.94"></rect>
-                            <text id="cake-topper-text" x="200" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4252"></text>
-                        </g>
-                    </svg>
+                    <div id="preview-panel-top" class="hidden">
+                        <svg id="cake-top-svg" class="mx-auto h-[330px] w-full max-w-sm" viewBox="0 0 320 320" aria-label="Cake top view">
+                            <g id="cake-top-base"></g>
+                            <g id="cake-top-toppings"></g>
+                            <text id="cake-top-message-preview" x="160" y="165" text-anchor="middle" font-size="16" font-weight="700" fill="#7A3444"></text>
+                        </svg>
+                    </div>
                 </div>
 
                 <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Live Estimate</h2>
@@ -210,6 +284,9 @@
             const spongeSelect = document.querySelector('select[name="customization[sponge]"]');
             const fillingSelect = document.querySelector('select[name="customization[filling]"]');
             const frostingSelect = document.getElementById('builder-frosting');
+            const frostingCustomInput = document.getElementById('builder-frosting-custom');
+            const frostingCustomHidden = document.getElementById('builder-frosting-custom-hidden');
+            const frostingCustomBtn = document.getElementById('builder-frosting-custom-btn');
             const frostingSwatches = [...document.querySelectorAll('.frosting-swatch')];
             const dripSelect = document.getElementById('builder-drip');
             const topperSelect = document.getElementById('builder-topper');
@@ -217,20 +294,25 @@
             const rushHidden = document.getElementById('builder-rush-hidden');
             const shapeSelect = document.getElementById('builder-shape');
             const messageInput = document.getElementById('builder-message');
+            const textColorInput = document.getElementById('builder-text-color');
             const topViewBaseEl = document.getElementById('cake-top-base');
             const topViewToppingsEl = document.getElementById('cake-top-toppings');
             const topViewMessageEl = document.getElementById('cake-top-message-preview');
             const toppingsHiddenInput = document.getElementById('builder-toppings-hidden');
-            const toppingShapeSelect = document.getElementById('builder-topping-shape');
+            const shapeAdjustBtns = [...document.querySelectorAll('.shape-adjust')];
             const toppingColorInput = document.getElementById('builder-topping-color');
-            const addToppingBtn = document.getElementById('builder-add-topping');
             const clearToppingsBtn = document.getElementById('builder-clear-toppings');
+            const quickToppingBtns = [...document.querySelectorAll('.quick-topping')];
+            const previewTabFrontBtn = document.getElementById('preview-tab-front');
+            const previewTabTopBtn = document.getElementById('preview-tab-top');
+            const previewPanelFront = document.getElementById('preview-panel-front');
+            const previewPanelTop = document.getElementById('preview-panel-top');
             const stepLabelEl = document.getElementById('builder-step-label');
             const prevStepBtn = document.getElementById('builder-prev-step');
             const nextStepBtn = document.getElementById('builder-next-step');
             const submitBtn = document.getElementById('builder-submit');
             const stepSections = [...document.querySelectorAll('[data-step]')];
-            const stepPills = [1, 2, 3].map((n) => document.getElementById(`step-pill-${n}`));
+            const stepPills = [1, 2].map((n) => document.getElementById(`step-pill-${n}`));
 
             const addonEl = document.getElementById('estimate-addon');
             const totalEl = document.getElementById('estimate-total');
@@ -245,7 +327,7 @@
             const pricing = {
                 size: { '6': 450, '8': 700, '10': 980, '12': 1280 },
                 layers: { '1': 0, '2': 240, '3': 420, '4': 620 },
-                frosting: { white: 10, ivory: 10, blush: 10, sage: 10, powder_blue: 10, chocolate: 10, mocha: 10, lavender: 10 },
+                frosting: { white: 10, ivory: 10, blush: 10, sage: 10, powder_blue: 10, chocolate: 10, mocha: 10, lavender: 10, custom: 10 },
                 drip: { none: 0, chocolate: 70, white_chocolate: 80, pink: 80, caramel: 90 },
                 topper: { none: 0, name: 120, acrylic: 200, edible_print: 180 },
                 rush: { no: 0, yes: 350 }
@@ -260,6 +342,16 @@
                 chocolate: ['#4a2f1f', '#311f14'],
                 mocha: ['#6a4638', '#4b3329'],
                 lavender: ['#d7b2ef', '#bb8fdd'],
+            };
+            const getFrostingTone = () => {
+                if (frostingSelect.value === 'custom') {
+                    const customHex = frostingCustomInput.value || '#6a4638';
+                    return [customHex, darkenHex(customHex, 0.72)];
+                }
+                return frostingTone[frostingSelect.value] || frostingTone.ivory;
+            };
+            const syncCustomFrostingSwatch = () => {
+                frostingCustomBtn.style.setProperty('--custom-color', frostingCustomInput.value || '#6a4638');
             };
 
             const spongeTone = {
@@ -302,6 +394,7 @@
             const dripOverscale = 1.03;
             const circleTopDripExtraScale = 1.005;
             const toppingItems = [];
+            const activeToppingPresets = new Set();
             let currentStep = 1;
 
             const php = (amount) => `PHP ${Number(amount).toFixed(2)}`;
@@ -598,11 +691,94 @@
 
             const shapeTopPath = {
                 Round: '<circle cx="160" cy="160" r="108"></circle>',
-                Square: '<rect x="64" y="64" width="192" height="192" rx="24"></rect>',
-                Heart: '<path d="M160 253c-53-35-90-68-90-107 0-26 20-46 45-46 18 0 34 10 45 25 11-15 27-25 45-25 25 0 45 20 45 46 0 39-37 72-90 107z"></path>'
+                Square: '<rect x="52" y="52" width="216" height="216" rx="20"></rect>',
+                Heart: '<path d="M160 268 C 98 228, 52 188, 52 134 C 52 102, 78 76, 110 76 C 132 76, 150 88, 160 108 C 170 88, 188 76, 210 76 C 242 76, 268 102, 268 134 C 268 188, 222 228, 160 268 Z"></path>'
+            };
+
+            const pointInTopShape = (shape, x, y) => {
+                if (shape === 'Round') {
+                    const dx = x - 160;
+                    const dy = y - 160;
+                    return ((dx * dx) + (dy * dy)) <= (108 * 108);
+                }
+                if (shape === 'Square') {
+                    return x >= 52 && x <= 268 && y >= 52 && y <= 268;
+                }
+                // Heart implicit equation, normalized around center for robust hit-test.
+                const nx = (x - 160) / 88;
+                const ny = (y - 154) / 76;
+                const v = Math.pow((nx * nx) + (ny * ny) - 1, 3) - (nx * nx * Math.pow(ny, 3));
+                return v <= 0;
+            };
+
+            const randomPointInTopShape = (shape) => {
+                const textSafeZone = (() => {
+                    const msg = (messageInput.value || '').trim();
+                    if (!msg) return null;
+                    const hardLines = msg.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+                    const wrappedLines = [];
+                    const approxCharsPerLine = 16;
+                    hardLines.forEach((line) => {
+                        if (line.length <= approxCharsPerLine) {
+                            wrappedLines.push(line);
+                            return;
+                        }
+                        let start = 0;
+                        while (start < line.length) {
+                            wrappedLines.push(line.slice(start, start + approxCharsPerLine));
+                            start += approxCharsPerLine;
+                        }
+                    });
+                    const effectiveLines = Math.max(1, wrappedLines.length || 1);
+                    const longestLine = wrappedLines.reduce((m, l) => Math.max(m, l.length), 0) || msg.length;
+                    const len = Math.max(10, Math.min(34, longestLine));
+                    return {
+                        cx: 160,
+                        cy: 160,
+                        rx: 52 + (len * 2.8),
+                        ry: 26 + (effectiveLines * 12) + (len * 0.35)
+                    };
+                })();
+                const insideTextSafeZone = (x, y) => {
+                    if (!textSafeZone) return false;
+                    const nx = (x - textSafeZone.cx) / textSafeZone.rx;
+                    const ny = (y - textSafeZone.cy) / textSafeZone.ry;
+                    return ((nx * nx) + (ny * ny)) <= 1;
+                };
+                const bounds = shape === 'Square'
+                    ? { minX: 52, maxX: 268, minY: 52, maxY: 268 }
+                    : shape === 'Heart'
+                        ? { minX: 52, maxX: 268, minY: 72, maxY: 268 }
+                        : { minX: 52, maxX: 268, minY: 52, maxY: 268 };
+                for (let tries = 0; tries < 300; tries++) {
+                    const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
+                    const y = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
+                    if (pointInTopShape(shape, x, y) && !insideTextSafeZone(x, y)) return { x, y };
+                }
+                return { x: 160, y: 160 };
             };
 
             const toppingSvg = (shape, x, y, color, idx) => {
+                if (shape === 'sprinkle') {
+                    const item = toppingItems[idx] || {};
+                    const length = Number(item.length || 16);
+                    const rotation = Number(item.rotation || 0);
+                    const thickness = Number(item.thickness || 5);
+                    return `<g transform="translate(${x} ${y}) rotate(${rotation})"><line x1="${(-length / 2).toFixed(2)}" y1="0" x2="${(length / 2).toFixed(2)}" y2="0" stroke="${color}" stroke-width="${thickness.toFixed(2)}" stroke-linecap="round"/></g>`;
+                }
+                if (shape === 'chip') {
+                    const item = toppingItems[idx] || {};
+                    const rotation = Number(item.rotation || 0);
+                    const scale = Number(item.scale || 1);
+                    // Irregular chocolate-chip silhouette
+                    return `<g transform="translate(${x} ${y}) rotate(${rotation}) scale(${scale})"><path d="M -6 -1.5 C -5 -6.2, 1.2 -8.1, 5.5 -4.8 C 8.9 -2.4, 8.2 2.8, 4.2 6 C 0.4 8.8, -4.4 7.2, -6.8 3.8 C -8.3 1.9, -7.9 0, -6 -1.5 Z" fill="${color}" stroke="#2f1c12" stroke-width="0.7"/></g>`;
+                }
+                if (shape === 'nut') {
+                    const item = toppingItems[idx] || {};
+                    const rotation = Number(item.rotation || 0);
+                    const scale = Number(item.scale || 1);
+                    return `<g transform="translate(${x} ${y}) rotate(${rotation}) scale(${scale})"><path d="M -5 -2 C -3.5 -6, 2.8 -6.8, 5.2 -3.2 C 6.8 -0.9, 5.8 2.2, 3.4 4.1 C 0.6 6.2, -3.6 5.7, -5.4 2.5 C -6.2 1, -6.1 -0.7, -5 -2 Z" fill="${color}" stroke="#8b5a2b" stroke-width="0.5"/></g>`;
+                }
                 if (shape === 'heart') {
                     return `<path d="M ${x} ${y + 8} c -8 -6 -14 -11 -14 -17 c 0 -5 4 -9 9 -9 c 3 0 6 2 7 5 c 1 -3 4 -5 7 -5 c 5 0 9 4 9 9 c 0 6 -6 11 -14 17 z" fill="${color}" stroke="#b84f74" stroke-width="1"/>`;
                 }
@@ -616,17 +792,81 @@
             };
 
             const renderTopView = () => {
-                const [toneTop] = frostingTone[frostingSelect.value] || frostingTone.buttercream;
+                const [toneTop] = getFrostingTone();
                 const topMarkup = shapeTopPath[shapeSelect.value] || shapeTopPath.Round;
+                const clipShape = topMarkup;
+                const effectiveDripMode = dripSelect.value || 'none';
+                const topDripColor = dripTone[effectiveDripMode] || darkenHex(toneTop, 0.65);
+                const topSurfaceColor = effectiveDripMode !== 'none' ? topDripColor : toneTop;
+                const topDripOverlay = effectiveDripMode !== 'none'
+                    ? `<g fill="none" stroke="${topDripColor}" stroke-width="14" stroke-linecap="round" opacity="0.95">${topMarkup}</g>`
+                    : '';
                 topViewBaseEl.innerHTML = `
-                    <g fill="${toneTop}" stroke="#bf8b99" stroke-width="2">
+                    <defs>
+                        <clipPath id="cake-top-clip">
+                            ${clipShape}
+                        </clipPath>
+                    </defs>
+                    <g fill="${topSurfaceColor}" stroke="#bf8b99" stroke-width="2">
                         ${topMarkup}
                     </g>
-                    <ellipse cx="160" cy="160" rx="92" ry="92" fill="rgba(255,255,255,0.12)"></ellipse>
+                    ${topDripOverlay}
                 `;
-                topViewToppingsEl.innerHTML = toppingItems.map((item, idx) => toppingSvg(item.shape, item.x, item.y, item.color, idx)).join('');
-                topViewMessageEl.textContent = (messageInput.value || '').trim();
+                topViewToppingsEl.innerHTML = `<g clip-path="url(#cake-top-clip)">${toppingItems.map((item, idx) => toppingSvg(item.shape, item.x, item.y, item.color, idx)).join('')}</g>`;
+                const rawMessage = (messageInput.value || '').slice(0, 50);
+                renderMultilineSvgText(topViewMessageEl, rawMessage, 16, 160, 165);
+                topViewMessageEl.setAttribute('fill', textColorInput.value || '#7A3444');
                 toppingsHiddenInput.value = JSON.stringify(toppingItems);
+            };
+
+            const renderMultilineSvgText = (textEl, rawText, maxLineChars, x, y) => {
+                const text = (rawText || '').slice(0, 50);
+                const lines = [];
+                const hardLines = text.split(/\r?\n/);
+                hardLines.forEach((line) => {
+                    const content = line.trim();
+                    if (!content) {
+                        lines.push('');
+                        return;
+                    }
+                    let start = 0;
+                    while (start < content.length) {
+                        lines.push(content.slice(start, start + maxLineChars));
+                        start += maxLineChars;
+                    }
+                });
+                const normalizedLines = lines.length ? lines.slice(0, 4) : [''];
+                textEl.replaceChildren();
+                textEl.setAttribute('x', String(x));
+                textEl.setAttribute('y', String(y));
+                textEl.setAttribute('text-anchor', 'middle');
+                const lineHeight = 18;
+                const baselineOffset = ((normalizedLines.length - 1) * lineHeight) / 2;
+                normalizedLines.forEach((line, idx) => {
+                    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    tspan.setAttribute('x', String(x));
+                    tspan.setAttribute('dy', idx === 0 ? String(-baselineOffset) : String(lineHeight));
+                    tspan.textContent = line;
+                    textEl.appendChild(tspan);
+                });
+            };
+
+            const setPreviewTab = (tab) => {
+                const showTop = tab === 'top';
+                previewPanelFront.classList.toggle('hidden', showTop);
+                previewPanelTop.classList.toggle('hidden', !showTop);
+                previewTabFrontBtn.classList.toggle('border-[#ec5a61]', !showTop);
+                previewTabFrontBtn.classList.toggle('bg-[#FDECEF]', !showTop);
+                previewTabFrontBtn.classList.toggle('text-[#5A3A3A]', !showTop);
+                previewTabFrontBtn.classList.toggle('border-[#F3D7DB]', showTop);
+                previewTabFrontBtn.classList.toggle('bg-[#FFF7F7]', showTop);
+                previewTabFrontBtn.classList.toggle('text-[#7A5252]', showTop);
+                previewTabTopBtn.classList.toggle('border-[#ec5a61]', showTop);
+                previewTabTopBtn.classList.toggle('bg-[#FDECEF]', showTop);
+                previewTabTopBtn.classList.toggle('text-[#5A3A3A]', showTop);
+                previewTabTopBtn.classList.toggle('border-[#F3D7DB]', !showTop);
+                previewTabTopBtn.classList.toggle('bg-[#FFF7F7]', !showTop);
+                previewTabTopBtn.classList.toggle('text-[#7A5252]', !showTop);
             };
 
             const updateStepView = () => {
@@ -641,12 +881,13 @@
                     pill.classList.toggle('bg-[#F7E7EB]', !active);
                     pill.classList.toggle('text-[#7A5252]', !active);
                 });
-                stepLabelEl.textContent = `Step ${currentStep} of 3`;
-                prevStepBtn.classList.toggle('hidden', currentStep === 1);
-                nextStepBtn.classList.toggle('hidden', currentStep === 3);
-                submitBtn.classList.toggle('hidden', currentStep !== 3);
+                stepLabelEl.textContent = `Step ${currentStep} of 2`;
+                prevStepBtn.disabled = currentStep === 1;
+                nextStepBtn.classList.toggle('hidden', currentStep === 2);
+                submitBtn.classList.toggle('hidden', currentStep !== 2);
                 if (currentStep === 1) nextStepBtn.textContent = 'Next: Toppings';
-                if (currentStep === 2) nextStepBtn.textContent = 'Next: Finish';
+                if (currentStep === 2) nextStepBtn.textContent = 'Review & Submit';
+                if (currentStep === 2) setPreviewTab('top');
                 renderTopView();
             };
 
@@ -658,7 +899,7 @@
                 const heightMap = { '6': 26, '8': 30, '10': 34, '12': 38 };
                 const baseWidth = baseWidthAtSix * Number(sizeScaleMap[sizeSelect.value] || 1);
                 const layerHeight = heightMap[sizeSelect.value] || 36;
-                const [toneTop, toneBottom] = frostingTone[frostingSelect.value] || frostingTone.ivory;
+                const [toneTop, toneBottom] = getFrostingTone();
                 const shape = shapeSelect.value;
                 const dripMode = dripSelect.value || 'none';
                 const tierGap = Number(tierGapByShape[shape] ?? 4);
@@ -691,6 +932,7 @@
                 let baseTierX = 200 - (scaledBaseWidth / 2);
                 let baseTierY = baseTierYAnchor;
                 let baseTierWidth = scaledBaseWidth;
+                const contactShadowColor = darkenHex(toneBottom, 0.62);
                 for (let i = 0; i < layers; i++) {
                     const width = Math.max(86, scaledBaseWidth - i * (14 * overallCakeScale));
                     const x = (200 - (width / 2));
@@ -699,6 +941,16 @@
                         baseTierX = x;
                         baseTierY = y;
                         baseTierWidth = width;
+                    }
+                    if (i > 0) {
+                        const contactShadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                        contactShadow.setAttribute('cx', String(x + (width / 2)));
+                        contactShadow.setAttribute('cy', String(y + Math.max(9, scaledLayerHeight * 0.78)));
+                        contactShadow.setAttribute('rx', String(Math.max(18, width * 0.43)));
+                        contactShadow.setAttribute('ry', String(Math.max(4, scaledLayerHeight * 0.13)));
+                        contactShadow.setAttribute('fill', contactShadowColor);
+                        contactShadow.setAttribute('opacity', String(Math.max(0.06, 0.14 - (i * 0.02))));
+                        cakeLayersEl.appendChild(contactShadow);
                     }
                     cakeLayersEl.appendChild(drawLayer(shape, x, y, width, scaledLayerHeight, toneTop, toneBottom, i, dripMode));
                 }
@@ -713,9 +965,10 @@
                 cakeShadowEl.setAttribute('rx', String(shadowRx));
                 cakeShadowEl.setAttribute('ry', String(shadowRy));
 
-                const message = (messageInput.value || '').trim();
-                messagePreviewEl.textContent = message;
-                messagePreviewEl.setAttribute('fill', '#7A3444');
+                const message = (messageInput.value || '').slice(0, 50);
+                messageInput.value = message;
+                renderMultilineSvgText(messagePreviewEl, message, 18, 200, 96);
+                messagePreviewEl.setAttribute('fill', textColorInput.value || '#7A3444');
 
                 const topperMap = { none: '', name: 'Name Topper', acrylic: 'Acrylic Topper', edible_print: 'Edible Print' };
                 const topperLabel = topperMap[topperSelect.value] || '';
@@ -735,6 +988,7 @@
                     Number(pricing.rush[rushCheckbox.checked ? 'yes' : 'no'] || 0);
 
                 rushHidden.value = rushCheckbox.checked ? 'yes' : 'no';
+                frostingCustomHidden.value = frostingSelect.value === 'custom' ? (frostingCustomInput.value || '') : '';
                 addonEl.textContent = php(subtotal);
                 totalEl.textContent = php(subtotal);
                 renderCake();
@@ -747,16 +1001,20 @@
                     btn.classList.toggle('border-[#ec5a61]', active);
                     btn.classList.toggle('ring-4', active);
                     btn.classList.toggle('ring-[#f3d7dd]', active);
-                    if (btn.textContent === '✓' || btn.textContent === '+') {
-                        btn.textContent = active ? '✓' : '';
+                    if (btn.dataset.frosting === 'custom') {
+                        btn.textContent = '+';
+                        return;
+                    }
+                    if (btn.dataset.frosting === 'mocha') {
+                        btn.textContent = active ? '\u2713' : '';
                     }
                 });
             };
 
-            [sizeSelect, layersSelect, spongeSelect, fillingSelect, frostingSelect, dripSelect, topperSelect, rushCheckbox, shapeSelect, messageInput].forEach((el) => {
+            [sizeSelect, layersSelect, spongeSelect, fillingSelect, frostingSelect, dripSelect, topperSelect, rushCheckbox, shapeSelect, messageInput, textColorInput].forEach((el) => {
                 el.addEventListener('change', compute);
             });
-            messageInput.addEventListener('input', compute);
+            [messageInput, textColorInput].forEach((el) => el.addEventListener('input', compute));
             frostingSwatches.forEach((btn) => {
                 btn.addEventListener('click', () => {
                     frostingSelect.value = btn.dataset.frosting;
@@ -764,24 +1022,132 @@
                     compute();
                 });
             });
+            frostingCustomBtn.addEventListener('click', () => {
+                frostingSelect.value = 'custom';
+                syncFrostingSwatchUI();
+                if (typeof frostingCustomInput.showPicker === 'function') {
+                    frostingCustomInput.showPicker();
+                } else {
+                    frostingCustomInput.click();
+                }
+                compute();
+            });
+            frostingCustomInput.addEventListener('input', () => {
+                frostingSelect.value = 'custom';
+                syncCustomFrostingSwatch();
+                syncFrostingSwatchUI();
+                compute();
+            });
 
-            addToppingBtn.addEventListener('click', () => {
-                const idx = toppingItems.length;
-                const angle = (idx * 37) * (Math.PI / 180);
-                const radius = 36 + ((idx * 9) % 52);
+            const addSingleShapeTopping = (shapeType) => {
+                const shape = shapeSelect.value || 'Round';
+                const pt = randomPointInTopShape(shape);
                 toppingItems.push({
-                    shape: toppingShapeSelect.value,
+                    shape: shapeType,
                     color: toppingColorInput.value,
-                    x: 160 + Math.cos(angle) * radius,
-                    y: 160 + Math.sin(angle) * radius
+                    x: pt.x,
+                    y: pt.y
+                });
+                renderTopView();
+            };
+
+            const removeSingleShapeTopping = (shapeType) => {
+                for (let i = toppingItems.length - 1; i >= 0; i--) {
+                    if (toppingItems[i].shape === shapeType && !toppingItems[i].preset) {
+                        toppingItems.splice(i, 1);
+                        break;
+                    }
+                }
+                renderTopView();
+            };
+
+            const addPresetToppings = (preset) => {
+                const setConfig = {
+                    sprinkles: { count: 24, palette: ['#e772aa', '#6ac39a', '#2fa8df', '#f9df00', '#f06f4f', '#887fc2'], shape: 'sprinkle', rMin: 24, rVar: 78 },
+                    sprinkles_choco: { count: 24, palette: ['#2f1b14', '#45291d', '#5a3526', '#3b2219', '#6a3f2d'], shape: 'sprinkle', rMin: 24, rVar: 78 },
+                    sprinkles_white: { count: 24, palette: ['#fffaf0', '#f7f1e3', '#f2ede2', '#efe7d8', '#faf6ee'], shape: 'sprinkle', rMin: 24, rVar: 78 },
+                    chips: { count: 26, palette: ['#5a331a', '#6a3f1f', '#70431f', '#4e2d17'], shape: 'chip', rMin: 22, rVar: 82 },
+                    nuts: { count: 22, palette: ['#b8742f', '#c98b45', '#f3e7cc', '#e9dbc1', '#9f6328'], shape: 'nut', rMin: 20, rVar: 86 },
+                    pearls: { count: 14, palette: ['#f8efe0', '#f3e7cf', '#efe2d2'], shape: 'dot', rMin: 20, rVar: 72 }
+                };
+                const cfg = setConfig[preset];
+                if (!cfg) return;
+                const isActive = activeToppingPresets.has(preset);
+                if (isActive) {
+                    for (let i = toppingItems.length - 1; i >= 0; i--) {
+                        if (toppingItems[i].preset === preset) toppingItems.splice(i, 1);
+                    }
+                    activeToppingPresets.delete(preset);
+                    quickToppingBtns.forEach((b) => {
+                        if (b.dataset.preset === preset) {
+                            b.classList.remove('bg-[#FDECEF]', 'border-[#ec5a61]', 'text-[#5A3A3A]');
+                            b.classList.add('bg-[#FFF7F7]', 'border-[#F3D7DB]', 'text-[#7A5252]');
+                        }
+                    });
+                    renderTopView();
+                    return;
+                }
+
+                // Replace all existing pieces from the same preset, then add fresh randomized set.
+                for (let i = toppingItems.length - 1; i >= 0; i--) {
+                    if (toppingItems[i].preset === preset) toppingItems.splice(i, 1);
+                }
+                const shape = shapeSelect.value || 'Round';
+                for (let i = 0; i < cfg.count; i++) {
+                    const idx = toppingItems.length;
+                    const pt = randomPointInTopShape(shape);
+                    const color = cfg.palette[(idx + i) % cfg.palette.length];
+                    const rotation = ((idx * 31) + (i * 23)) % 180;
+                    const length = 10 + ((idx + i) % 10); // 10..19
+                    const thickness = 4 + (((idx + i) % 3) * 0.9); // 4..5.8
+                    const chipScale = 0.7 + (((idx + i) % 6) * 0.08); // 0.7..1.1
+                    const nutScale = 0.45 + (((idx + i) % 8) * 0.07); // 0.45..0.94
+                    toppingItems.push({
+                        shape: cfg.shape,
+                        color,
+                        x: pt.x,
+                        y: pt.y,
+                        rotation,
+                        length,
+                        thickness,
+                        scale: cfg.shape === 'nut' ? nutScale : chipScale,
+                        preset
+                    });
+                }
+                activeToppingPresets.add(preset);
+                quickToppingBtns.forEach((b) => {
+                    if (b.dataset.preset === preset) {
+                        b.classList.remove('bg-[#FFF7F7]', 'border-[#F3D7DB]', 'text-[#7A5252]');
+                        b.classList.add('bg-[#FDECEF]', 'border-[#ec5a61]', 'text-[#5A3A3A]');
+                    }
+                });
+                renderTopView();
+            };
+
+            clearToppingsBtn.addEventListener('click', () => {
+                toppingItems.length = 0;
+                activeToppingPresets.clear();
+                quickToppingBtns.forEach((b) => {
+                    b.classList.remove('bg-[#FDECEF]', 'border-[#ec5a61]', 'text-[#5A3A3A]');
+                    b.classList.add('bg-[#FFF7F7]', 'border-[#F3D7DB]', 'text-[#7A5252]');
                 });
                 renderTopView();
             });
 
-            clearToppingsBtn.addEventListener('click', () => {
-                toppingItems.length = 0;
-                renderTopView();
+            quickToppingBtns.forEach((btn) => {
+                btn.addEventListener('click', () => addPresetToppings(btn.dataset.preset));
             });
+            shapeAdjustBtns.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const shapeType = btn.dataset.shape;
+                    const action = btn.dataset.action;
+                    if (!shapeType || !action) return;
+                    if (action === 'add') addSingleShapeTopping(shapeType);
+                    if (action === 'remove') removeSingleShapeTopping(shapeType);
+                });
+            });
+            previewTabFrontBtn.addEventListener('click', () => setPreviewTab('front'));
+            previewTabTopBtn.addEventListener('click', () => setPreviewTab('top'));
 
             prevStepBtn.addEventListener('click', () => {
                 currentStep = Math.max(1, currentStep - 1);
@@ -789,13 +1155,16 @@
             });
 
             nextStepBtn.addEventListener('click', () => {
-                currentStep = Math.min(3, currentStep + 1);
+                currentStep = Math.min(2, currentStep + 1);
                 updateStepView();
             });
 
             compute();
+            syncCustomFrostingSwatch();
             syncFrostingSwatchUI();
+            setPreviewTab('front');
             updateStepView();
         })();
     </script>
 @endsection
+

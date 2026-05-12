@@ -91,7 +91,11 @@ Route::get('/products', function (Request $request) {
 Route::get('/product/{slug}', function ($slug) {
     abort_unless(Schema::hasTable('products') && Schema::hasTable('categories'), 404);
 
-    $product = \App\Models\Product::with(['category', 'images'])
+    $product = \App\Models\Product::with([
+            'category',
+            'images',
+            'variants' => fn ($query) => $query->orderByDesc('is_default')->orderBy('display_order')->orderBy('id'),
+        ])
         ->where('slug', $slug)
         ->where('is_active', true)
         ->firstOrFail();

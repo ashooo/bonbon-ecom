@@ -55,7 +55,7 @@
         <h2 class="mb-3 text-lg font-semibold">Template Guide</h2>
         <p class="text-xs text-slate-600">
             Required columns: <code>name</code>, <code>price</code>, <code>category</code>.
-            Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code>, <code>variant_is_default</code>, <code>variant_is_active</code>, <code>image_url</code>.
+            Optional: <code>description</code>, <code>discount_price</code>, <code>stock_quantity</code>, <code>status</code>, <code>pre_order_days</code>, <code>is_featured</code>, <code>is_best_seller</code>, <code>variant_name</code>, <code>variant_sku</code>, <code>variant_stock_quantity</code>, <code>variant_price_adjustment</code> (actual variant price), <code>variant_is_default</code>, <code>variant_is_active</code>, <code>image_url</code>.
         </p>
         <ul class="mt-3 list-disc space-y-1 pl-5 text-xs text-slate-600">
             <li>One row = one variant</li>

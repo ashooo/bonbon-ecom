@@ -41,6 +41,7 @@
             <form method="POST" action="{{ route('cart.add') }}" class="space-y-6" id="cake-builder-form">
                 @csrf
                 <input type="hidden" id="builder-toppings-hidden" name="customization[toppings]" value="[]">
+                <input type="hidden" id="builder-preview-svg-hidden" name="customization[preview_svg]" value="">
 
                 <section class="rounded-3xl border border-[#F3D7DD] bg-white p-5 shadow-lg">
                     <div class="mb-3 flex items-center justify-between">
@@ -299,6 +300,7 @@
             const topViewToppingsEl = document.getElementById('cake-top-toppings');
             const topViewMessageEl = document.getElementById('cake-top-message-preview');
             const toppingsHiddenInput = document.getElementById('builder-toppings-hidden');
+            const previewSvgHiddenInput = document.getElementById('builder-preview-svg-hidden');
             const shapeAdjustBtns = [...document.querySelectorAll('.shape-adjust')];
             const toppingColorInput = document.getElementById('builder-topping-color');
             const clearToppingsBtn = document.getElementById('builder-clear-toppings');
@@ -323,6 +325,7 @@
             const messagePreviewEl = document.getElementById('cake-message-preview');
             const topperWrapEl = document.getElementById('cake-topper');
             const topperTextEl = document.getElementById('cake-topper-text');
+            const cakeSvgEl = document.getElementById('cake-svg');
 
             const pricing = {
                 size: { '6': 450, '8': 700, '10': 980, '12': 1280 },
@@ -978,6 +981,7 @@
                 renderInsidePreview();
             };
 
+
             const compute = () => {
                 const subtotal =
                     Number(pricing.size[sizeSelect.value] || 0) +
@@ -992,6 +996,45 @@
                 addonEl.textContent = php(subtotal);
                 totalEl.textContent = php(subtotal);
                 renderCake();
+                syncPreviewSvgSnapshot();
+            };
+
+            const syncPreviewSvgSnapshot = () => {
+                try {
+                    if (!cakeSvgEl) return;
+                    const clone = cakeSvgEl.cloneNode(true);
+                    clone.removeAttribute('id');
+                    clone.removeAttribute('class');
+                    clone.setAttribute('width', '160');
+                    clone.setAttribute('height', '120');
+
+                    // Keep gradient/clip ids working in saved SVG by remapping them to unique names.
+                    const uid = `snap${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+                    const idMap = new Map();
+                    clone.querySelectorAll('[id]').forEach((node, idx) => {
+                        const oldId = node.getAttribute('id');
+                        if (!oldId) return;
+                        const nextId = `${uid}-${idx}`;
+                        idMap.set(oldId, nextId);
+                        node.setAttribute('id', nextId);
+                    });
+                    const refAttrs = ['fill', 'stroke', 'filter', 'clip-path', 'mask', 'href', 'xlink:href'];
+                    clone.querySelectorAll('*').forEach((node) => {
+                        refAttrs.forEach((attr) => {
+                            const value = node.getAttribute(attr);
+                            if (!value) return;
+                            let updated = value;
+                            idMap.forEach((nextId, oldId) => {
+                                updated = updated.replace(new RegExp(`url\\(#${oldId}\\)`, 'g'), `url(#${nextId})`);
+                                if (updated === `#${oldId}`) updated = `#${nextId}`;
+                            });
+                            if (updated !== value) node.setAttribute(attr, updated);
+                        });
+                    });
+                    previewSvgHiddenInput.value = clone.outerHTML;
+                } catch (error) {
+                    previewSvgHiddenInput.value = '';
+                }
             };
 
             const syncFrostingSwatchUI = () => {

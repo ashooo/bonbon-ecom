@@ -51,21 +51,33 @@
                     <div class="p-8 space-y-6">
                         <div class="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             @foreach ($items as $item)
+                                @php
+                                    $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
+                                    $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? null : 'Custom Design');
+                                @endphp
                                 <div class="flex items-center space-x-4 pb-6 border-b border-dashed border-[#F5E6E8] last:border-0 last:pb-0 mb-6 last:mb-0">
                                     <div class="relative">
-                                        <img
-                                            src="{{ $item->product?->main_image_url ?? 'https://via.placeholder.com/80x80?text=Product' }}"
-                                            alt="{{ $item->product?->name ?? 'Product' }}"
-                                            class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30"
-                                        >
+                                        @if (!empty($item->customization_payload['preview_svg']))
+                                            <div class="w-20 h-20 overflow-hidden rounded-2xl ring-4 ring-[#F8E2E7]/30 bg-white [&_svg]:h-full [&_svg]:w-full">
+                                                {!! $item->customization_payload['preview_svg'] !!}
+                                            </div>
+                                        @elseif ($item->product?->main_image_url)
+                                            <img
+                                                src="{{ $item->product->main_image_url }}"
+                                                alt="{{ $itemName }}"
+                                                class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30"
+                                            >
+                                        @else
+                                            <x-custom-cake-thumbnail :payload="$item->customization_payload" width="80" height="80" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30" />
+                                        @endif
                                         <span class="absolute -top-2 -right-2 bg-[#5A3A3A] text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
                                             {{ $item->quantity }}
                                         </span>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-bold text-[#5A3A3A] leading-tight">{{ $item->product?->name ?? 'Unavailable product' }}</h3>
-                                        @if ($item->variant?->name)
-                                            <p class="text-[#8C6770] text-sm mt-1">{{ $item->variant->name }}</p>
+                                        <h3 class="font-bold text-[#5A3A3A] leading-tight">{{ $itemName }}</h3>
+                                        @if ($item->variant?->name || $itemVariantLabel)
+                                            <p class="text-[#8C6770] text-sm mt-1">{{ $item->variant?->name ?? $itemVariantLabel }}</p>
                                         @endif
                                         @if ($item->product?->status === 'pre_order' && ($item->product?->pre_order_days ?? 0) > 0)
                                             <div class="flex items-center gap-1.5 mt-2">

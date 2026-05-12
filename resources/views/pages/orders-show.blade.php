@@ -121,13 +121,40 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($order->items as $item)
+                                @php
+                                    $itemName = $item->variant?->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
+                                    $itemVariantLabel = $item->variant?->name ?? (($item->variant_id ? 'N/A' : 'Custom Design'));
+                                @endphp
                                 <tr>
-                                    <td class="px-3 py-3 text-sm font-medium">{{ $item->variant?->product?->name ?? 'Unknown Product' }}</td>
-                                    <td class="px-3 py-3 text-sm">{{ $item->variant?->name ?? 'N/A' }}</td>
+                                    <td class="px-3 py-3 text-sm font-medium">
+                                        <div class="flex items-center gap-2">
+                                            @if (!empty($item->customization_payload['preview_svg']))
+                                                <div class="h-10 w-10 overflow-hidden rounded-md bg-white [&_svg]:h-full [&_svg]:w-full">
+                                                    {!! $item->customization_payload['preview_svg'] !!}
+                                                </div>
+                                            @elseif ($item->variant?->product?->main_image_url)
+                                                <img src="{{ $item->variant->product->main_image_url }}" alt="{{ $itemName }}" class="h-10 w-10 rounded-md object-cover">
+                                            @else
+                                                <x-custom-cake-thumbnail :payload="$item->customization_payload" width="40" height="40" class="h-10 w-10 rounded-md object-cover" />
+                                            @endif
+                                            <span>{{ $itemName }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3 text-sm">{{ $itemVariantLabel }}</td>
                                     <td class="px-3 py-3 text-sm">{{ $item->quantity }}</td>
                                     <td class="px-3 py-3 text-sm">&#8369;{{ number_format((float) $item->unit_price, 2) }}</td>
                                     <td class="px-3 py-3 text-sm font-semibold">&#8369;{{ number_format((float) $item->subtotal, 2) }}</td>
                                 </tr>
+                                @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
+                                    <tr>
+                                        <td colspan="5" class="px-3 pb-3 text-xs text-gray-500">
+                                            @foreach($item->customization_payload as $key => $value)
+                                                @continue(in_array($key, ['preview_image', 'preview_svg'], true))
+                                                <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                @endif
                             @empty
                                 <tr><td colspan="5" class="px-3 py-6 text-center text-sm text-gray-500">No items found for this order.</td></tr>
                             @endforelse

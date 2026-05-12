@@ -68,6 +68,10 @@ class CheckoutController extends Controller
 
     private function resolveVariantForCartItem($item): ?Variant
     {
+        if (! $item->product_id && ! $item->variant_id) {
+            return null;
+        }
+
         if ($item->variant_id) {
             return Variant::query()->find($item->variant_id);
         }
@@ -157,6 +161,10 @@ class CheckoutController extends Controller
         foreach ($cart->items as $item) {
             $resolvedVariant = $this->resolveVariantForCartItem($item);
 
+            if (! $item->product_id && ! $item->variant_id) {
+                continue;
+            }
+
             if (! $resolvedVariant) {
                 return redirect()->route('checkout.index')->withErrors([
                     'checkout' => 'Some cart items are unavailable for checkout. Please review your cart and try again.',
@@ -199,19 +207,24 @@ class CheckoutController extends Controller
 
             foreach ($cart->items as $item) {
                 $variant = $this->resolveVariantForCartItem($item);
-                if (! $variant) {
+                $isCustomOnlyItem = ! $item->product_id && ! $item->variant_id;
+                if (! $variant && ! $isCustomOnlyItem) {
                     throw new \RuntimeException('Unable to resolve a product variant for checkout.');
                 }
 
                 OrderItem::create([
                     'order_id' => $order->id,
-                    'variant_id' => $variant->id,
+                    'variant_id' => $variant?->id,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->quantity * $item->unit_price,
                     'special_instructions' => $item->special_instructions,
                     'customization_payload' => $item->customization_payload,
                 ]);
+
+                if ($isCustomOnlyItem || ! $variant) {
+                    continue;
+                }
 
                 $previousStock = (int) $variant->stock_quantity;
                 $newStock = max(0, $previousStock - (int) $item->quantity);

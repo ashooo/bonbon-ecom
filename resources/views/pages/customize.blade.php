@@ -327,14 +327,7 @@
             const topperTextEl = document.getElementById('cake-topper-text');
             const cakeSvgEl = document.getElementById('cake-svg');
 
-            const pricing = {
-                size: { '6': 450, '8': 700, '10': 980, '12': 1280 },
-                layers: { '1': 0, '2': 240, '3': 420, '4': 620 },
-                frosting: { white: 10, ivory: 10, blush: 10, sage: 10, powder_blue: 10, chocolate: 10, mocha: 10, lavender: 10, custom: 10 },
-                drip: { none: 0, chocolate: 70, white_chocolate: 80, pink: 80, caramel: 90 },
-                topper: { none: 0, name: 120, acrylic: 200, edible_print: 180 },
-                rush: { no: 0, yes: 350 }
-            };
+            const pricing = @json($customizationPricing ?? []);
 
             const frostingTone = {
                 white: ['#f2f2f2', '#d9d9d9'],
@@ -986,10 +979,13 @@
                 const subtotal =
                     Number(pricing.size[sizeSelect.value] || 0) +
                     Number(pricing.layers[layersSelect.value] || 0) +
+                    Number(pricing.sponge[spongeSelect.value] || 0) +
+                    Number(pricing.filling[fillingSelect.value] || 0) +
                     Number(pricing.frosting[frostingSelect.value] || 0) +
                     Number(pricing.drip[dripSelect.value] || 0) +
                     Number(pricing.topper[topperSelect.value] || 0) +
-                    Number(pricing.rush[rushCheckbox.checked ? 'yes' : 'no'] || 0);
+                    Number(pricing.rush[rushCheckbox.checked ? 'yes' : 'no'] || 0) +
+                    (Number(pricing.toppings?.per_piece || 0) * toppingItems.length);
 
                 rushHidden.value = rushCheckbox.checked ? 'yes' : 'no';
                 frostingCustomHidden.value = frostingSelect.value === 'custom' ? (frostingCustomInput.value || '') : '';

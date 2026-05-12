@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\StoreSetting;
 use App\Models\Variant;
+use App\Support\CustomizationPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -13,37 +15,6 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     private ?string $guestCartToken = null;
-    private const CUSTOMIZATION_PRICE_ADJUSTMENTS = [
-        'size' => [
-            '6' => 0,
-            '8' => 250,
-            '10' => 500,
-            '12' => 850,
-        ],
-        'layers' => [
-            '1' => 0,
-            '2' => 180,
-            '3' => 320,
-            '4' => 480,
-        ],
-        'frosting' => [
-            'buttercream' => 0,
-            'whipped' => 80,
-            'fondant' => 220,
-            'ganache' => 160,
-        ],
-        'topper' => [
-            'none' => 0,
-            'name' => 120,
-            'acrylic' => 200,
-            'edible_print' => 180,
-        ],
-        'rush' => [
-            'no' => 0,
-            'yes' => 350,
-        ],
-    ];
-
     private function resolveGuestCartToken(Request $request): string
     {
         $token = trim((string) ($request->cookie('cart_token') ?? ''));
@@ -234,15 +205,28 @@ class CartController extends Controller
 
     private function calculateCustomizationAdjustment(array $payload): float
     {
+        $settings = StoreSetting::query()->first();
+        $pricing = CustomizationPricing::mergeWithDefaults($settings?->customization_pricing);
         $adjustment = 0.0;
 
-        foreach (self::CUSTOMIZATION_PRICE_ADJUSTMENTS as $key => $options) {
+        foreach ($pricing as $key => $options) {
+            if (! is_array($options)) {
+                continue;
+            }
             $selected = $payload[$key] ?? null;
             if (! is_string($selected)) {
                 continue;
             }
 
             $adjustment += (float) ($options[$selected] ?? 0);
+        }
+
+        if (isset($payload['toppings']) && is_string($payload['toppings'])) {
+            $parsed = json_decode($payload['toppings'], true);
+            if (is_array($parsed)) {
+                $perPiece = (float) ($pricing['toppings']['per_piece'] ?? 0);
+                $adjustment += count($parsed) * $perPiece;
+            }
         }
 
         return $adjustment;

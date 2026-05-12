@@ -17,6 +17,11 @@ class StoreSetting extends Model
         'footer_address',
         'footer_hours',
         'copyright_text',
+        'customization_pricing',
+    ];
+
+    protected $casts = [
+        'customization_pricing' => 'array',
     ];
 
     public function getHeroImageUrlAttribute(): ?string

@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Services\InvoiceService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
 {
+    public function __construct(private InvoiceService $invoiceService) {}
+
     public function download(Invoice $invoice): StreamedResponse
     {
         $invoice->loadMissing('order.user');
@@ -19,14 +22,14 @@ class InvoiceController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $path = $invoice->pdf_path;
+        $path = $this->invoiceService->ensureInvoicePdf($invoice, true);
 
         if ($path && Storage::disk('local')->exists($path)) {
             $invoice->incrementPrintCount();
 
             return Storage::disk('local')->download(
                 $path,
-                'invoice-' . $invoice->order->order_number . '.html'
+                'receipt-' . $invoice->order->order_number . '.pdf'
             );
         }
 

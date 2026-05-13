@@ -34,6 +34,7 @@
                 <h1 class="text-3xl font-bold">{{ $order->order_number }}</h1>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="{{ route('orders.receipt', $order) }}" class="inline-flex items-center rounded-2xl bg-pink-600 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-700">View Receipt</a>
                 <a href="{{ route('orders.index') }}" class="inline-flex items-center rounded-2xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">Back to Orders</a>
             </div>
         </div>
@@ -190,16 +191,32 @@
                     </div>
                 @endif
 
+                @php
+                    $displayDeliveryAddress = null;
+
+                    if ((string) $order->order_type === 'pickup') {
+                        $displayDeliveryAddress = 'BonBons PH';
+                    } elseif ($order->delivery_address) {
+                        $displayDeliveryAddress = trim((string) $order->delivery_address);
+
+                        if (filter_var($displayDeliveryAddress, FILTER_VALIDATE_URL)) {
+                            $path = urldecode((string) parse_url($displayDeliveryAddress, PHP_URL_PATH));
+                            $displayDeliveryAddress = str_replace('/maps/place/', '', trim($path, '/'));
+                            $displayDeliveryAddress = str_replace('+', ' ', $displayDeliveryAddress);
+                        }
+                    }
+                @endphp
+
                 <div class="rounded-3xl bg-white p-6 shadow-md">
                     <h2 class="mb-4 text-xl font-semibold">Customer</h2>
                     <div class="space-y-2 text-sm">
                         <p class="font-medium">{{ $order->customer_name }}</p>
                         <p>{{ $order->customer_email }}</p>
                         <p>{{ $order->customer_phone }}</p>
-                        @if ($order->delivery_address)
+                        @if ($displayDeliveryAddress)
                             <div class="mt-3 rounded-2xl bg-slate-50 p-3">
                                 <p class="text-xs uppercase tracking-wide text-gray-500">Delivery Address</p>
-                                <p class="mt-1">{{ $order->delivery_address }}</p>
+                                <p class="mt-1">{{ $displayDeliveryAddress }}</p>
                             </div>
                         @endif
                         @if ($order->special_instructions)

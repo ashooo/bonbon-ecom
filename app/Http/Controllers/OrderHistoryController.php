@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryMovement;
 use App\Models\Order;
+use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class OrderHistoryController extends Controller
 {
+    public function __construct(private InvoiceService $invoiceService) {}
+
     private function isOrderCancellable(string $status): bool
     {
         return in_array(strtolower($status), ['pending', 'confirmed'], true);
@@ -133,6 +137,73 @@ class OrderHistoryController extends Controller
         ]);
     }
 
+    public function receipt(Request $request, Order $order)
+    {
+        if (Auth::check()) {
+            if ((int) $order->user_id !== (int) Auth::id()) {
+                return redirect()->route('orders.index')->withErrors([
+                    'order_receipt' => 'You are not allowed to view this receipt.',
+                ]);
+            }
+        } elseif (! $this->canGuestAccessOrder($request, $order)) {
+            return redirect()->route('orders.index')->withErrors([
+                'order_receipt' => 'Please find the order first before viewing receipt.',
+            ]);
+        }
+
+        $order->load(['items.variant.product', 'invoice']);
+        $invoiceHtml = $this->invoiceService->renderInvoiceHtml($order);
+
+        return view('pages.receipt', [
+            'order' => $order,
+            'invoiceHtml' => $invoiceHtml,
+        ]);
+    }
+
+    public function receiptHtml(Request $request, Order $order)
+    {
+        if (Auth::check()) {
+            if ((int) $order->user_id !== (int) Auth::id()) {
+                abort(403);
+            }
+        } elseif (! $this->canGuestAccessOrder($request, $order)) {
+            abort(403);
+        }
+
+        $order->load(['items.variant.product', 'invoice']);
+        $invoiceHtml = $this->invoiceService->renderInvoiceHtml($order);
+
+        return response($invoiceHtml, 200)
+            ->header('Content-Type', 'text/html; charset=utf-8')
+            ->header('X-Frame-Options', 'SAMEORIGIN');
+    }
+
+    public function receiptPdf(Request $request, Order $order)
+    {
+        if (Auth::check()) {
+            if ((int) $order->user_id !== (int) Auth::id()) {
+                abort(403);
+            }
+        } elseif (! $this->canGuestAccessOrder($request, $order)) {
+            abort(403);
+        }
+
+        $order->loadMissing('invoice');
+        $invoice = $order->invoice;
+        if (! $invoice) {
+            abort(404, 'Invoice not found');
+        }
+
+        $path = $this->invoiceService->ensureInvoicePdf($invoice, true);
+        if (! Storage::disk('local')->exists($path)) {
+            abort(404, 'Receipt file not found');
+        }
+
+        $invoice->incrementPrintCount();
+
+        return Storage::disk('local')->download($path, 'receipt-' . $order->order_number . '.pdf');
+    }
+
     public function cancel(Request $request, Order $order)
     {
         if (Auth::check()) {
@@ -177,6 +248,10 @@ class OrderHistoryController extends Controller
         DB::transaction(function () use ($order): void {
             $order->update(['status' => 'cancelled']);
 
+            if (! $order->stock_deducted_at) {
+                return;
+            }
+
             $order->loadMissing('items.variant');
 
             foreach ($order->items as $item) {
@@ -199,6 +274,8 @@ class OrderHistoryController extends Controller
                     'reason' => 'Cancelled order ' . $order->order_number . ' from web orders page',
                 ]);
             }
+
+            $order->update(['stock_deducted_at' => null]);
         });
 
         return redirect()->route('orders.index')->with('success', 'Order ' . $order->order_number . ' cancelled successfully.');

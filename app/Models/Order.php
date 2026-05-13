@@ -11,6 +11,8 @@ class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STORE_PICKUP_LOCATION_URL = 'https://www.google.com/maps/place/Para%C3%B1aque+-+Sucat+Rd,+Metro+Manila/data=!4m2!3m1!1s0x3397cfc87e01d813:0x2a09c89c16afa4ed?sa=X&ved=1t:242&ictx=111';
+
     protected static function booted(): void
     {
         static::created(function (Order $order): void {
@@ -48,6 +50,8 @@ class Order extends Model
         'special_instructions',
         'status',
         'payment_status',
+        'payment_method',
+        'stock_deducted_at',
     ];
 
     protected $casts = [
@@ -55,6 +59,7 @@ class Order extends Model
         'delivery_fee' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'total' => 'decimal:2',
+        'stock_deducted_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 

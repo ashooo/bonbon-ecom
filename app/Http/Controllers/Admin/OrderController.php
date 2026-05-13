@@ -49,7 +49,7 @@ class OrderController extends Controller
             'status' => $data['status'],
         ]);
 
-        if ($previousStatus !== 'cancelled' && $data['status'] === 'cancelled') {
+        if ($previousStatus !== 'cancelled' && $data['status'] === 'cancelled' && $order->stock_deducted_at) {
             $order->loadMissing('items.variant');
 
             foreach ($order->items as $item) {
@@ -73,6 +73,8 @@ class OrderController extends Controller
                     'reason' => 'Admin cancelled order ' . $order->order_number,
                 ]);
             }
+
+            $order->update(['stock_deducted_at' => null]);
         }
 
         if ($order->user_id && $previousStatus !== $data['status']) {

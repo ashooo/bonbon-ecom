@@ -56,6 +56,7 @@
             @forelse ($orders as $order)
                 @php
                     $status = strtolower((string) $order->status);
+                    $paymentMethodLabel = (string) $order->payment_method === 'paymongo' ? 'QRPH' : strtoupper((string) $order->payment_method);
                     $statusClass = match ($status) {
                         'cancelled' => 'bg-red-100 text-red-800',
                         'completed' => 'bg-green-100 text-green-800',
@@ -79,6 +80,7 @@
                             <h3 class="font-semibold">{{ $order->order_number }}</h3>
                             <p class="text-sm text-gray-600">Placed on {{ $order->created_at?->format('F j, Y h:i A') }}</p>
                             <p class="mt-1 text-sm text-gray-600">{{ ucfirst((string) $order->order_type) }}</p>
+                            <p class="text-xs text-gray-500">Payment: {{ $paymentMethodLabel }} ({{ ucfirst((string) $order->payment_status) }})</p>
                             <span class="mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">{{ ucfirst((string) $order->status) }}</span>
                         </div>
 
@@ -88,6 +90,9 @@
 
                             <a href="{{ route('orders.show', $order) }}" class="inline-block rounded-md bg-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300">
                                 View Details
+                            </a>
+                            <a href="{{ route('orders.receipt', $order) }}" class="inline-block rounded-md bg-pink-100 px-3 py-2 text-sm font-semibold text-pink-700 hover:bg-pink-200">
+                                Receipt
                             </a>
 
 

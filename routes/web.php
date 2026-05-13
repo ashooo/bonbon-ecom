@@ -125,9 +125,14 @@ Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear')
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/paymongo/success/{order}', [CheckoutController::class, 'paymongoSuccess'])->name('checkout.paymongo.success');
+Route::get('/checkout/paymongo/cancel/{order}', [CheckoutController::class, 'paymongoCancel'])->name('checkout.paymongo.cancel');
 Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
 Route::post('/orders/lookup', [OrderHistoryController::class, 'lookup'])->name('orders.lookup');
 Route::get('/orders/{order}', [OrderHistoryController::class, 'show'])->name('orders.show');
+Route::get('/orders/{order}/receipt', [OrderHistoryController::class, 'receipt'])->name('orders.receipt');
+Route::get('/orders/{order}/receipt/html', [OrderHistoryController::class, 'receiptHtml'])->name('orders.receipt.html');
+Route::get('/orders/{order}/receipt/pdf', [OrderHistoryController::class, 'receiptPdf'])->name('orders.receipt.pdf');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
 
 Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');

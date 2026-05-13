@@ -290,6 +290,15 @@ class CheckoutController extends Controller
             return $response;
         } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Checkout order placement failed.', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+                'cart_id' => $cart->id ?? null,
+                'payment_method' => $request->input('payment_method'),
+                'order_type' => $request->input('order_type'),
+            ]);
 
             return redirect()->route('checkout.index')->withErrors([
                 'checkout' => 'Something went wrong while placing your order. Please try again.',

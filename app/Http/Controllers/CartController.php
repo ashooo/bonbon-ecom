@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\CartItem;
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\StoreSetting;
 use App\Models\Variant;
+use App\Support\CustomizationPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -13,37 +15,6 @@ use Illuminate\Support\Str;
 class CartController extends Controller
 {
     private ?string $guestCartToken = null;
-    private const CUSTOMIZATION_PRICE_ADJUSTMENTS = [
-        'size' => [
-            '6' => 0,
-            '8' => 250,
-            '10' => 500,
-            '12' => 850,
-        ],
-        'layers' => [
-            '1' => 0,
-            '2' => 180,
-            '3' => 320,
-            '4' => 480,
-        ],
-        'frosting' => [
-            'buttercream' => 0,
-            'whipped' => 80,
-            'fondant' => 220,
-            'ganache' => 160,
-        ],
-        'topper' => [
-            'none' => 0,
-            'name' => 120,
-            'acrylic' => 200,
-            'edible_print' => 180,
-        ],
-        'rush' => [
-            'no' => 0,
-            'yes' => 350,
-        ],
-    ];
-
     private function resolveGuestCartToken(Request $request): string
     {
         $token = trim((string) ($request->cookie('cart_token') ?? ''));
@@ -110,7 +81,7 @@ class CartController extends Controller
     public function add(Request $request)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'nullable|exists:products,id',
             'variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'nullable|integer|min:1',
             'special_instructions' => 'nullable|string|max:2000',
@@ -122,39 +93,63 @@ class CartController extends Controller
             'customization.shape' => 'nullable|string|max:100',
             'customization.size' => 'nullable|in:6,8,10,12',
             'customization.theme' => 'nullable|string|max:100',
-            'customization.message' => 'nullable|string|max:120',
+            'customization.message' => 'nullable|string|max:50',
+            'customization.frosting_custom' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'customization.drip' => 'nullable|in:none,chocolate,white_chocolate,pink,caramel',
+            'customization.toppings' => 'nullable|string|max:5000',
+            'customization.preview_svg' => 'nullable|string|max:120000',
             'customization.topper' => 'nullable|in:none,name,acrylic,edible_print',
             'customization.rush' => 'nullable|in:no,yes',
         ]);
 
         $cart = $this->getCart($request);
         $quantity = $request->input('quantity', 1);
-        $product = Product::findOrFail($request->integer('product_id'));
-        $variant = $request->filled('variant_id') ? Variant::findOrFail($request->integer('variant_id')) : null;
+        $hasCustomization = is_array($request->input('customization')) && count((array) $request->input('customization')) > 0;
+        $hasProductId = $request->filled('product_id');
 
-        if ($variant && (int) $variant->product_id !== (int) $product->id) {
+        if (! $hasProductId && ! $hasCustomization) {
+            return back()->withErrors([
+                'product_id' => 'Please select a product or provide customization details.',
+            ]);
+        }
+
+        $product = $hasProductId ? Product::findOrFail($request->integer('product_id')) : null;
+        $variant = ($hasProductId && $request->filled('variant_id')) ? Variant::findOrFail($request->integer('variant_id')) : null;
+
+        if ($product && $variant && (int) $variant->product_id !== (int) $product->id) {
             return back()->withErrors([
                 'variant_id' => 'Selected variant does not belong to the selected product.',
             ]);
         }
 
-        $basePrice = (float) $product->effective_price;
+        $basePrice = (float) ($product?->effective_price ?? 0);
         $customizationPayload = $this->sanitizeCustomizationPayload((array) $request->input('customization', []));
         $customizationAdjustment = $this->calculateCustomizationAdjustment($customizationPayload);
-        $unitPrice = $basePrice + (float) $variant?->price_adjustment + $customizationAdjustment;
+        $unitPrice = $basePrice + (float) ($variant?->price_adjustment ?? 0) + $customizationAdjustment;
 
-        $existingItem = $cart->items()
-            ->where('product_id', $product->id)
-            ->where('variant_id', $variant?->id)
-            ->where('customization_payload', json_encode($customizationPayload))
-            ->first();
+        if (! $hasProductId && isset($customizationPayload['shape'])) {
+            $customizationPayload['item_name'] = 'Custom Cake';
+        }
+
+        $existingItemQuery = $cart->items()->where('customization_payload', json_encode($customizationPayload));
+        if ($product) {
+            $existingItemQuery->where('product_id', $product->id);
+        } else {
+            $existingItemQuery->whereNull('product_id');
+        }
+        if ($variant) {
+            $existingItemQuery->where('variant_id', $variant->id);
+        } else {
+            $existingItemQuery->whereNull('variant_id');
+        }
+        $existingItem = $existingItemQuery->first();
 
         if ($existingItem) {
             $existingItem->increment('quantity', $quantity);
         } else {
             $cart->items()->create([
                 'cart_id' => $cart->id,
-                'product_id' => $product->id,
+                'product_id' => $product?->id,
                 'variant_id' => $variant?->id,
                 'unit_price' => $unitPrice,
                 'quantity' => $quantity,
@@ -168,7 +163,7 @@ class CartController extends Controller
 
     private function sanitizeCustomizationPayload(array $raw): array
     {
-        $allowedKeys = ['sponge', 'filling', 'frosting', 'layers', 'shape', 'size', 'theme', 'message', 'topper', 'rush'];
+        $allowedKeys = ['sponge', 'filling', 'frosting', 'frosting_custom', 'layers', 'shape', 'size', 'theme', 'message', 'drip', 'toppings', 'preview_svg', 'topper', 'rush'];
         $payload = [];
 
         foreach ($allowedKeys as $key) {
@@ -182,6 +177,15 @@ class CartController extends Controller
                 continue;
             }
 
+            if ($key === 'preview_svg') {
+                $sanitized = $this->sanitizePreviewSvg($trimmed);
+                if ($sanitized === '') {
+                    continue;
+                }
+                $payload[$key] = $sanitized;
+                continue;
+            }
+
             $payload[$key] = $trimmed;
         }
 
@@ -190,17 +194,39 @@ class CartController extends Controller
         return $payload;
     }
 
+    private function sanitizePreviewSvg(string $svg): string
+    {
+        $allowed = '<svg><g><path><ellipse><circle><rect><text><tspan><defs><linearGradient><stop><clipPath><line><polygon><polyline>';
+        $clean = strip_tags($svg, $allowed);
+        $clean = preg_replace('/on[a-zA-Z]+\s*=\s*("|\').*?("|\')/i', '', $clean) ?? '';
+        $clean = preg_replace('/javascript:/i', '', $clean) ?? '';
+        return trim($clean);
+    }
+
     private function calculateCustomizationAdjustment(array $payload): float
     {
+        $settings = StoreSetting::query()->first();
+        $pricing = CustomizationPricing::mergeWithDefaults($settings?->customization_pricing);
         $adjustment = 0.0;
 
-        foreach (self::CUSTOMIZATION_PRICE_ADJUSTMENTS as $key => $options) {
+        foreach ($pricing as $key => $options) {
+            if (! is_array($options)) {
+                continue;
+            }
             $selected = $payload[$key] ?? null;
             if (! is_string($selected)) {
                 continue;
             }
 
             $adjustment += (float) ($options[$selected] ?? 0);
+        }
+
+        if (isset($payload['toppings']) && is_string($payload['toppings'])) {
+            $parsed = json_decode($payload['toppings'], true);
+            if (is_array($parsed)) {
+                $perPiece = (float) ($pricing['toppings']['per_piece'] ?? 0);
+                $adjustment += count($parsed) * $perPiece;
+            }
         }
 
         return $adjustment;

@@ -1,5 +1,8 @@
 <!-- Settings Section -->
 <div id="settings-section" class="admin-section hidden">
+    @php
+        $customizationPricing = \App\Support\CustomizationPricing::mergeWithDefaults(($settings?->customization_pricing ?? null));
+    @endphp
     <div class="space-y-6"> 
 
         @if(session('success'))
@@ -138,6 +141,47 @@
                 <button class="mt-6 rounded-2xl bg-pink-600 px-6 py-3 text-sm font-semibold text-white hover:bg-pink-700">
                     Save Changes
                 </button>
+            </div>
+
+            <div class="rounded-3xl bg-white p-6 shadow-soft lg:col-span-2">
+                <h2 class="text-xl font-semibold mb-2">Customization Pricing</h2>
+                <p class="text-sm text-slate-500 mb-6">Set add-on prices used by the custom cake builder.</p>
+
+                <div class="space-y-6">
+                    @php
+                        $groups = [
+                            'size' => 'Base Size',
+                            'layers' => 'Tiers',
+                            'sponge' => 'Sponge',
+                            'filling' => 'Filling',
+                            'frosting' => 'Frosting',
+                            'drip' => 'Drip',
+                            'topper' => 'Topper',
+                            'toppings' => 'Toppings',
+                            'rush' => 'Rush',
+                        ];
+                    @endphp
+                    @foreach($groups as $groupKey => $groupLabel)
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700 mb-3">{{ $groupLabel }}</h3>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach(($customizationPricing[$groupKey] ?? []) as $optionKey => $priceValue)
+                                    <label class="rounded-2xl border border-slate-200 px-3 py-2">
+                                        <span class="block text-xs uppercase tracking-wide text-slate-500 mb-1">{{ str_replace('_', ' ', $optionKey) }}</span>
+                                        <input
+                                            name="customization_pricing[{{ $groupKey }}][{{ $optionKey }}]"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ old("customization_pricing.$groupKey.$optionKey", $priceValue) }}"
+                                            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-100"
+                                        />
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </form>
     </div>

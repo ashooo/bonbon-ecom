@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\StoreSetting;
+use App\Support\CustomizationPricing;
 
 class CustomizeController extends Controller
 {
@@ -24,6 +26,9 @@ class CustomizeController extends Controller
                 ->get();
         }
 
-        return view('pages.customize', compact('products'));
+        $settings = StoreSetting::query()->first();
+        $customizationPricing = CustomizationPricing::mergeWithDefaults($settings?->customization_pricing);
+
+        return view('pages.customize', compact('products', 'customizationPricing'));
     }
 }

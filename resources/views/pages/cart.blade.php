@@ -15,16 +15,27 @@
             <div class="lg:col-span-2">
                 <div class="space-y-4">
                     @foreach ($items as $item)
+                        @php
+                            $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
+                            $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design');
+                        @endphp
                         <div class="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4">
-                            <img src="{{ $item->product?->main_image_url ?? 'https://via.placeholder.com/100x100?text=Product' }}" alt="{{ $item->product?->name ?? 'Product' }}" class="w-20 h-20 rounded object-cover">
+                            @if (!empty($item->customization_payload['preview_svg']))
+                                <div class="h-20 w-20 overflow-hidden rounded bg-white [&_svg]:h-full [&_svg]:w-full">
+                                    {!! $item->customization_payload['preview_svg'] !!}
+                                </div>
+                            @elseif ($item->product?->main_image_url)
+                                <img src="{{ $item->product->main_image_url }}" alt="{{ $itemName }}" class="w-20 h-20 rounded object-cover">
+                            @else
+                                <x-custom-cake-thumbnail :payload="$item->customization_payload" width="80" height="80" class="h-20 w-20 rounded object-cover" />
+                            @endif
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold">{{ $item->product?->name ?? 'Unavailable product' }}</h3>
-                                @if ($item->variant?->name)
-                                    <p class="text-gray-600">{{ $item->variant->name }}</p>
-                                @endif
+                                <h3 class="text-lg font-semibold">{{ $itemName }}</h3>
+                                <p class="text-gray-600">{{ $itemVariantLabel }}</p>
                                 @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
                                     <p class="mt-1 text-xs text-gray-500">
                                         @foreach($item->customization_payload as $key => $value)
+                                            @continue(in_array($key, ['preview_image', 'preview_svg'], true))
                                             <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
                                         @endforeach
                                     </p>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\StoreSetting;
+use App\Support\CustomizationPricing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,6 +23,7 @@ class SettingsController extends Controller
             'footer_address' => 'nullable|string|max:255',
             'footer_hours' => 'nullable|string|max:1000',
             'copyright_text' => 'nullable|string|max:255',
+            'customization_pricing' => 'nullable|array',
         ]);
 
         $settings = StoreSetting::query()->firstOrCreate([], [
@@ -44,10 +46,33 @@ class SettingsController extends Controller
             $data['chat_avatar'] = $request->file('chat_avatar')->store('settings', 'public');
         }
 
+        $data['customization_pricing'] = $this->sanitizeCustomizationPricing(
+            (array) $request->input('customization_pricing', [])
+        );
+
         $settings->update($data);
 
         return redirect()
             ->route('admin.dashboard', ['section' => 'settings'])
             ->with('success', 'Settings updated successfully.');
+    }
+
+    private function sanitizeCustomizationPricing(array $raw): array
+    {
+        $defaults = CustomizationPricing::defaults();
+        $sanitized = [];
+
+        foreach ($defaults as $group => $options) {
+            $sanitized[$group] = [];
+            $groupRaw = is_array($raw[$group] ?? null) ? $raw[$group] : [];
+            foreach ($options as $key => $defaultValue) {
+                $candidate = $groupRaw[$key] ?? null;
+                $sanitized[$group][$key] = is_numeric($candidate)
+                    ? max(0, (float) $candidate)
+                    : (float) $defaultValue;
+            }
+        }
+
+        return $sanitized;
     }
 }

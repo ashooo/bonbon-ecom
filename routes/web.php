@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 Route::get('/', function () {
     $featuredProducts = collect();
     $featuredCategories = collect();
+    $shelfProducts = collect();
 
     if (Schema::hasTable('products') && Schema::hasTable('categories')) {
         $featuredProducts = \App\Models\Product::with('category')
@@ -45,12 +46,17 @@ Route::get('/', function () {
             ->orderBy('name')
             ->take(8)
             ->get();
+
+        $shelfProducts = \App\Models\Product::with(['category', 'images', 'variants' => fn ($q) => $q->where('is_active', true)->orderByDesc('is_default')->orderBy('display_order')])
+            ->where('is_active', true)
+            ->latest()
+            ->get();
     }
 
-    return view('pages.home', compact('featuredProducts', 'featuredCategories'));
+    return view('pages.home', compact('featuredProducts', 'featuredCategories', 'shelfProducts'));
 });
 
-Route::get('/products', function (Request $request) {
+Route::get('/test-products', function (Request $request) {
     $products = collect();
     $categories = collect();
 
@@ -116,6 +122,7 @@ Route::get('/product/{slug}', function ($slug) {
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart/json', [CartController::class, 'cartJson'])->name('cart.json');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::put('/cart/{item}', [CartController::class, 'updateQuantity'])->name('cart.update');
 Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');

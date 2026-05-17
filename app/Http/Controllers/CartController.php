@@ -158,7 +158,53 @@ class CartController extends Controller
             ]);
         }
 
+        if ($request->expectsJson() || $request->ajax()) {
+            $cart->load('items.product', 'items.variant');
+            return $this->cartJsonResponse($cart, $request);
+        }
+
         return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
+    }
+
+    public function cartJson(Request $request)
+    {
+        $cart = $this->getCart($request);
+        return $this->cartJsonResponse($cart, $request);
+    }
+
+    private function cartJsonResponse(Cart $cart, Request $request)
+    {
+        $items = $cart->items->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'name' => $item->product?->name ?? ($item->customization_payload['item_name'] ?? 'Custom Cake'),
+                'variant' => $item->variant?->name ?? 'Default',
+                'image' => $item->product?->main_image_url ?? null,
+                'unit_price' => (float) $item->unit_price,
+                'quantity' => (int) $item->quantity,
+                'subtotal' => (float) ($item->unit_price * $item->quantity),
+            ];
+        });
+
+        $subtotal = (float) $cart->subtotal;
+        $delivery = 5.99;
+        $tax = $subtotal * 0.1;
+        $total = $subtotal + $delivery + $tax;
+
+        $response = response()->json([
+            'items' => $items,
+            'count' => $items->sum('quantity'),
+            'subtotal' => $subtotal,
+            'delivery' => $delivery,
+            'tax' => $tax,
+            'total' => $total,
+        ]);
+
+        if ($this->guestCartToken) {
+            $response->cookie('cart_token', $this->guestCartToken, 60 * 24 * 30);
+        }
+
+        return $response;
     }
 
     private function sanitizeCustomizationPayload(array $raw): array

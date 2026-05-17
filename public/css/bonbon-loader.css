@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════════════════
+   BonBon Loader — Reusable Loading Overlay
+   ═══════════════════════════════════════════════════ */
+
+/* ─── Overlay (inline) ─── */
+.bb-loader-overlay {
+    position: absolute; inset: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(13, 7, 5, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: inherit;
+    animation: bbLoaderFadeIn 0.25s ease;
+}
+
+/* ─── Fullscreen ─── */
+.bb-loader-fullscreen {
+    position: fixed; inset: 0; z-index: 9999;
+    border-radius: 0;
+    background: rgba(13, 7, 5, 0.92);
+}
+
+/* ─── Fade ─── */
+@keyframes bbLoaderFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.bb-loader-fadeout {
+    opacity: 0 !important;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* ─── Inner ─── */
+.bb-loader-inner {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 0.8rem;
+}
+
+/* ─── Animation Container ─── */
+.bb-loader-anim {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    width: 100px; height: 100px;
+}
+
+.bb-loader-small .bb-loader-anim {
+    width: 56px; height: 56px;
+}
+
+/* ─── Cake SVG ─── */
+.bb-loader-cake {
+    animation: bbCakeBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes bbCakeBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+/* ─── Steam ─── */
+.bb-steam {
+    animation: bbSteamRise 2s ease-in-out infinite;
+}
+
+.bb-steam-1 { animation-delay: 0s; }
+.bb-steam-2 { animation-delay: 0.7s; }
+
+@keyframes bbSteamRise {
+    0% { opacity: 0; transform: translateY(4px); }
+    30% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-8px); }
+}
+
+/* ─── Orbiting Dots ─── */
+.bb-orbit {
+    position: absolute; inset: 0;
+    animation: bbOrbitSpin 3s linear infinite;
+}
+
+@keyframes bbOrbitSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.bb-dot {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #E6B7BE;
+    top: 50%; left: 50%;
+    margin-top: -3px; margin-left: -3px;
+}
+
+.bb-dot:nth-child(1) { background: #C88A92; width: 7px; height: 7px; margin-top:-3.5px; margin-left:-3.5px; transform: rotate(0deg) translateX(var(--bb-orbit-r)); }
+.bb-dot:nth-child(2) { background: #E6B7BE; width: 6px; height: 6px; transform: rotate(60deg) translateX(var(--bb-orbit-r)); }
+.bb-dot:nth-child(3) { background: #F5E6E8; transform: rotate(120deg) translateX(var(--bb-orbit-r)); }
+.bb-dot:nth-child(4) { background: #C88A92; opacity: 0.5; transform: rotate(180deg) translateX(var(--bb-orbit-r)); }
+.bb-dot:nth-child(5) { background: #E6B7BE; opacity: 0.4; width: 5px; height: 5px; margin-top:-2.5px; margin-left:-2.5px; transform: rotate(240deg) translateX(var(--bb-orbit-r)); }
+.bb-dot:nth-child(6) { background: #F5E6E8; opacity: 0.3; width: 4px; height: 4px; margin-top:-2px; margin-left:-2px; transform: rotate(300deg) translateX(var(--bb-orbit-r)); }
+
+/* ─── Text ─── */
+.bb-loader-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem; font-weight: 600;
+    color: #C88A92;
+    letter-spacing: 0.05em;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.bb-loader-text-sm {
+    font-size: 0.6rem;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

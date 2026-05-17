@@ -27,7 +27,7 @@
                 <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
                 <ul class="space-y-2">
                     <li><a href="/" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a></li>
-                    <li><a href="/products" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Products</a></li>
+                    <li><a href="/#shop" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Products</a></li>
                     <li><a href="/customize" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a></li>
                 </ul>
             </div>

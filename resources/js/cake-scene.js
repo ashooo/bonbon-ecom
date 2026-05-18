@@ -500,7 +500,7 @@ export function createCakeScene(containerEl) {
     tip.position.y = 0.58;
     tip.scale.set(1, 1.5, 1);
     frostingGroup.add(tip);
-    cupcakeGroup.add(frostingGroup);
+    // cupcakeGroup.add(frostingGroup);
 
     // Colorful sprinkles on frosting
     const sprinkleColors = [0xff4444, 0x44cc44, 0x4488ff, 0xffcc00, 0xff88cc, 0xff8844, 0x8844ff];
@@ -521,13 +521,13 @@ export function createCakeScene(containerEl) {
             y + (Math.random() - 0.5) * 0.04,
             Math.sin(angle) * r
         );
-        cupcakeGroup.add(sprinkle);
+        // cupcakeGroup.add(sprinkle);
     }
 
     cupcakeGroup.scale.set(0.6, 0.6, 0.6);
     cupcakeGroup.position.set(3.5, 3.0, -1);
     cupcakeGroup.visible = false;
-    scene.add(cupcakeGroup);
+    // scene.add(cupcakeGroup);
 
     // ═══════════════════════════════════════
     // SIGNBOARD (left side, static)
@@ -551,13 +551,13 @@ export function createCakeScene(containerEl) {
     const leftLeg = new THREE.Mesh(legGeo, woodMat);
     leftLeg.position.set(-0.22, -0.1, 0);
     leftLeg.rotation.z = -0.12;
-    signboardGroup.add(leftLeg);
+    // signboardGroup.add(leftLeg);
 
     // Right leg
     const rightLeg = new THREE.Mesh(legGeo, woodMat);
     rightLeg.position.set(0.22, -0.1, 0);
     rightLeg.rotation.z = 0.12;
-    signboardGroup.add(rightLeg);
+    // signboardGroup.add(rightLeg);
 
     // Back support legs
     const backLegGeo = new THREE.BoxGeometry(0.03, 0.75, 0.03);
@@ -565,26 +565,26 @@ export function createCakeScene(containerEl) {
     backLeftLeg.position.set(-0.18, -0.12, -0.15);
     backLeftLeg.rotation.x = 0.2;
     backLeftLeg.rotation.z = -0.08;
-    signboardGroup.add(backLeftLeg);
+    // signboardGroup.add(backLeftLeg);
 
     const backRightLeg = new THREE.Mesh(backLegGeo, woodMat);
     backRightLeg.position.set(0.18, -0.12, -0.15);
     backRightLeg.rotation.x = 0.2;
     backRightLeg.rotation.z = 0.08;
-    signboardGroup.add(backRightLeg);
+    // signboardGroup.add(backRightLeg);
 
     // Board frame (wooden border)
     const frameGeo = new THREE.BoxGeometry(0.52, 0.62, 0.03);
     const frame = new THREE.Mesh(frameGeo, woodMat);
     frame.position.set(0, 0.28, 0);
     frame.castShadow = true;
-    signboardGroup.add(frame);
+    // signboardGroup.add(frame);
 
     // Chalkboard face
     const boardGeo = new THREE.BoxGeometry(0.46, 0.56, 0.005);
     const board = new THREE.Mesh(boardGeo, chalkMat);
     board.position.set(0, 0.28, 0.018);
-    signboardGroup.add(board);
+    // signboardGroup.add(board);
 
     // "BonBon" text on chalkboard using canvas texture
     const signCanvas = document.createElement('canvas');
@@ -633,7 +633,7 @@ export function createCakeScene(containerEl) {
     signboardGroup.position.set(-3.5, 3.0, -1);
     signboardGroup.rotation.y = 0.3;
     signboardGroup.visible = false;
-    scene.add(signboardGroup);
+    // scene.add(signboardGroup);
 
     // --- State ---
     let rotationSpeed = 0.003;

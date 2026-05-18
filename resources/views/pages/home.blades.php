@@ -57,20 +57,20 @@
             </div>
 
             {{-- Signboard Overlay (top-left) --}}
-            <!-- <div id="signboard-overlay" class="side-overlay side-overlay-left" style="opacity: 0;">
+            <div id="signboard-overlay" class="side-overlay side-overlay-left" style="opacity: 0;">
                 <a href="{{ url('/#shop') }}" class="side-overlay-btn side-overlay-btn-sign">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26Z"/></svg>
                     Recommendations
                 </a>
-            </div> -->
+            </div>
 
             {{-- Cupcake Overlay (top-right) --}}
-            <!-- <div id="cupcake-overlay" class="side-overlay side-overlay-right" style="opacity: 0;">
+            <div id="cupcake-overlay" class="side-overlay side-overlay-right" style="opacity: 0;">
                 <a href="{{ url('/#shop') }}" class="side-overlay-btn side-overlay-btn-cupcake">
                     Explore Our Pastries
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                 </a>
-            </div> -->
+            </div>
 
             {{-- Scroll indicator --}}
             <div class="scroll-indicator" id="scroll-indicator">
@@ -656,144 +656,6 @@
             z-index: 100;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-        }
-    
-        /* Pink Theme Overrides */
-        :root {
-            --bb-pink-50: #fff5f8;
-            --bb-pink-100: #ffe7ef;
-            --bb-pink-200: #ffcfe0;
-            --bb-pink-300: #ffb0cd;
-            --bb-pink-400: #ff8db7;
-            --bb-pink-500: #f86aa2;
-            --bb-pink-600: #e04f88;
-            --bb-pink-700: #ba3a6d;
-            --bb-pink-800: #8f2a53;
-            --bb-plum-900: #2b0f1e;
-            --bb-rose-900: #1c0a14;
-            --bb-text: #fff4f8;
-            --bb-soft-text: rgba(255, 244, 248, 0.72);
-            --bb-accent: #ff9cc4;
-        }
-
-        .cake-scroll-section {
-            background: linear-gradient(
-                180deg,
-                #ffd7e8 0%,
-                #ffb7d4 14%,
-                #f985b7 36%,
-                #9a3a6f 68%,
-                #2b0f1e 100%
-            ) !important;
-        }
-
-        .cake-grain {
-            opacity: 0.06 !important;
-            background-image: radial-gradient(circle, rgba(255, 181, 210, 0.45) 1px, transparent 1px) !important;
-        }
-
-        .cake-vignette {
-            background: radial-gradient(
-                ellipse 72% 62% at 50% 50%,
-                transparent 30%,
-                rgba(28, 10, 20, 0.58) 100%
-            ) !important;
-        }
-
-        .story-label {
-            color: var(--bb-pink-100) !important;
-            background: rgba(255, 186, 215, 0.14) !important;
-            border-color: rgba(255, 186, 215, 0.35) !important;
-        }
-
-        .story-heading,
-        .story-heading-final {
-            color: var(--bb-text) !important;
-            text-shadow: 0 8px 34px rgba(43, 15, 30, 0.45) !important;
-        }
-
-        .story-sub {
-            color: var(--bb-soft-text) !important;
-        }
-
-        .story-cta {
-            color: #4b1732 !important;
-            background: linear-gradient(135deg, #ffd5e7 0%, #ff9ec6 45%, #f66ca3 100%) !important;
-            box-shadow: 0 10px 34px rgba(248, 106, 162, 0.34), 0 4px 14px rgba(43, 15, 30, 0.32) !important;
-        }
-
-        .story-cta:hover {
-            box-shadow: 0 14px 40px rgba(248, 106, 162, 0.44), 0 4px 16px rgba(43, 15, 30, 0.35) !important;
-        }
-
-        .side-overlay-btn-sign {
-            color: var(--bb-pink-50) !important;
-            background: rgba(248, 106, 162, 0.24) !important;
-            border-color: rgba(255, 188, 217, 0.42) !important;
-        }
-
-        .side-overlay-btn-sign:hover {
-            background: rgba(248, 106, 162, 0.34) !important;
-            box-shadow: 0 8px 28px rgba(248, 106, 162, 0.28) !important;
-        }
-
-        .side-overlay-btn-cupcake {
-            color: var(--bb-pink-50) !important;
-            background: rgba(255, 214, 234, 0.16) !important;
-            border-color: rgba(255, 214, 234, 0.34) !important;
-        }
-
-        .side-overlay-btn-cupcake:hover {
-            background: rgba(255, 214, 234, 0.26) !important;
-            box-shadow: 0 8px 28px rgba(255, 186, 215, 0.2) !important;
-        }
-
-        .scroll-indicator span {
-            color: rgba(255, 231, 239, 0.62) !important;
-        }
-
-        .scroll-mouse {
-            border-color: rgba(255, 221, 235, 0.45) !important;
-        }
-
-        .scroll-wheel {
-            background: var(--bb-accent) !important;
-        }
-
-        .cake-preloader {
-            background: var(--bb-rose-900) !important;
-        }
-
-        .preloader-ring {
-            border-top-color: #ff9cc4 !important;
-            border-right-color: rgba(255, 156, 196, 0.3) !important;
-        }
-
-        .preloader-text {
-            color: #ffd2e6 !important;
-        }
-
-        .cake-img {
-            filter: saturate(1.06) hue-rotate(-8deg) contrast(1.03) brightness(1.02);
-        }
-
-        .price-tag {
-            background: linear-gradient(145deg, rgba(255, 221, 235, 0.93), rgba(255, 188, 217, 0.9)) !important;
-            color: #5a1f3b !important;
-            border-color: rgba(186, 58, 109, 0.25) !important;
-        }
-
-        .tag-flavor,
-        .tag-layers {
-            color: #6b2645 !important;
-        }
-
-        .tag-price {
-            color: #8f2a53 !important;
-        }
-
-        header {
-            background: rgba(43, 15, 30, 0.36) !important;
         }
     </style>
     <link rel="stylesheet" href="/css/shelf.css">

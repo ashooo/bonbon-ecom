@@ -8,32 +8,70 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root {
-            --pink-light: #F5E6E8;
-            --pink-medium: #E6B7BE;
-            --pink-dark: #C88A92;
-            --cream: #FFFFFF;
-            --white-soft: #FFFFFF;
-            --text-dark: #2E2E2E;
-            --border-soft: #F5F5F5;
-            --brand-brown: #5A3A3A;
-            --brand-soft-brown: #7A5252;
-        }
+<style>
+    :root {
+        --pink-light: #F5E6E8;
+        --pink-medium: #E6B7BE;
+        --pink-dark: #C88A92;
+        --cream: #FFFFFF;
+        --white-soft: #FFFFFF;
+        --text-dark: #2E2E2E;
+        --border-soft: #F5F5F5;
+        --brand-brown: #F3D5E0;
+        --brand-soft-brown: #E8C4D0;
+        --sidebar-text: #440E03;
+    }
 
-        body {
-            font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-            background-color: #F3F4F6;
-            color: var(--text-dark);
-        }
+    body {
+        font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        background-color: #F3F4F6;
+        color: var(--text-dark);
+    }
 
-        .text-pink-600 { color: var(--pink-medium) !important; }
-        .bg-pink-600 { background-color: var(--pink-medium) !important; }
-        .hover\:bg-pink-700:hover { background-color: var(--pink-dark) !important; }
-        .bg-pink-100 { background-color: var(--pink-light) !important; }
-        .border-pink-600 { border-color: var(--pink-medium) !important; }
-        .shadow-soft { box-shadow: 0 20px 35px rgba(0,0,0,0.08); }
-    </style>
+    .text-pink-600 { color: var(--pink-medium) !important; }
+    .bg-pink-600 { background-color: var(--pink-medium) !important; }
+    .hover\:bg-pink-700:hover { background-color: var(--pink-dark) !important; }
+    .bg-pink-100 { background-color: var(--pink-light) !important; }
+    .border-pink-600 { border-color: var(--pink-medium) !important; }
+    .shadow-soft { box-shadow: 0 20px 35px rgba(0,0,0,0.08); }
+    
+    /* Sidebar styling */
+    aside {
+        background-color: var(--brand-brown) !important;
+    }
+    
+    aside .nav-link {
+        color: var(--sidebar-text) !important;
+    }
+    
+    aside .nav-link:hover {
+        color: var(--sidebar-text) !important;
+        background-color: rgba(68, 14, 3, 0.1) !important;
+    }
+    
+    aside .text-white,
+    aside .text-gray-200,
+    aside .text-pink-200,
+    aside a {
+        color: var(--sidebar-text) !important;
+    }
+    
+    aside .border-white\/10 {
+        border-color: rgba(68, 14, 3, 0.1) !important;
+    }
+    
+    /* Make icons visible */
+    aside svg {
+        color: var(--sidebar-text) !important;
+        stroke: var(--sidebar-text) !important;
+    }
+    
+    /* Remove icon backgrounds */
+    aside .bg-white\/10,
+    aside .bg-white\/20 {
+        background-color: transparent !important;
+    }
+</style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
@@ -41,58 +79,78 @@
 <body class="min-h-screen">
     <div class="min-h-screen grid grid-cols-[280px_minmax(0,1fr)]">
         <!-- Sidebar -->
-        <aside class="bg-[#1F2937] text-gray-100 flex flex-col">
-            <div class="px-6 py-8 border-b border-white/10">
-                <a href="{{ route('admin.dashboard') }}" class="text-2xl font-semibold text-white">BonBon Admin</a>
-                <p class="mt-2 text-sm text-gray-400">Store management</p>
-            </div>
+<aside class="flex flex-col" style="background-color: #F3D5E0;">
+    <div class="px-6 py-8 border-b" style="border-color: rgba(68, 14, 3, 0.1);">
+        <a href="{{ route('admin.dashboard') }}" class="text-2xl font-black" style="color: #440E03;">BonBon Admin</a>
+        <p class="mt-1 text-sm" style="color: #440E03;">Store management</p>
+    </div>
 
-            <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-                <div class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-3">Main Menu</div>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white active" data-section="dashboard">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h8v8H3V3zm10 0h8v5h-8V3zM3 13h5v8H3v-8zm7 4h11v4H10v-4z"></path></svg>
-                    </span>
-                    Dashboard
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="products">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </span>
-                    Products
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="inventory">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path></svg>
-                    </span>
-                    Inventory
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="orders">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M7 7v14m10-14v14M5 7l1.5-3h11L19 7"></path></svg>
-                    </span>
-                    Orders
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="users">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path></svg>
-                    </span>
-                    Users
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="support">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    </span>
-                   Chat Support
-                </a>
-                <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-200 hover:bg-white/10 hover:text-white" data-section="settings">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-pink-200">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </span>
-                    Settings
-                </a>
-            </nav>
-        </aside>
+    <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="dashboard" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+            </span>
+            Dashboard
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="products" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7L4 7M20 12L4 12M20 17L4 17M4 4v16h16V4z"></path>
+                </svg>
+            </span>
+            Products
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="inventory" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                </svg>
+            </span>
+            Inventory
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="orders" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+            </span>
+            Orders
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="users" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </span>
+            Users
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="support" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                </svg>
+            </span>
+            Chat Support
+        </a>
+        
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="settings" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+            </span>
+            Settings
+        </a>
+    </nav>
+</aside>
 
         <div class="flex flex-col">
             <header class="relative border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
@@ -106,8 +164,12 @@
                     </div>
 
                     <div class="flex items-center gap-3 justify-end">
+                        @php
+                            $__store_settings = \App\Models\StoreSetting::query()->first();
+                            $__admin_avatar = $__store_settings?->chat_avatar_url ?? 'https://via.placeholder.com/32';
+                        @endphp
                         <button class="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-50 px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100" id="adminProfileToggle">
-                            <img src="https://via.placeholder.com/32" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
+                            <img src="{{ $__admin_avatar }}" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
                             <span>Admin</span>
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>

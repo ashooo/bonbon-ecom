@@ -7,6 +7,8 @@ use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\StoreSetting;
 use Symfony\Component\HttpFoundation\Response;
 
 class ExportController extends Controller
@@ -26,13 +28,198 @@ class ExportController extends Controller
     {
         $filters = $this->validatedExportFilters($request);
         $format = $this->validatedFormat($request);
+        $reportType = $request->validate(['report_type' => 'required|in:sales,product'])['report_type'];
         $groupBy = $request->validate([
-            'group_by' => 'nullable|in:day,month',
+            'group_by' => 'nullable|in:day,week,month,year',
         ])['group_by'] ?? 'day';
 
-        $basename = 'reports-export-' . $groupBy . '-' . $filters['start']->format('Ymd') . '-' . $filters['end']->format('Ymd');
+        if ($reportType === 'sales') {
+            $periodExpression = match ($groupBy) {
+                'month' => "DATE_FORMAT(created_at, '%Y-%m')",
+                'year' => "DATE_FORMAT(created_at, '%Y')",
+                'week' => "DATE_FORMAT(created_at, '%x-W%v')",
+                default => 'DATE(created_at)',
+            };
 
-        return $this->downloadRows($this->reportHeadings(), $this->reportRows($filters, $groupBy), $basename, $format, 'Reports Export');
+            $query = Order::query()
+                ->selectRaw($periodExpression . ' as period')
+                ->selectRaw('COUNT(*) as orders_count')
+                ->selectRaw('SUM(subtotal) as subtotal_sum')
+                ->selectRaw('SUM(delivery_fee) as delivery_fee_sum')
+                ->selectRaw('SUM(total) as total_sum')
+                ->selectRaw("SUM(CASE WHEN payment_status = 'refunded' THEN total ELSE 0 END) as refunded_sum")
+                ->selectRaw("SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count")
+                ->whereBetween('created_at', [$filters['start'], $filters['end']])
+                ->groupBy(DB::raw($periodExpression))
+                ->orderBy('period')
+                ->get();
+
+            $headings = [
+                'Period',
+                'Total Revenue',
+                'Total Orders',
+                'Average Order Value',
+                'Discounts Used',
+                'Refunded Amount',
+                'Net Sales',
+            ];
+
+            $rows = $query->map(function ($row) {
+                $ordersCount = (int) $row->orders_count;
+                $total = (float) $row->total_sum;
+                $refunded = (float) $row->refunded_sum;
+                $net = $total - $refunded;
+
+                return [
+                    $row->period,
+                    number_format($total, 2, '.', ''),
+                    $ordersCount,
+                    number_format($ordersCount > 0 ? $total / $ordersCount : 0, 2, '.', ''),
+                    '0.00', // Discounts not tracked per order in current schema
+                    number_format($refunded, 2, '.', ''),
+                    number_format($net, 2, '.', ''),
+                ];
+            })->all();
+
+            // overall totals for summary
+            $totalRevenue = (float) $query->sum(fn($r) => (float) $r->total_sum);
+            $totalOrders = (int) $query->sum(fn($r) => (int) $r->orders_count);
+
+            // active customers: count distinct customer_email within period for completed/confirmed/ready
+            $activeCustomers = Order::query()
+                ->whereBetween('created_at', [$filters['start'], $filters['end']])
+                ->whereIn('status', ['confirmed', 'ready', 'completed'])
+                ->distinct()
+                ->count('customer_email');
+
+            $averageOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0.0;
+
+            // Build matrix for export (header, summary, blank, trend table)
+            $matrix = [];
+            $matrix[] = ['Report Type', 'Sales Report'];
+            $matrix[] = ['Start Date', $filters['start']->toDateString()];
+            $matrix[] = ['End Date', $filters['end']->toDateString()];
+            $matrix[] = ['Group By', ucfirst($groupBy)];
+            $matrix[] = ['Generated', now()->toDateTimeString()];
+            $matrix[] = [];
+            $matrix[] = ['Sales Summary'];
+            $matrix[] = ['Total Revenue', number_format($totalRevenue, 2, '.', '')];
+            $matrix[] = ['Total Orders', $totalOrders];
+            $matrix[] = ['Active Customers', $activeCustomers];
+            $matrix[] = ['Average Order Value', number_format($averageOrderValue, 2, '.', '')];
+            $matrix[] = ['Discounts Used', '0.00'];
+            $matrix[] = ['Refunded Amount', number_format((float) $query->sum(fn($r) => (float) $r->refunded_sum), 2, '.', '')];
+            $matrix[] = ['Net Sales', number_format($totalRevenue - (float) $query->sum(fn($r) => (float) $r->refunded_sum), 2, '.', '')];
+            $matrix[] = [];
+            $matrix[] = ['Revenue Trend'];
+            $matrix[] = ['Period', 'Orders', 'Revenue'];
+
+            foreach ($rows as $r) {
+                $matrix[] = [$r[0], $r[2], $r[1]];
+            }
+
+            $basename = 'sales-report-' . $groupBy . '-' . $filters['start']->format('Ymd') . '-' . $filters['end']->format('Ymd');
+
+            // Export according to format
+            if ($format === 'csv') {
+                return $this->streamCsvMatrix($matrix, $basename);
+            }
+
+            if ($format === 'excel') {
+                return $this->downloadExcelHtml($matrix, $basename, 'Sales Report');
+            }
+
+            if ($format === 'pdf') {
+                $settings = StoreSetting::query()->first();
+                $logoPath = $settings && $settings->chat_avatar ? public_path('storage/' . $settings->chat_avatar) : public_path('images/logo.png');
+
+                $pdf = Pdf::loadView('admin.reports.pdf-sales', [
+                    'matrix' => $matrix,
+                    'title' => 'Sales Report',
+                    'logoPath' => $logoPath,
+                ])->setPaper('a4', 'landscape');
+
+                return $pdf->download($basename . '.pdf');
+            }
+
+            return $this->downloadPdfFromMatrix($matrix, $basename, 'Sales Report');
+        }
+
+        // Product sales report
+        $items = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('product_variants as variants', 'variants.id', '=', 'order_items.variant_id')
+            ->join('products', 'products.id', '=', 'variants.product_id')
+            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            ->whereBetween('orders.created_at', [$filters['start'], $filters['end']])
+            ->where('orders.status', '<>', 'cancelled')
+            ->selectRaw('products.id as product_id, products.name as product_name, categories.name as category_name, SUM(order_items.quantity) as quantity_sold, COUNT(DISTINCT orders.id) as orders_count, SUM(order_items.subtotal) as revenue_generated, AVG(order_items.subtotal / NULLIF(order_items.quantity,0)) as avg_price')
+            ->groupBy('products.id', 'products.name', 'categories.name')
+            ->orderByDesc('quantity_sold')
+            ->get();
+
+        $matrix = [];
+        $matrix[] = ['Report Type', 'Product Sales Report'];
+        $matrix[] = ['Start Date', $filters['start']->toDateString()];
+        $matrix[] = ['End Date', $filters['end']->toDateString()];
+        $matrix[] = ['Group By', ucfirst($groupBy)];
+        $matrix[] = ['Generated', now()->toDateTimeString()];
+        $matrix[] = [];
+        $matrix[] = ['Products'];
+        $matrix[] = ['Product Name', 'Category', 'Qty Sold', 'Orders Count', 'Revenue', 'Avg. Price'];
+
+        foreach ($items as $it) {
+            $matrix[] = [
+                $it->product_name,
+                $it->category_name ?? '',
+                (int) $it->quantity_sold,
+                (int) $it->orders_count,
+                number_format((float) $it->revenue_generated, 2, '.', ''),
+                number_format((float) $it->avg_price, 2, '.', ''),
+            ];
+        }
+
+        // summary
+        $most = $items->first();
+        $low = $items->sortBy('quantity_sold')->take(5);
+
+        $matrix[] = [];
+        if ($most) {
+            $matrix[] = ['Most Ordered Product', $most->product_name, (int) $most->quantity_sold];
+        }
+
+        if ($low && $low->isNotEmpty()) {
+            $matrix[] = [];
+            $matrix[] = ['Low Performing Products', '', ''];
+            foreach ($low as $l) {
+                $matrix[] = [$l->product_name, (int) $l->quantity_sold, number_format((float) $l->revenue_generated, 2, '.', '')];
+            }
+        }
+
+        $basename = 'product-sales-report-' . $filters['start']->format('Ymd') . '-' . $filters['end']->format('Ymd');
+
+        if ($format === 'csv') {
+            return $this->streamCsvMatrix($matrix, $basename);
+        }
+
+        if ($format === 'excel') {
+            return $this->downloadExcelHtml($matrix, $basename, 'Product Sales Report');
+        }
+
+        if ($format === 'pdf') {
+            $settings = StoreSetting::query()->first();
+            $logoPath = $settings && $settings->chat_avatar ? public_path('storage/' . $settings->chat_avatar) : public_path('images/logo.png');
+
+            $pdf = Pdf::loadView('admin.reports.pdf-product', [
+                'matrix' => $matrix,
+                'title' => 'Product Sales Report',
+                'logoPath' => $logoPath,
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->download($basename . '.pdf');
+        }
+
+        return $this->downloadPdfFromMatrix($matrix, $basename, 'Product Sales Report');
     }
 
     private function validatedExportFilters(Request $request): array
@@ -84,18 +271,23 @@ class ExportController extends Controller
 
     private function reportHeadings(): array
     {
+        return array_values($this->reportFields());
+    }
+
+    private function reportFields(): array
+    {
         return [
-            'Period',
-            'Orders',
-            'Pending',
-            'Confirmed',
-            'Ready',
-            'Completed',
-            'Cancelled',
-            'Subtotal',
-            'Delivery Fees',
-            'Total Revenue',
-            'Average Order Value',
+            'period' => 'Period',
+            'orders_count' => 'Orders',
+            'pending_count' => 'Pending',
+            'confirmed_count' => 'Confirmed',
+            'ready_count' => 'Ready',
+            'completed_count' => 'Completed',
+            'cancelled_count' => 'Cancelled',
+            'subtotal_sum' => 'Subtotal',
+            'delivery_fee_sum' => 'Delivery Fees',
+            'total_sum' => 'Total Revenue',
+            'average_order_value' => 'Average Order Value',
         ];
     }
 
@@ -149,17 +341,17 @@ class ExportController extends Controller
                 $total = (float) $row->total_sum;
 
                 return [
-                    $row->period,
-                    $ordersCount,
-                    (int) $row->pending_count,
-                    (int) $row->confirmed_count,
-                    (int) $row->ready_count,
-                    (int) $row->completed_count,
-                    (int) $row->cancelled_count,
-                    number_format((float) $row->subtotal_sum, 2, '.', ''),
-                    number_format((float) $row->delivery_fee_sum, 2, '.', ''),
-                    number_format($total, 2, '.', ''),
-                    number_format($ordersCount > 0 ? $total / $ordersCount : 0, 2, '.', ''),
+                    'period' => $row->period,
+                    'orders_count' => $ordersCount,
+                    'pending_count' => (int) $row->pending_count,
+                    'confirmed_count' => (int) $row->confirmed_count,
+                    'ready_count' => (int) $row->ready_count,
+                    'completed_count' => (int) $row->completed_count,
+                    'cancelled_count' => (int) $row->cancelled_count,
+                    'subtotal_sum' => number_format((float) $row->subtotal_sum, 2, '.', ''),
+                    'delivery_fee_sum' => number_format((float) $row->delivery_fee_sum, 2, '.', ''),
+                    'total_sum' => number_format($total, 2, '.', ''),
+                    'average_order_value' => number_format($ordersCount > 0 ? $total / $ordersCount : 0, 2, '.', ''),
                 ];
             })
             ->all();
@@ -208,7 +400,9 @@ class ExportController extends Controller
     {
         return response()->streamDownload(function () use ($headings, $rows): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, $headings);
+            if (!empty($headings)) {
+                fputcsv($handle, $headings);
+            }
 
             foreach ($rows as $row) {
                 fputcsv($handle, $row);
@@ -217,6 +411,67 @@ class ExportController extends Controller
             fclose($handle);
         }, $basename . '.csv', [
             'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function streamCsvMatrix(array $matrix, string $basename): Response
+    {
+        return response()->streamDownload(function () use ($matrix): void {
+            $handle = fopen('php://output', 'w');
+            foreach ($matrix as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, $basename . '.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
+    private function downloadExcelHtml(array $matrix, string $basename, string $title): Response
+    {
+        $html = '<html><head><meta charset="UTF-8"></head><body>';
+        $html .= '<h2>' . e($title) . '</h2>';
+
+        // Build a single table with rows of varying length
+        $html .= '<table border="1" cellpadding="6" cellspacing="0">';
+        foreach ($matrix as $row) {
+            $html .= '<tr>';
+            foreach ($row as $cell) {
+                $html .= '<td>' . e((string) $cell) . '</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</table>';
+        $html .= '</body></html>';
+
+        return response($html, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $basename . '.xls"',
+        ]);
+    }
+
+    private function downloadPdfFromMatrix(array $matrix, string $basename, string $title): Response
+    {
+        $lines = [];
+        $lines[] = $title;
+        $lines[] = 'Generated: ' . now()->format('Y-m-d H:i:s');
+        $lines[] = '';
+
+        foreach ($matrix as $row) {
+            if (empty($row)) {
+                $lines[] = '';
+                continue;
+            }
+
+            $parts = array_map(fn($c) => (string) $c, $row);
+            $lines[] = implode(' | ', $parts);
+        }
+
+        $pdf = $this->buildSimplePdf($lines);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $basename . '.pdf"',
         ]);
     }
 

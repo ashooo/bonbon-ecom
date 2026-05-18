@@ -97,9 +97,7 @@
                                                 <input type="hidden" name="user_search" value="{{ $userFilters['search'] ?? '' }}">
                                                 <input type="hidden" name="user_page" value="{{ method_exists($users, 'currentPage') ? $users->currentPage() : 1 }}">
                                                 <input type="hidden" name="is_active" value="{{ $user->is_active ? 0 : 1 }}">
-                                                <button type="submit" class="rounded-xl px-3 py-1 text-xs font-semibold {{ $user->is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200' }}">
-                                                    {{ $user->is_active ? 'Deactivate' : 'Activate' }}
-                                                </button>
+                                      
                                             </form>
 
                                             <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Soft delete this user?');">

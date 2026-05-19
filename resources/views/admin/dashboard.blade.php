@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+﻿@extends('layouts.admin')
 
 @section('content')
     @include('admin.dashboard-analytics')
@@ -8,5 +8,7 @@
     @include('admin.orders')
     @include('admin.users')
     @include('admin.support')
+    @include('admin.customization')
     @include('admin.settings')
 @endsection
+

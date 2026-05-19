@@ -4,9 +4,12 @@
     @php
         $items = $items ?? collect();
         $subtotal = $subtotal ?? 0;
-        $delivery = $delivery ?? 5.99;
-        $tax = $tax ?? ($subtotal * 0.1);
-        $total = $total ?? ($subtotal + $delivery + $tax);
+        $configuredDeliveryFee = $configuredDeliveryFee ?? 5.99;
+        $configuredTaxRate = $configuredTaxRate ?? 10;
+        $serviceFee = $serviceFee ?? 0;
+        $delivery = $delivery ?? 0;
+        $tax = $tax ?? ($subtotal * ($configuredTaxRate / 100));
+        $total = $total ?? ($subtotal + $delivery + $tax + $serviceFee);
         $maxPreOrderDays = $maxPreOrderDays ?? 0;
         $minFulfillmentDate = $minFulfillmentDate ?? now()->toDateString();
         $minFulfillmentTime = $minFulfillmentTime ?? now()->format('H:i');
@@ -101,11 +104,15 @@
                             </div>
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-[#8C6770]">Delivery Fee</span>
-                                <span id="checkout-delivery" class="font-bold text-[#5A3A3A]" data-delivery-fee="5.99">&#8369;{{ number_format($delivery, 2) }}</span>
+                                <span id="checkout-delivery" class="font-bold text-[#5A3A3A]" data-delivery-fee="{{ number_format($configuredDeliveryFee, 2, '.', '') }}">&#8369;{{ number_format($delivery, 2) }}</span>
                             </div>
                             <div class="flex justify-between items-center text-sm">
-                                <span class="text-[#8C6770]">Tax (10%)</span>
+                                <span class="text-[#8C6770]">Tax ({{ number_format((float) $configuredTaxRate, 2) }}%)</span>
                                 <span id="checkout-tax" class="font-bold text-[#5A3A3A]" data-value="{{ number_format($tax, 2, '.', '') }}">&#8369;{{ number_format($tax, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#8C6770]">Service Fee</span>
+                                <span id="checkout-service-fee" class="font-bold text-[#5A3A3A]" data-value="{{ number_format($serviceFee, 2, '.', '') }}">&#8369;{{ number_format($serviceFee, 2) }}</span>
                             </div>
                             
                             <div class="pt-4 mt-2 border-t border-[#EED9DE]">
@@ -532,6 +539,7 @@
             const subtotalEl = document.getElementById('checkout-subtotal');
             const taxEl = document.getElementById('checkout-tax');
             const deliveryEl = document.getElementById('checkout-delivery');
+            const serviceFeeEl = document.getElementById('checkout-service-fee');
             const totalEl = document.getElementById('checkout-total');
             const fulfillmentDateInput = document.querySelector('input[name="fulfillment_date"]');
             const fulfillmentTimeInput = document.getElementById('fulfillment_time');
@@ -562,13 +570,14 @@
             const formatPeso = (v) => `₱${Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
             const refreshTotals = () => {
-                if (!subtotalEl || !taxEl || !deliveryEl || !totalEl) return;
+                if (!subtotalEl || !taxEl || !deliveryEl || !serviceFeeEl || !totalEl) return;
                 const subtotal = Number(subtotalEl.dataset.value || '0');
                 const tax = Number(taxEl.dataset.value || '0');
                 const deliveryFee = Number(deliveryEl.dataset.deliveryFee || '0');
+                const serviceFee = Number(serviceFeeEl.dataset.value || '0');
                 const delivery = orderType.value === 'delivery' ? deliveryFee : 0;
                 deliveryEl.textContent = formatPeso(delivery);
-                totalEl.textContent = formatPeso(subtotal + tax + delivery);
+                totalEl.textContent = formatPeso(subtotal + tax + delivery + serviceFee);
             };
 
             /* ── Time enforcement ── */

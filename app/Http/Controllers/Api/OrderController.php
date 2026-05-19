@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\StoreSetting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -99,12 +100,17 @@ class OrderController extends Controller
 
         try {
             $orderType = $request->string('order_type')->value();
+            $settings = StoreSetting::query()->first();
+            $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+            $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+            $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
             $deliveryAddress = $orderType === 'pickup'
                 ? Order::STORE_PICKUP_LOCATION_URL
                 : trim($request->string('delivery_address')->value());
             $subtotal = $cart->items->sum(fn ($item) => $item->quantity * $item->unit_price);
-            $deliveryFee = $orderType === 'delivery' ? 50.00 : 0;
-            $total = $subtotal + $deliveryFee;
+            $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0;
+            $tax = $subtotal * ($configuredTaxRate / 100);
+            $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
 
             $paymentMethod = $request->string('payment_method')->value() ?: 'cod';
             if (! Auth::check()) {

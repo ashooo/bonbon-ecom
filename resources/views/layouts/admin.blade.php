@@ -16,14 +16,16 @@
         --white-soft: #FFFFFF;
         --text-dark: #2E2E2E;
         --border-soft: #F5F5F5;
-        --brand-brown: #F3D5E0;
-        --brand-soft-brown: #E8C4D0;
-        --sidebar-text: #440E03;
+        --brand-brown: #5A3A3A;
+        --brand-soft-brown: #7A5252;
+        --sidebar-bg: #F3D5E0;
+        --sidebar-bg-hover: rgba(90, 58, 58, 0.1);
+        --sidebar-text: #5A3A3A;
     }
 
     body {
         font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-        background-color: #F3F4F6;
+        background-color: var(--border-soft);
         color: var(--text-dark);
     }
 
@@ -36,7 +38,7 @@
     
     /* Sidebar styling */
     aside {
-        background-color: var(--brand-brown) !important;
+        background-color: var(--sidebar-bg) !important;
     }
     
     aside .nav-link {
@@ -45,7 +47,7 @@
     
     aside .nav-link:hover {
         color: var(--sidebar-text) !important;
-        background-color: rgba(68, 14, 3, 0.1) !important;
+        background-color: var(--sidebar-bg-hover) !important;
     }
     
     aside .text-white,
@@ -56,7 +58,7 @@
     }
     
     aside .border-white\/10 {
-        border-color: rgba(68, 14, 3, 0.1) !important;
+        border-color: var(--sidebar-bg-hover) !important;
     }
     
     /* Make icons visible */
@@ -78,79 +80,88 @@
 <body class="min-h-screen">
     <div class="min-h-screen grid grid-cols-[280px_minmax(0,1fr)]">
         <!-- Sidebar -->
-<aside class="flex flex-col" style="background-color: #F3D5E0;">
-    <div class="px-6 py-8 border-b" style="border-color: rgba(68, 14, 3, 0.1);">
-        <a href="{{ route('admin.dashboard') }}" class="text-2xl font-black" style="color: #440E03;">BonBon Admin</a>
-        <p class="mt-1 text-sm" style="color: #440E03;">Store management</p>
+<aside class="flex flex-col" style="background-color: var(--sidebar-bg);">
+    <div class="px-6 py-8 border-b" style="border-color: var(--sidebar-bg-hover);">
+        <a href="{{ route('admin.dashboard') }}" class="text-2xl font-black" style="color: var(--sidebar-text);">BonBon Admin</a>
+        <p class="mt-1 text-sm" style="color: var(--sidebar-text);">Store management</p>
     </div>
 
     <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-1">
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="dashboard" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="dashboard" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                 </svg>
             </span>
             Dashboard
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="products" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="products" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M20 7L4 7M20 12L4 12M20 17L4 17M4 4v16h16V4z"></path>
                 </svg>
             </span>
             Products
         </a>
 
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="categories" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="categories" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>
                 </svg>
             </span>
             Categories
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="inventory" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="inventory" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                 </svg>
             </span>
             Inventory
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="orders" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="orders" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
             </span>
             Orders
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="users" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="users" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                 </svg>
             </span>
             Users
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="support" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="support" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                 </svg>
             </span>
             Chat Support
         </a>
         
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="settings" style="color: #440E03;">
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="customization" style="color: var(--sidebar-text);">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6M9 16h6M9 8h6M6 5h12a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z"></path>
+                </svg>
+            </span>
+            Customization
+        </a>
+
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="settings" style="color: var(--sidebar-text);">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>

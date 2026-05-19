@@ -52,7 +52,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 10,
                 'is_best_seller' => true,
-                'image' => 'K83ym3Zp3PPsYpEFSGHMOcVKH1a5WyZvY0HOOhYV.jpg',
+                'image' => 'CMC.jpeg',
             ],
             [
                 'name' => 'Vanilla Sponge Cake',
@@ -65,7 +65,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 33,
                 'is_best_seller' => false,
-                'image' => 'ZLDUNBeB290ZMBJQIT7bJTZOeVA93I6Iry9mAyeG.jpg',
+                'image' => 'VanillaSpong.jpeg',
             ],
             [
                 'name' => 'Chocolate Sponge Cake',
@@ -78,7 +78,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 20,
                 'is_best_seller' => false,
-                'image' => 'hPkLFeUE1RbsVQ8ung6R6Y3X6s55AnbU6vF6oRjP.jpg',
+                'image' => '6-choco-sponge.jpeg',
             ],
             [
                 'name' => 'Strawberry Sponge Cake',
@@ -91,7 +91,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 30,
                 'is_best_seller' => false,
-                'image' => 'OiMgpN6Lqv1DqGjC3eIeSJGqfdHIXt6chR2CVHkS.jpg',
+                'image' => 'strawberry-sponge.jpeg',
             ],
             [
                 'name' => 'Strawberry Fresh Cream Cake',
@@ -104,7 +104,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 5,
                 'is_best_seller' => true,
-                'image' => 'abI6GWRsHZtKZhiz6Nraaxow4LAUKqXM4bTjuHIa.jpg',
+                'image' => 'strawberry-cake.jpeg',
             ],
             [
                 'name' => 'Cinnamon Roll Cake',
@@ -117,7 +117,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 5,
                 'is_best_seller' => false,
-                'image' => 'nXMDjv5Nq8PcbCw9rbd4KbXWGvyacYqtKmhoiLne.jpg',
+                'image' => 'Cinnamon-Roll-Cake.jpeg',
             ],
             [
                 'name' => 'Choco Sprinkle Bliss Cupcake',
@@ -130,7 +130,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 10,
                 'is_best_seller' => true,
-                'image' => '0gCYjrp8dJTfO9qfFrJ5KDoclcNj7OvQsl80xsbG.jpg',
+                'image' => 'chocolate-cupcake-12.jpeg',
             ],
             [
                 'name' => 'Famous Dubai Chewy Choco',
@@ -143,7 +143,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 10,
                 'is_best_seller' => true,
-                'image' => '0mdfEMdtpIkN49BnHTXyP1X6rW6P2bZAmiGm3l9a.jpg',
+                'image' => 'dubai-chewy-choco.jpeg',
             ],
             [
                 'name' => 'Sweet Mango Bento Cake',
@@ -156,7 +156,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 10,
                 'is_best_seller' => false,
-                'image' => 'aGkZtqXhzUHsOJW7QXqch5932VdbFFMH7qPLhmwo.jpg',
+                'image' => 'mango-bento-cake.jpeg',
             ],
             [
                 'name' => 'Strawberry Bento Cake "Valentine Edition"',
@@ -169,7 +169,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 3,
                 'is_best_seller' => false,
-                'image' => 'XvEWsZITLHcX3BmIARXhqZB89NTB3I3lqYAwjtkv.jpg',
+                'image' => 'Valentines-Cake.jpeg',
             ],
             [
                 'name' => 'Assorted Flavor Cupcake',
@@ -182,7 +182,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 12,
                 'is_best_seller' => true,
-                'image' => 'MBAPYhfaYRiULvuWK8bguFEmB1UXDoqPPBE0mTjv.jpg',
+                'image' => 'assorted-cupcake.jpeg',
             ],
             [
                 'name' => 'Cookies & Cream flavoured Cupcake',
@@ -195,7 +195,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 5,
                 'is_best_seller' => false,
-                'image' => '3OHrz308yIqLdtEHI85RWtJ3TgFhVAKKhsHdoJyW.jpg',
+                'image' => 'cookies&cream-cupcake.jpeg',
             ],
             [
                 'name' => 'Mocha Sponge Cake',
@@ -208,7 +208,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 25,
                 'is_best_seller' => false,
-                'image' => 'YEIP6jEKHQecuuR5OBA6hTv9QvEXwSlsl9PDwDaH.jpg',
+                'image' => 'mocha-sponge-cake.jpeg',
             ],
             [
                 'name' => 'Cheese Cupcake',
@@ -221,7 +221,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 3,
                 'is_best_seller' => false,
-                'image' => 'QKwihVfcLAdM7DQysPA9yShHaEhPXiWvcCRdPHc5.jpg',
+                'image' => 'cheese-cupcake.jpeg',
             ],
             [
                 'name' => 'Mocha Cream Cake',
@@ -234,7 +234,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => true,
                 'stock_quantity' => 5,
                 'is_best_seller' => true,
-                'image' => 'fCCCu3iOK15DwzrtEdasOTJvA3IXm8gU1vhHoix7.jpg',
+                'image' => 'mocha-cake.jpeg',
             ],
             [
                 'name' => 'Assorted 12 pieced Special Donuts',
@@ -247,7 +247,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 2,
                 'is_best_seller' => false,
-                'image' => 'NBLEwSZ9R7urosYYEqn0xiaO3VD4aO3VWZkqbMWP.jpg',
+                'image' => 'assorted-donut.jpeg',
             ],
             [
                 'name' => 'Special Brownies',
@@ -260,7 +260,7 @@ class CatalogSeeder extends Seeder
                 'is_featured' => false,
                 'stock_quantity' => 10,
                 'is_best_seller' => false,
-                'image' => 'QzqtKp6MbeRwVDbu2y2Uwpp9k4kDHdqOTnmlcMQq.jpg',
+                'image' => 'assorted-brownies.jpeg',
             ],
         ];
 

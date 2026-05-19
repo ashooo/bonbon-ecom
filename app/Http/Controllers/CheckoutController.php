@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\StoreSetting;
 use App\Models\Variant;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -94,14 +95,19 @@ class CheckoutController extends Controller
     {
         $cart = $this->getCart($request);
         $items = $cart->items;
+        $settings = StoreSetting::query()->first();
+        $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+        $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
         $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
         $minFulfillmentTime = $minFulfillmentAt->format('H:i');
         $subtotal = $cart->subtotal;
         $delivery = 0.0;
-        $tax = $subtotal * 0.1;
-        $total = $subtotal + $delivery + $tax;
+        $tax = $subtotal * ($configuredTaxRate / 100);
+        $serviceFee = $configuredServiceFee;
+        $total = $subtotal + $delivery + $tax + $serviceFee;
 
         $savedAddresses = Auth::check()
             ? Auth::user()->addresses()->latest()->get()
@@ -114,6 +120,9 @@ class CheckoutController extends Controller
             'delivery',
             'tax',
             'total',
+            'serviceFee',
+            'configuredDeliveryFee',
+            'configuredTaxRate',
             'maxPreOrderDays',
             'minFulfillmentDate',
             'minFulfillmentTime',
@@ -194,13 +203,17 @@ class CheckoutController extends Controller
 
         try {
             $orderType = $request->string('order_type')->value();
+            $settings = StoreSetting::query()->first();
+            $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+            $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+            $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
             $deliveryAddress = $orderType === 'pickup'
                 ? Order::STORE_PICKUP_LOCATION_URL
                 : trim($request->string('delivery_address')->value());
             $subtotal = (float) $cart->items->sum(fn ($item) => $item->quantity * $item->unit_price);
-            $deliveryFee = $orderType === 'delivery' ? 5.99 : 0.0;
-            $tax = $subtotal * 0.1;
-            $total = $subtotal + $deliveryFee + $tax;
+            $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0.0;
+            $tax = $subtotal * ($configuredTaxRate / 100);
+            $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
 
             $paymentMethod = $request->string('payment_method')->value();
             $order = Order::create([

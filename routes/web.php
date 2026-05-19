@@ -555,6 +555,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         ));
     })->name('admin.dashboard');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('/settings/customization-pricing', [\App\Http\Controllers\Admin\SettingsController::class, 'updateCustomizationPricing'])->name('admin.customization-pricing.update');
+    Route::post('/settings/shop-fees', [\App\Http\Controllers\Admin\SettingsController::class, 'updateShopFees'])->name('admin.shop-fees.update');
 
     // Category Routes
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class)->names([

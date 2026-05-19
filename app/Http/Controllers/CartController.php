@@ -64,12 +64,15 @@ class CartController extends Controller
         $request = request();
         $cart = $this->getCart($request);
         $items = $cart->items;
+        $settings = StoreSetting::query()->first();
         $subtotal = $cart->subtotal;
-        $delivery = 5.99;
-        $tax = $subtotal * 0.1;
-        $total = $subtotal + $delivery + $tax;
+        $delivery = (float) ($settings?->delivery_fee ?? 5.99);
+        $taxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $serviceFee = (float) ($settings?->service_fee ?? 0.0);
+        $tax = $subtotal * ($taxRate / 100);
+        $total = $subtotal + $delivery + $tax + $serviceFee;
 
-        $response = response()->view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total'));
+        $response = response()->view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total', 'taxRate', 'serviceFee'));
 
         if ($this->guestCartToken) {
             $response->cookie('cart_token', $this->guestCartToken, 60 * 24 * 30);

@@ -1,143 +1,184 @@
 <!-- Products Section -->
 <div id="products-section" class="admin-section hidden">
     <div class="space-y-6">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-        <h1 class="text-3xl font-bold">Products Management</h1>
-        <p class="mt-1 text-sm text-slate-500">Manage your product catalog and categories</p>
-    </div>
-    <div class="flex flex-wrap gap-3">
-        <a href="{{ route('admin.products.create') }}" class="rounded-2xl bg-pink-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-pink-700 transition-all duration-200 shadow-md">
-            Add Single Product
-        </a>
-        <a href="{{ route('admin.products.bulk-upload.form') }}" class="rounded-2xl px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#330A02] transition-all duration-200 shadow-md" style="background-color: #440E03;">
-            Bulk Upload Products
-        </a>
-        <a href="{{ route('admin.categories.create') }}" class="rounded-2xl bg-pink-50 px-5 py-2.5 text-sm font-semibold hover:bg-pink-100 transition-all duration-200 shadow-md" style="color: #440E03;">
-            Add Categories
-        </a>
-    </div>
-</div>
+        @php
+            $productsCollection = collect($allProducts ?? []);
+            if (isset($allProducts) && method_exists($allProducts, 'getCollection')) {
+                $productsCollection = $allProducts->getCollection();
+            }
+
+            $totalOnPage = $productsCollection->count();
+            $activeOnPage = $productsCollection->where('status', 'active')->count();
+            $lowStockOnPage = $productsCollection->filter(fn($product) => (int) ($product->stock_quantity ?? 0) > 0 && (int) ($product->stock_quantity ?? 0) <= 10)->count();
+            $outOfStockOnPage = $productsCollection->filter(fn($product) => (int) ($product->stock_quantity ?? 0) <= 0)->count();
+            $totalProducts = (isset($allProducts) && method_exists($allProducts, 'total')) ? (int) $allProducts->total() : $totalOnPage;
+        @endphp
+
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div class="space-y-1">
+                <h1 class="text-2xl font-semibold tracking-tight text-[#4B2E38]">Products overview</h1>
+                <p class="text-sm text-[#8A6A76]">Manage catalog items, stock status, and category alignment</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.products.create') }}" class="rounded-xl bg-[#C47A90] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#B66880]">Add product</a>
+                <a href="{{ route('admin.products.bulk-upload.form') }}" class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] transition hover:bg-[#FAF1F5]">Bulk upload</a>
+            </div>
+        </div>
 
         @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
-            <span class="block sm:inline">{{ session('success') }}</span>
-        </div>
+            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700" role="alert">
+                {{ session('success') }}
+            </div>
         @endif
 
-        <div class="rounded-3xl bg-white p-6 shadow-soft">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-semibold">Product List</h2>
-                <form method="GET" action="{{ route('admin.products.index') }}" class="flex flex-wrap gap-3">
-                    <input
-                        type="text"
-                        name="product_search"
-                        value="{{ $productFilters['search'] ?? '' }}"
-                        placeholder="Search products..."
-                        class="w-80 rounded-2xl border border-slate-200 px-4 py-2.5 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200"
-                    />
-                    <select name="product_status" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200">
-                        <option value="all" {{ ($productFilters['status'] ?? 'all') === 'all' ? 'selected' : '' }}>All Statuses</option>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-2xl border border-[#E9C7D4] bg-gradient-to-br from-[#FFF7FA] to-[#F6DFE9] p-4 shadow-sm">
+                <p class="text-xs uppercase tracking-[0.16em] text-[#8F6172]">Total Products</p>
+                <p class="mt-2 text-3xl font-semibold text-[#4D2E38]">{{ $totalProducts }}</p>
+                <p class="mt-1 text-xs text-[#8A6A76]">Across all pages</p>
+            </div>
+            <div class="rounded-2xl border border-[#ECD8E0] bg-white p-4 shadow-sm">
+                <p class="text-xs uppercase tracking-[0.16em] text-[#90707A]">Active</p>
+                <p class="mt-2 text-3xl font-semibold text-[#4D2E38]">{{ $activeOnPage }}</p>
+                <p class="mt-1 text-xs text-[#8A6A76]">Sellable now</p>
+            </div>
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+                <p class="text-xs uppercase tracking-[0.16em] text-[#90707A]">Low Stock</p>
+                <p class="mt-2 text-3xl font-semibold text-amber-700">{{ $lowStockOnPage }}</p>
+                <p class="mt-1 text-xs text-[#8A6A76]">1 to 10 units</p>
+            </div>
+            <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+                <p class="text-xs uppercase tracking-[0.16em] text-[#90707A]">Out of Stock</p>
+                <p class="mt-2 text-3xl font-semibold text-rose-600">{{ $outOfStockOnPage }}</p>
+                <p class="mt-1 text-xs text-[#8A6A76]">Needs restock</p>
+            </div>
+        </div>
+
+        <div class="rounded-3xl border border-[#ECD8E0] bg-white p-6 shadow-sm">
+            <div class="mb-4 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-[#4B2E38]">Product list</h2>
+                    <p class="text-sm text-[#8A6A76]">Filter and manage products quickly</p>
+                </div>
+
+                <form id="products-filter-form" method="GET" action="{{ route('admin.products.index') }}" class="grid w-full gap-2 rounded-2xl border border-[#ECD8E0] bg-[#FFF8FB] p-3 sm:grid-cols-2 xl:w-auto xl:grid-cols-[300px_170px_200px_140px_auto]">
+                    <input type="hidden" name="section" value="products">
+                    <input type="text" name="product_search" value="{{ $productFilters['search'] ?? '' }}" placeholder="Search products..." class="w-full rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none" />
+
+                    <select name="product_status" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">
+                        <option value="all" {{ ($productFilters['status'] ?? 'all') === 'all' ? 'selected' : '' }}>All statuses</option>
                         <option value="active" {{ ($productFilters['status'] ?? '') === 'active' ? 'selected' : '' }}>Active</option>
                         <option value="pre_order" {{ ($productFilters['status'] ?? '') === 'pre_order' ? 'selected' : '' }}>Pre-order</option>
                         <option value="inactive" {{ ($productFilters['status'] ?? '') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
-                    <select name="product_category" class="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200">
-                        <option value="">All Categories</option>
+
+                    <select name="product_category" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">
+                        <option value="">All categories</option>
                         @foreach($allCategories ?? [] as $category)
-                            <option value="{{ $category->id }}" {{ (string) ($productFilters['category'] ?? '') === (string) $category->id ? 'selected' : '' }}>
-                                {{ $category->name }}
-                            </option>
+                            <option value="{{ $category->id }}" {{ (string) ($productFilters['category'] ?? '') === (string) $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
                         @endforeach
                     </select>
-                        <button type="submit" class="relative group rounded-2xl bg-pink-600 p-2.5 text-white hover:bg-pink-700 transition-all duration-200 shadow-md" aria-label="Apply Filters">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M5 12l5 5L20 7" />
-                            </svg>
-                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Apply Filters</span>
-                        </button>
+
+                    <select name="product_per_page" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">
+                        @foreach([12, 25, 50] as $size)
+                            <option value="{{ $size }}" {{ (int) ($productFilters['per_page'] ?? 12) === $size ? 'selected' : '' }}>Show {{ $size }}</option>
+                        @endforeach
+                    </select>
+
+                    <button type="submit" class="rounded-xl bg-[#C47A90] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#B66880]">Apply</button>
                 </form>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="border-b border-slate-200">
+            <div class="mb-3 flex items-center justify-between text-xs text-[#8A6A76]">
+                <p>Stock thresholds: 0 = out of stock, 1-10 = low stock, 11+ = healthy stock.</p>
+                <button type="button" id="products-compact-toggle" class="rounded-lg border border-[#E3CDD7] bg-white px-3 py-1.5 font-semibold text-[#6B4A57] hover:bg-[#F7EBF0]">Compact mode</button>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-[#F1E2E8]">
+                <table id="products-table" class="w-full min-w-[920px]">
+                    <thead class="bg-[#FBF2F6]">
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Image</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Name</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Category</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Price</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Stock</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Price / Discount</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Stock</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-[#F4E5EB] bg-white">
                         @forelse($allProducts ?? [] as $product)
-                        <tr>
-                            <td class="px-4 py-4">
-                                @if($product->main_image)
-                                    <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" class="w-12 h-12 rounded-lg object-cover" />
-                                @else
-                                    <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                                        <i class="fas fa-image text-gray-400"></i>
+                            @php
+                                $stock = (int) ($product->stock_quantity ?? 0);
+                                $stockClass = $stock <= 0 ? 'bg-rose-50 text-rose-700' : ($stock <= 10 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700');
+                                $statusClass = match($product->status) {
+                                    'active' => 'bg-emerald-50 text-emerald-700',
+                                    'inactive' => 'bg-slate-100 text-slate-700',
+                                    'pre_order' => 'bg-violet-50 text-violet-700',
+                                    'draft' => 'bg-amber-50 text-amber-700',
+                                    'archived' => 'bg-rose-50 text-rose-700',
+                                    default => 'bg-slate-100 text-slate-700'
+                                };
+                            @endphp
+                            <tr class="hover:bg-[#FFFCFD]">
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if($product->main_image)
+                                            <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" class="h-12 w-12 rounded-xl border border-[#F0E0E7] object-cover" />
+                                        @else
+                                            <div class="flex h-12 w-12 items-center justify-center rounded-xl border border-[#F0E0E7] bg-[#F8EFF3] text-[#9B7A86]">IMG</div>
+                                        @endif
+                                        <div>
+                                            <p class="text-sm font-semibold text-[#4E303A]">{{ $product->name }}</p>
+                                            <p class="text-xs text-[#8A6A76]">ID #{{ $product->id }}</p>
+                                        </div>
                                     </div>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 text-sm font-medium">{{ $product->name }}</td>
-                            <td class="px-4 py-4 text-sm text-slate-500">{{ $product->category->name ?? 'No Category' }}</td>
-                            <td class="px-4 py-4 text-sm">
-                                &#8369;{{ number_format((float) $product->effective_price, 2) }}
-                                @if($product->hasDiscount())
-                                    <span class="text-red-500 line-through text-xs">&#8369;{{ number_format((float) $product->price, 2) }}</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-4 text-sm">
-                                <span class="{{ $product->stock_quantity > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $product->stock_quantity }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-4 text-sm">
-                                <span class="px-2 py-1 rounded-full text-xs
-                                    @if($product->status === 'active') bg-green-100 text-green-800
-                                    @elseif($product->status === 'inactive') bg-red-100 text-red-800
-                                    @elseif($product->status === 'pre_order') bg-yellow-100 text-yellow-800
-                                    @endif">
-                                    @if($product->status === 'active') Active
-                                    @elseif($product->status === 'inactive') Inactive
-                                    @elseif($product->status === 'pre_order') Pre-order
+                                </td>
+                                <td class="px-4 py-4 text-sm text-[#6B4A57]">{{ $product->category->name ?? 'No category' }}</td>
+                                <td class="px-4 py-4 text-sm">
+                                    <div class="font-semibold text-[#4E303A]">&#8369;{{ number_format((float) $product->effective_price, 2) }}</div>
+                                    @if($product->hasDiscount())
+                                        <div class="text-xs text-rose-600 line-through">&#8369;{{ number_format((float) $product->price, 2) }}</div>
                                     @endif
-                                </span>
-                            </td>
-                            <td class="px-4 py-4">
-                                <div class="flex gap-3">
-                                    <a href="{{ route('admin.products.edit', ['product' => $product->id]) }}" class="group relative text-slate-600 hover:text-slate-800 transition-colors" title="Edit">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Edit</span>
-                                    </a>
-                                    <form action="{{ route('admin.products.destroy', ['product' => $product->id]) }}" method="POST" class="inline js-confirm-delete-form" data-confirm-title="Delete Product" data-confirm-message="Are you sure you want to delete this product?">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="group relative text-red-500 hover:text-red-700 transition-colors" title="Delete">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $stockClass }}">
+                                        @if($stock > 0 && $stock <= 10)
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-1 inline h-3.5 w-3.5 align-[-2px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 9v4"></path>
+                                                <path d="M12 17h.01"></path>
+                                                <path d="m10.29 3.86-8.16 14A2 2 0 0 0 3.87 21h16.26a2 2 0 0 0 1.74-3.14l-8.16-14a2 2 0 0 0-3.42 0z"></path>
                                             </svg>
-                                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Delete</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
+                                        @endif
+                                        {{ $stock }} units
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">
+                                        {{ $product->status === 'pre_order' ? 'Pre-order' : ucfirst($product->status) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('admin.products.edit', ['product' => $product->id]) }}" class="group relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#E3CDD7] text-[#6B4A57] hover:bg-[#F7EBF0]" aria-label="Edit">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                        </a>
+                                        <form action="{{ route('admin.products.destroy', ['product' => $product->id]) }}" method="POST" class="inline js-confirm-delete-form" data-confirm-title="Delete Product" data-confirm-message="Are you sure you want to delete this product?">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50" aria-label="Delete">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-slate-500">
-                                <div class="flex flex-col items-center">
-                                    <i class="fas fa-box-open text-4xl mb-2"></i>
-                                    <p>No products found. <a href="{{ route('admin.products.create') }}" class="text-blue-600 hover:text-blue-800">Create your first product</a></p>
-                                </div>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="px-4 py-10 text-center text-sm text-[#8A6A76]">
+                                    No products found. <a href="{{ route('admin.products.create') }}" class="font-semibold text-[#B66880] hover:text-[#9E536A]">Create your first product</a>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -150,25 +191,21 @@
                         'product_search' => $productFilters['search'] ?? null,
                         'product_status' => $productFilters['status'] ?? 'all',
                         'product_category' => $productFilters['category'] ?? null,
+                        'product_per_page' => $productFilters['per_page'] ?? 12,
                     ])->links() }}
                 </div>
             @endif
         </div>
-
     </div>
 </div>
 
 <div id="delete-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4" aria-hidden="true">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
-        <h3 id="delete-confirm-title" class="text-lg font-semibold text-slate-900">Confirm Delete</h3>
-        <p id="delete-confirm-message" class="mt-2 text-sm text-slate-600">Are you sure you want to continue?</p>
+    <div class="w-full max-w-md rounded-2xl border border-[#ECD8E0] bg-white p-6 shadow-lg">
+        <h3 id="delete-confirm-title" class="text-lg font-semibold text-[#4B2E38]">Confirm Delete</h3>
+        <p id="delete-confirm-message" class="mt-2 text-sm text-[#7E5E6A]">Are you sure you want to continue?</p>
         <div class="mt-6 flex items-center justify-end gap-3">
-            <button type="button" id="delete-confirm-cancel" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
-                Cancel
-            </button>
-            <button type="button" id="delete-confirm-submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
-                Delete
-            </button>
+            <button type="button" id="delete-confirm-cancel" class="rounded-xl border border-[#E5D2DA] bg-white px-4 py-2 text-sm font-semibold text-[#6B4A57] hover:bg-[#F8EFF3]">Cancel</button>
+            <button type="button" id="delete-confirm-submit" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Delete</button>
         </div>
     </div>
 </div>
@@ -221,6 +258,34 @@
             if (pendingForm) {
                 pendingForm.submit();
             }
+        });
+
+        const filterForm = document.getElementById('products-filter-form');
+        const compactToggle = document.getElementById('products-compact-toggle');
+        const productsTable = document.getElementById('products-table');
+        let searchTimer = null;
+
+        if (filterForm) {
+            filterForm.querySelectorAll('select[name="product_status"], select[name="product_category"], select[name="product_per_page"]').forEach((el) => {
+                el.addEventListener('change', () => filterForm.submit());
+            });
+            const searchInput = filterForm.querySelector('input[name="product_search"]');
+            searchInput?.addEventListener('input', () => {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => filterForm.submit(), 300);
+            });
+        }
+
+        compactToggle?.addEventListener('click', () => {
+            productsTable?.classList.toggle('text-xs');
+            productsTable?.querySelectorAll('td').forEach((td) => td.classList.toggle('py-2'));
+            productsTable?.querySelectorAll('td').forEach((td) => td.classList.toggle('py-4'));
+            productsTable?.querySelectorAll('img').forEach((img) => {
+                img.classList.toggle('h-10');
+                img.classList.toggle('w-10');
+                img.classList.toggle('h-12');
+                img.classList.toggle('w-12');
+            });
         });
     });
 </script>

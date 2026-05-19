@@ -264,6 +264,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $productSearchFilter = $request->string('product_search')->trim()->value();
         $productStatusFilter = $request->string('product_status')->value();
         $productCategoryFilter = $request->integer('product_category') ?: null;
+        $productPerPage = (int) $request->integer('product_per_page', 12);
+        if (! in_array($productPerPage, [12, 25, 50], true)) {
+            $productPerPage = 12;
+        }
 
         $allProductsQuery = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc');
 
@@ -289,7 +293,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $allProducts = $allProductsQuery->paginate(12, ['*'], 'product_page')->withQueryString();
+        $allProducts = $allProductsQuery->paginate($productPerPage, ['*'], 'product_page')->withQueryString();
         $allCategories = \App\Models\Category::with('parent')->orderBy('name')->get();
         $settings = Schema::hasTable('store_settings')
             ? StoreSetting::query()->first()
@@ -536,6 +540,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'search' => $productSearchFilter,
             'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
             'category' => $productCategoryFilter,
+            'per_page' => $productPerPage,
         ];
 
         return view('admin.dashboard', compact(

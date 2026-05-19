@@ -76,7 +76,7 @@
                         <tr>
                             <td class="px-4 py-4">
                                 @if($product->main_image)
-                                    <img src="{{ asset('storage/' . $product->main_image) }}" alt="{{ $product->name }}" class="w-12 h-12 rounded-lg object-cover" />
+                                    <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" class="w-12 h-12 rounded-lg object-cover" />
                                 @else
                                     <div class="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center">
                                         <i class="fas fa-image text-gray-400"></i>

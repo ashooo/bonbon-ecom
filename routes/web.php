@@ -322,7 +322,29 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
-        $last7DaysStart = Carbon::today()->subDays(6);
+
+        $defaultTrendStart = Carbon::today()->subDays(6);
+        $defaultTrendEnd = Carbon::today();
+
+        try {
+            $trendStart = $request->filled('trend_start')
+                ? Carbon::parse($request->string('trend_start')->value())->startOfDay()
+                : $defaultTrendStart->copy()->startOfDay();
+        } catch (\Throwable $e) {
+            $trendStart = $defaultTrendStart->copy()->startOfDay();
+        }
+
+        try {
+            $trendEnd = $request->filled('trend_end')
+                ? Carbon::parse($request->string('trend_end')->value())->endOfDay()
+                : $defaultTrendEnd->copy()->endOfDay();
+        } catch (\Throwable $e) {
+            $trendEnd = $defaultTrendEnd->copy()->endOfDay();
+        }
+
+        if ($trendStart->gt($trendEnd)) {
+            [$trendStart, $trendEnd] = [$trendEnd->copy()->startOfDay(), $trendStart->copy()->endOfDay()];
+        }
 
         $todayRevenue = (float) Order::query()
             ->whereDate('created_at', $today)
@@ -362,15 +384,16 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $dailyRevenueMap = Order::query()
             ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders_count')
-            ->where('created_at', '>=', $last7DaysStart)
+            ->whereBetween('created_at', [$trendStart, $trendEnd])
             ->whereIn('status', ['confirmed', 'ready', 'completed'])
             ->groupBy('day')
             ->orderBy('day')
             ->get()
             ->keyBy('day');
 
-        $revenueTrend = collect(range(0, 6))->map(function ($index) use ($last7DaysStart, $dailyRevenueMap) {
-            $day = $last7DaysStart->copy()->addDays($index);
+        $trendDays = $trendStart->copy()->startOfDay()->diffInDays($trendEnd->copy()->startOfDay()) + 1;
+        $revenueTrend = collect(range(0, max(0, $trendDays - 1)))->map(function ($index) use ($trendStart, $dailyRevenueMap) {
+            $day = $trendStart->copy()->addDays($index);
             $key = $day->toDateString();
             $row = $dailyRevenueMap->get($key);
 

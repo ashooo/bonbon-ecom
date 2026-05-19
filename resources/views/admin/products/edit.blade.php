@@ -101,11 +101,11 @@
         </div>
 
         <!-- Current Main Image -->
-        @if($product->main_image)
+        @if($product->main_image_url)
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Current Main Image</label>
             <div class="flex items-center space-x-4">
-                <img src="{{ asset('storage/' . $product->main_image) }}" alt="{{ $product->name }}" class="w-20 h-20 object-cover rounded-lg">
+                <img src="{{ $product->main_image_url }}" alt="{{ $product->name }}" class="w-20 h-20 object-cover rounded-lg">
                 <div>
                     <p class="text-sm text-gray-500">Leave empty to keep current image</p>
                 </div>
@@ -144,7 +144,7 @@
             <div id="image-sortable-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 @foreach($product->images->sortBy('sort_order') as $image)
                 <div class="relative cursor-move rounded-lg border border-transparent" draggable="true" data-image-id="{{ $image->id }}">
-                    <img src="{{ asset('storage/' . $image->image_path) }}" alt="Product image" class="w-full h-20 object-cover rounded-lg">
+                    <img src="{{ $image->image_url }}" alt="Product image" class="w-full h-20 object-cover rounded-lg">
                     <button type="button" onclick="deleteImage({{ $image->id }})"
                             class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
                         &times;

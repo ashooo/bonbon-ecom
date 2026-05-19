@@ -474,6 +474,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $inventorySearchFilter = $request->string('inventory_search')->trim()->value();
         $inventoryStatusFilter = $request->string('inventory_status')->value();
+        $inventoryPerPage = (int) $request->integer('inventory_per_page', 12);
+        if (! in_array($inventoryPerPage, [12, 25, 50], true)) {
+            $inventoryPerPage = 12;
+        }
         $lowStockThreshold = 10;
 
         $inventoryQuery = Variant::query()
@@ -502,7 +506,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $inventoryItems = $inventoryQuery->paginate(12, ['*'], 'inventory_page')->withQueryString();
+        $inventoryItems = $inventoryQuery->paginate($inventoryPerPage, ['*'], 'inventory_page')->withQueryString();
         $inventoryCounts = [
             'all' => Variant::where('is_active', true)->count(),
             'out_of_stock' => Variant::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
@@ -512,6 +516,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $inventoryFilters = [
             'search' => $inventorySearchFilter,
             'status' => $inventoryStatusFilter === '' ? 'all' : $inventoryStatusFilter,
+            'per_page' => $inventoryPerPage,
         ];
 
         $lowStockVariants = Variant::query()

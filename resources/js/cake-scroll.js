@@ -190,7 +190,11 @@ export function initCakeScrollytelling() {
     let hoveredCakeGroup = null;
     let hoveredProduct = null;
 
-    // Slot 0 is always the hero; products fill slots 1, 2, 3 ...
+    // --- Wheel Physics Variables ---
+    let targetScrollProgress = 0;
+    let currentScrollProgress = 0;
+
+    // We don't use flat Y slots anymore, we use rowIndex and colIndex.
     function getSlotX(slotIndex, totalCakes) {
         if (isMobileGallery) return 0;
         
@@ -203,12 +207,11 @@ export function initCakeScrollytelling() {
         return startX + col * CAKE_SPACING;
     }
 
-    function getSlotY(slotIndex) {
+    function getRowIndex(slotIndex) {
         if (isMobileGallery) {
-            return 1.5 - (slotIndex * CAKE_SPACING_Y);
+            return slotIndex;
         } else {
-            const row = Math.floor(slotIndex / MAX_PER_ROW);
-            return 0 - (row * CAKE_SPACING_Y); // Desktop stacks rows downwards from 0
+            return Math.floor(slotIndex / MAX_PER_ROW);
         }
     }
 
@@ -462,10 +465,9 @@ export function initCakeScrollytelling() {
 
         // 2. Recalculate Scroll Bounds
         const maxRow = isMobileGallery ? Math.max(0, totalSlots - 1) : Math.max(0, Math.floor((totalSlots - 1) / MAX_PER_ROW));
-        const totalSpanY = maxRow * CAKE_SPACING_Y;
 
         let topCameraY = isMobileGallery ? 2.8 : 2.2;
-        let topLookY = isMobileGallery ? getSlotY(0) + 0.5 : 1.2;
+        let topLookY = isMobileGallery ? 2.0 : 1.2;
 
         const scrollOverlay = document.getElementById('gallery-scroll-overlay');
         const scrollContent = document.getElementById('gallery-scroll-overlay-content');
@@ -479,21 +481,27 @@ export function initCakeScrollytelling() {
                 scrollOverlay.removeEventListener('scroll', scrollOverlay._handleScroll);
             }
 
-            if (totalSpanY > 0) {
+            if (rowCount > 1) {
                 scrollOverlay.style.display = 'block';
                 scrollOverlay._handleScroll = () => {
                     const maxScroll = scrollOverlay.scrollHeight - scrollOverlay.clientHeight;
                     if (maxScroll <= 0) return;
-                    const progress = scrollOverlay.scrollTop / maxScroll;
-                    state.cameraY = topCameraY - (progress * totalSpanY);
-                    state.cameraLookY = topLookY - (progress * totalSpanY);
+                    targetScrollProgress = scrollOverlay.scrollTop / maxScroll;
+                    
+                    // Keep camera strictly locked in place
+                    state.cameraY = topCameraY;
+                    state.cameraLookY = topLookY;
                 };
                 scrollOverlay.addEventListener('scroll', scrollOverlay._handleScroll);
             } else {
                 scrollOverlay.style.display = 'none';
-                state.cameraY = topCameraY;
-                state.cameraLookY = topLookY;
+                targetScrollProgress = 0;
+                currentScrollProgress = 0;
             }
+            
+            // Force camera to the correct top position immediately
+            state.cameraY = topCameraY;
+            state.cameraLookY = topLookY;
         }
 
         // 3. Spawn new cakes
@@ -501,24 +509,19 @@ export function initCakeScrollytelling() {
         currentFilteredProducts.forEach((product, i) => {
             const slotIndex = i;
             const finalX = isMobileGallery ? 0 : getSlotX(slotIndex, totalSlots);
-            const finalY = isMobileGallery ? getSlotY(slotIndex) : getSlotY(slotIndex);
+            const rowIndex = getRowIndex(slotIndex);
             
             // If it's the initial load, stagger them slowly. If refiltering, spawn faster.
             const delay = isInitial ? (0.2 + i * 0.55) : (0.2 + i * 0.15); 
 
             spawnTl.call(() => {
-                const startX = isMobileGallery ? 0 : finalX + 18;
-                const startY = isMobileGallery ? finalY - 10 : finalY;
-                const galleryCake = createGalleryCake(product.name, startX, startY, GALLERY_SCALE);
-                galleryCake.userData.product = product; // Add for raycaster detection
+                const galleryCake = createGalleryCake(product.name, finalX, 0, GALLERY_SCALE);
+                galleryCake.userData.product = product;
+                galleryCake.userData.rowIndex = rowIndex;
+                galleryCake.userData.spawnOffset = 10; // We will animate this dropping down
                 galleryCake.visible = true;
 
-                if (!isMobileGallery) {
-                    gsap.to(galleryCake.position, { x: finalX, duration: isInitial ? 1.0 : 0.8, ease: 'power3.out' });
-                    gsap.fromTo(galleryCake.position, { y: finalY - 1.2 }, { y: finalY, duration: isInitial ? 1.0 : 0.8, ease: 'power2.out' });
-                } else {
-                    gsap.to(galleryCake.position, { y: finalY, duration: isInitial ? 1.2 : 0.8, ease: 'power3.out' });
-                }
+                gsap.to(galleryCake.userData, { spawnOffset: 0, duration: isInitial ? 1.0 : 0.8, ease: 'bounce.out' });
 
                 gsap.delayedCall(isInitial ? 0.7 : 0.4, () => {
                     showGalleryLabel(product, galleryCake, slotIndex, totalSlots);
@@ -535,6 +538,36 @@ export function initCakeScrollytelling() {
 
         const width = window.innerWidth;
         const height = window.innerHeight;
+
+        // Smoothly interpolate current scroll progress to target scroll progress
+        currentScrollProgress += (targetScrollProgress - currentScrollProgress) * 0.1;
+
+        // FERRIS WHEEL PHYSICS
+        const R = 22.0; // Radius of the wheel
+        const arcSpacing = CAKE_SPACING_Y; // Distance along the arc
+        const deltaTheta = arcSpacing / R;
+        
+        // Compute total span based on how many rows exist
+        const totalRows = isMobileGallery ? currentFilteredProducts.length : Math.ceil(currentFilteredProducts.length / MAX_PER_ROW);
+        const maxTheta = Math.max(0, totalRows - 1) * deltaTheta;
+        const currentThetaOffset = currentScrollProgress * maxTheta;
+
+        galleryCakes.forEach(cakeGroup => {
+            const rowIndex = cakeGroup.userData.rowIndex;
+            if (rowIndex === undefined) return;
+            
+            // Calculate angle for this specific cake
+            const rowTheta = rowIndex * deltaTheta;
+            const theta = rowTheta - currentThetaOffset;
+
+            // Parametric equations for a circle in Y-Z plane
+            // At theta = 0, cake is at (Y=0, Z=0)
+            const cakeY = -R * Math.sin(theta) + (cakeGroup.userData.spawnOffset || 0);
+            const cakeZ = R * Math.cos(theta) - R;
+
+            cakeGroup.position.y = cakeY;
+            cakeGroup.position.z = cakeZ;
+        });
 
         // RAYCASTING FOR CLICK EFFECTS
         if (camera && galleryCakes.length > 0) {
@@ -572,13 +605,13 @@ export function initCakeScrollytelling() {
         activeLabels.forEach(item => {
             if (!item.cake || !item.el) return;
 
-            // Calculate vertical distance from camera
-            const distance = camera.position.y - item.cake.position.y;
-            
-            // Hide labels if the cake is too far away (approx 2 rows)
-            if (distance > 15 || distance < -5) {
+            // FERRIS WHEEL VISIBILITY CULLING
+            // If the cake is rotated far behind the wheel or below, we hide it.
+            // theta can be derived indirectly, or we can check Z depth.
+            // If Z < -12, it's curving heavily backward out of view.
+            if (item.cake.position.z < -14) {
                 item.el.style.visibility = 'hidden';
-                return; // Skip projecting if hidden
+                return; 
             } else {
                 item.el.style.visibility = 'visible';
             }

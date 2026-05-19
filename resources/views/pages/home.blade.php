@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('hideGlobalLoader', true)
-@section('hideChatbot', true)
 
 @php
     $cakesCategory = $featuredCategories->first(fn ($category) => str_contains(strtolower($category->name), 'cake'));
@@ -47,12 +46,12 @@
                 </div>
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
-                    <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
+                    <h2 class="story-heading-final">Handcrafted<br>Cake for Every Occasions</h2>
                     <p class="story-sub">Three layers. One unforgettable moment.</p>
-                    <a id="story-cta-btn" href="#cake-shelf" class="story-cta" style="opacity: 0;">
+                    <button id="story-cta-btn" type="button" class="story-cta" style="opacity: 0;">
                         Explore Our Cakes
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -72,12 +71,68 @@
                 </a>
             </div> -->
 
+            {{-- Gallery Back Button --}}
+            <button id="gallery-back-btn" class="gallery-back-btn" style="display: none; opacity: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Go Back
+            </button>
+
+            {{-- Gallery Filter Bar --}}
+            <div id="gallery-filter-bar" class="gallery-filter-bar" style="display: none; opacity: 0;">
+                <div class="filter-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="gallery-search" placeholder="Search cakes...">
+                </div>
+                <select id="gallery-category" class="filter-select">
+                    <option value="">All Categories</option>
+                    @foreach($featuredCategories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+                <select id="gallery-sort" class="filter-select">
+                    <option value="name_asc">Name: A-Z</option>
+                    <option value="name_desc">Name: Z-A</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                </select>
+            </div>
+
+            {{-- Mobile Gallery Scroll Area --}}
+            <div id="gallery-scroll-overlay">
+                <div class="gallery-scroll-overlay-content" id="gallery-scroll-overlay-content"></div>
+            </div>
+
             {{-- Scroll indicator --}}
             <div class="scroll-indicator" id="scroll-indicator">
                 <div class="scroll-mouse">
                     <div class="scroll-wheel"></div>
                 </div>
                 <span>Scroll to discover</span>
+            </div>
+
+            {{-- Product Details Modal --}}
+            <div id="gallery-product-modal" class="gallery-product-modal" style="display: none; opacity: 0;">
+                <div class="gallery-modal-backdrop" id="gallery-modal-backdrop"></div>
+                <div class="gallery-modal-content">
+                    <button id="gallery-modal-close" class="gallery-modal-close">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    <div class="gallery-modal-body">
+                        <h3 id="gallery-modal-title" class="gallery-modal-title"></h3>
+                        <p id="gallery-modal-price" class="gallery-modal-price"></p>
+                        <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
+                        <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
+                        
+                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
+                            @csrf
+                            <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="gallery-modal-add-btn">
+                                Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -230,6 +285,261 @@
            ═══════════════════════════════════════════════════ */
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+        .gallery-back-btn {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: #f5ebe0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .gallery-back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .gallery-filter-bar {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(20, 10, 5, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 30px;
+            z-index: 999;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .filter-search-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .filter-search-wrap input {
+            background: transparent;
+            border: none;
+            color: #f5ebe0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+        }
+
+        .filter-search-wrap input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .filter-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f5ebe0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .filter-select option {
+            background: #1a0e0a;
+            color: #f5ebe0;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px;
+                border-radius: 12px;
+            }
+        }
+
+        .gallery-product-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gallery-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 5, 2, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            cursor: pointer;
+        }
+
+        .gallery-modal-content {
+            position: relative;
+            background: rgba(255, 255, 255, 0.95);
+            width: 90%;
+            max-width: 450px;
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 2001;
+        }
+
+        .gallery-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            color: #8C6770;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .gallery-modal-close:hover {
+            background: rgba(200, 138, 146, 0.1);
+            color: #5A3A3A;
+            transform: scale(1.1);
+        }
+
+        .gallery-modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #5A3A3A;
+            margin-bottom: 8px;
+        }
+
+        .gallery-modal-price {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #C88A92;
+            margin-bottom: 12px;
+        }
+
+        .gallery-modal-stock {
+            display: inline-block;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #F8E2E7;
+            color: #8C6770;
+            margin-bottom: 20px;
+        }
+
+        .gallery-modal-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #6F4C54;
+            margin-bottom: 24px;
+        }
+
+        .gallery-modal-add-btn {
+            width: 100%;
+            background: #5A3A3A;
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(90, 58, 58, 0.2);
+        }
+
+        .gallery-modal-add-btn:hover {
+            background: #7A5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(90, 58, 58, 0.3);
+        }
+
+        #gallery-scroll-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: none;
+            z-index: 50; /* below the back button but above canvas */
+        }
+        .gallery-scroll-overlay-content {
+            width: 100%;
+            /* Height will be set dynamically via JS */
+        }
+
+        .gallery-label {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(20, 10, 5, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 8px 12px;
+            pointer-events: none;
+            z-index: 40;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .gallery-label-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: #f5ebe0;
+            margin-bottom: 4px;
+        }
+        .gallery-label-price {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #d4a373;
+        }
 
         .cake-scroll-section {
             position: relative;
@@ -797,9 +1107,13 @@
         }
     </style>
     <link rel="stylesheet" href="/css/shelf.css">
+@endsection
 
-    @push('scripts')
-        @vite('resources/js/cake-entry.js')
+@push('scripts')
+    @vite('resources/js/cake-entry.js')
+    <script>
+        window.__cakeProducts = @json($shelfProducts->values());
+    </script>
 
         <script>
             // Hide scroll indicator after first scroll
@@ -830,9 +1144,6 @@
                     shelf.style.display = '';
                     shelf.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-
-                const ctaBtn = document.getElementById('story-cta-btn');
-                if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
 
                 document.querySelectorAll('a').forEach(a => {
                     if (a.textContent.trim() === 'Shop' && a.closest('header')) {
@@ -1143,4 +1454,3 @@
             })();
         </script>
     @endpush
-@endsection

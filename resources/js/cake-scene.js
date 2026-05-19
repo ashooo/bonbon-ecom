@@ -1248,7 +1248,8 @@ export function createCakeScene(containerEl) {
 
         // Gallery cakes — gentle spin
         for (const gc of galleryCakes) {
-            if (gc.visible) gc.rotation.y += 0.004;
+            // Disabled continuous rotation to improve performance for large catalogs
+            // if (gc.visible) gc.rotation.y += 0.004;
         }
 
         // Cupcake (spinning independently)

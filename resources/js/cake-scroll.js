@@ -176,7 +176,7 @@ export function initCakeScrollytelling() {
     // Layout config — determines 3D positions for each slot
     const MAX_PER_ROW = 4;
     const CAKE_SPACING = 3.8; // world-units between cakes (horizontal)
-    const CAKE_SPACING_Y = 4.0; // world-units between cakes (vertical mobile)
+    const CAKE_SPACING_Y = 6.5; // world-units between cakes (vertical)
     const HERO_SCALE = 0.58;  // scale for hero cake after zoom-out
     const GALLERY_SCALE = 0.55; // scale for product cakes
 
@@ -571,6 +571,17 @@ export function initCakeScrollytelling() {
 
         activeLabels.forEach(item => {
             if (!item.cake || !item.el) return;
+
+            // Calculate vertical distance from camera
+            const distance = camera.position.y - item.cake.position.y;
+            
+            // Hide labels if the cake is too far away (approx 2 rows)
+            if (distance > 15 || distance < -5) {
+                item.el.style.visibility = 'hidden';
+                return; // Skip projecting if hidden
+            } else {
+                item.el.style.visibility = 'visible';
+            }
 
             // Clone 3D position and project to 2D
             const pos = item.cake.position.clone();

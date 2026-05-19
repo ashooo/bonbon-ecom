@@ -301,15 +301,25 @@
             } catch (err) {}
         });
         document.addEventListener('click', function(e){
-            if(e.target && e.target.id === 'apply-trend'){
-                var start = document.getElementById('trend_start').value;
-                var end = document.getElementById('trend_end').value;
-                if(!start || !end){ alert('Please select both start and end dates.'); return; }
-                var params = new URLSearchParams(window.location.search);
-                params.set('trend_start', start);
-                params.set('trend_end', end);
-                window.location.search = params.toString();
+            var applyButton = e.target ? e.target.closest('#apply-trend') : null;
+            if(!applyButton){
+                return;
             }
+
+            var startInput = document.getElementById('trend_start');
+            var endInput = document.getElementById('trend_end');
+            var start = startInput ? startInput.value : '';
+            var end = endInput ? endInput.value : '';
+
+            if(!start || !end){
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            var params = new URLSearchParams(window.location.search);
+            params.set('trend_start', start);
+            params.set('trend_end', end);
+            window.location.search = params.toString();
         });
     })();
 </script>

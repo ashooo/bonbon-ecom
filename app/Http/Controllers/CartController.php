@@ -81,6 +81,39 @@ class CartController extends Controller
         return $response;
     }
 
+    public function cartJson(Request $request)
+    {
+        $cart = $this->getCart($request);
+        $items = $cart->items;
+        $settings = StoreSetting::query()->first();
+
+        $subtotal = (float) $cart->subtotal;
+        $delivery = (float) ($settings?->delivery_fee ?? 5.99);
+        $taxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $serviceFee = (float) ($settings?->service_fee ?? 0.0);
+        $tax = $subtotal * ($taxRate / 100);
+        $total = $subtotal + $delivery + $tax + $serviceFee;
+
+        return response()->json([
+            'count' => (int) $items->sum('quantity'),
+            'items' => $items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake'),
+                    'variant' => $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design'),
+                    'image' => $item->product?->main_image_url,
+                    'quantity' => (int) $item->quantity,
+                    'subtotal' => (float) ($item->quantity * $item->unit_price),
+                ];
+            })->values(),
+            'subtotal' => $subtotal,
+            'delivery' => $delivery,
+            'tax' => $tax,
+            'service_fee' => $serviceFee,
+            'total' => $total,
+        ]);
+    }
+
     public function add(Request $request)
     {
         $request->validate([
@@ -169,11 +202,6 @@ class CartController extends Controller
         return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
     }
 
-    public function cartJson(Request $request)
-    {
-        $cart = $this->getCart($request);
-        return $this->cartJsonResponse($cart, $request);
-    }
 
     private function cartJsonResponse(Cart $cart, Request $request)
     {

@@ -1,7 +1,8 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('hideGlobalLoader', true)
 @section('hideChatbot', true)
+@section('hideFooter', true)
 
 @php
     $cakesCategory = $featuredCategories->first(fn ($category) => str_contains(strtolower($category->name), 'cake'));
@@ -30,7 +31,7 @@
             {{-- Vignette --}}
             <div class="cake-vignette" aria-hidden="true"></div>
 
-            {{-- Story Messages —  positioned bottom-left for desktop --}}
+            {{-- Story Messages â€”  positioned bottom-left for desktop --}}
             <div class="story-messages">
                 <div id="story-msg-1" class="story-msg" style="opacity: 0;">
                     <span class="story-label">The Crown</span>
@@ -104,9 +105,9 @@
             </div>
             <select id="shelf-sort" class="shelf-sort">
                 <option value="default">Sort by</option>
-                <option value="price-low">Price: Low → High</option>
-                <option value="price-high">Price: High → Low</option>
-                <option value="name-az">Name: A → Z</option>
+                <option value="price-low">Price: Low â†’ High</option>
+                <option value="price-high">Price: High â†’ Low</option>
+                <option value="name-az">Name: A â†’ Z</option>
             </select>
         </div>
 
@@ -128,7 +129,7 @@
                         <input type="hidden" name="product_id" id="menu-card-product-id" />
                         <input type="hidden" name="variant_id" id="menu-card-variant-id" />
                         <div class="menu-card-qty">
-                            <button type="button" id="menu-card-qty-minus" class="qty-btn">−</button>
+                            <button type="button" id="menu-card-qty-minus" class="qty-btn">âˆ’</button>
                             <input type="number" name="quantity" id="menu-card-qty" value="1" min="1" max="99" />
                             <button type="button" id="menu-card-qty-plus" class="qty-btn">+</button>
                         </div>
@@ -136,7 +137,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
                             Add to Cart
                         </button>
-                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details →</a>
+                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details â†’</a>
                     </form>
                 </div>
             </aside>
@@ -167,7 +168,7 @@
                                 <div class="price-tag">
                                     <span class="tag-flavor">{{ Str::limit($product->name, 18) }}</span>
                                     <span class="tag-layers">{{ $product->category->name ?? '' }}</span>
-                                    <span class="tag-price">₱{{ number_format($product->effective_price, 0) }}</span>
+                                    <span class="tag-price">â‚±{{ number_format($product->effective_price, 0) }}</span>
                                 </div>
                             </div>
                             @endforeach
@@ -207,15 +208,15 @@
 
                     {{-- Order Summary --}}
                     <div class="cart-summary">
-                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₱0</span></div>
-                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">₱5.99</span></div>
-                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">₱0</span></div>
+                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">â‚±0</span></div>
+                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">â‚±5.99</span></div>
+                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">â‚±0</span></div>
                         <div class="cart-summary-divider"></div>
-                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">₱0</span></div>
+                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">â‚±0</span></div>
                     </div>
 
                     <a href="/checkout" class="cart-checkout-btn">Proceed to Checkout</a>
-                    <a href="/cart" class="cart-view-link">View Full Cart →</a>
+                    <a href="/cart" class="cart-view-link">View Full Cart â†’</a>
                 </div>
             </aside>
         </div>
@@ -226,16 +227,27 @@
     </section>
 
     <style>
-        /* ═══════════════════════════════════════════════════
-           CAKE SCROLLYTELLING — PROFESSIONAL DARK THEME
-           ═══════════════════════════════════════════════════ */
+        html,
+        body {
+            overflow-x: clip;
+        }
+
+        #app-shell main.container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+           CAKE SCROLLYTELLING â€” PROFESSIONAL DARK THEME
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
         .cake-scroll-section {
             position: relative;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
+            width: 100%;
+            margin-left: 0;
             height: 500vh;
             background: linear-gradient(
                 180deg,
@@ -297,7 +309,7 @@
             );
         }
 
-        /* ─── Story Messages ─── */
+        /* â”€â”€â”€ Story Messages â”€â”€â”€ */
         .story-messages {
             position: absolute;
             z-index: 10;
@@ -338,7 +350,7 @@
             margin: 0;
         }
 
-        /* Final message — centered */
+        /* Final message â€” centered */
         .story-msg-final {
             left: 50% !important;
             bottom: auto !important;
@@ -403,7 +415,7 @@
             transform: translateX(3px);
         }
 
-        /* ─── Side Overlays (Signboard & Cupcake) ─── */
+        /* â”€â”€â”€ Side Overlays (Signboard & Cupcake) â”€â”€â”€ */
         .side-overlay {
             position: absolute;
             z-index: 12;
@@ -476,7 +488,7 @@
             transform: rotate(15deg) scale(1.1);
         }
 
-        /* ─── Scroll Indicator ─── */
+        /* â”€â”€â”€ Scroll Indicator â”€â”€â”€ */
         .scroll-indicator {
             position: absolute;
             bottom: 2rem;
@@ -528,7 +540,7 @@
             50% { opacity: 1; }
         }
 
-        /* ─── Preloader ─── */
+        /* â”€â”€â”€ Preloader â”€â”€â”€ */
         .cake-preloader {
             position: fixed;
             inset: 0;
@@ -575,7 +587,7 @@
             50% { opacity: 1; }
         }
 
-        /* ─── Responsive ─── */
+        /* â”€â”€â”€ Responsive â”€â”€â”€ */
         @media (max-width: 768px) {
             .story-msg {
                 left: 50% !important;
@@ -650,7 +662,7 @@
             }
         }
 
-        /* ─── Sticky Navbar Override ─── */
+        /* â”€â”€â”€ Sticky Navbar Override â”€â”€â”€ */
         header {
             position: sticky !important;
             top: 0;
@@ -804,10 +816,28 @@
             background: rgba(255, 242, 249, 0.86) !important;
         }
     </style>
-    <link rel="stylesheet" href="/css/shelf.css">
+    @if (file_exists(public_path('css/shelf.css')))
+        <link rel="stylesheet" href="/css/shelf.css">
+    @endif
 
     @push('scripts')
         @vite('resources/js/cake-entry.js')
+
+        <script>
+            // Fallback: never let preloader block the page if a script fails.
+            (() => {
+                const hidePreloader = () => {
+                    const preloader = document.getElementById('cake-preloader');
+                    if (!preloader) return;
+                    preloader.style.opacity = '0';
+                    preloader.style.visibility = 'hidden';
+                    setTimeout(() => preloader.remove(), 500);
+                };
+
+                window.addEventListener('load', hidePreloader, { once: true });
+                setTimeout(hidePreloader, 2200);
+            })();
+        </script>
 
         <script>
             // Hide scroll indicator after first scroll
@@ -827,7 +857,7 @@
         </script>
 
         <script>
-            // ═══ Shelf: Reveal, Search, Filter, Sort + Menu Card ═══
+            // â•â•â• Shelf: Reveal, Search, Filter, Sort + Menu Card â•â•â•
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
@@ -909,7 +939,7 @@
                     });
                 }
 
-                // ═══ Menu Card ═══
+                // â•â•â• Menu Card â•â•â•
                 const card = document.getElementById('menu-card');
                 const cardClose = document.getElementById('menu-card-close');
                 const cardImg = document.getElementById('menu-card-img');
@@ -948,9 +978,9 @@
 
                     // Price
                     if (salePrice && parseFloat(salePrice) > 0 && parseFloat(salePrice) < originalPrice) {
-                        cardPrice.innerHTML = `₱${Number(salePrice).toLocaleString()} <span class="original-price">₱${Number(originalPrice).toLocaleString()}</span>`;
+                        cardPrice.innerHTML = `â‚±${Number(salePrice).toLocaleString()} <span class="original-price">â‚±${Number(originalPrice).toLocaleString()}</span>`;
                     } else {
-                        cardPrice.textContent = `₱${Number(price).toLocaleString()}`;
+                        cardPrice.textContent = `â‚±${Number(price).toLocaleString()}`;
                     }
 
                     // Variants
@@ -961,7 +991,7 @@
                             const chip = document.createElement('button');
                             chip.type = 'button';
                             chip.className = 'variant-chip' + (i === 0 ? ' active' : '') + (v.stock <= 0 ? ' out-of-stock' : '');
-                            chip.textContent = v.name + (v.price ? ` (₱${Number(v.price).toLocaleString()})` : '');
+                            chip.textContent = v.name + (v.price ? ` (â‚±${Number(v.price).toLocaleString()})` : '');
                             chip.dataset.variantId = v.id;
                             chip.addEventListener('click', () => {
                                 cardVariantsList.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('active'));
@@ -991,7 +1021,7 @@
                     items.forEach(i => i.classList.remove('shelf-item-active'));
                 }
 
-                // Click on cake → open card
+                // Click on cake â†’ open card
                 items.forEach(item => {
                     item.addEventListener('click', () => openMenuCard(item));
                 });
@@ -1009,7 +1039,7 @@
                     if (v < 99) cardQty.value = v + 1;
                 });
 
-                // Add to cart via AJAX → show cart panel
+                // Add to cart via AJAX â†’ show cart panel
                 const cartPanel = document.getElementById('cart-panel');
                 const cartPanelToggle = document.getElementById('cart-panel-toggle');
                 const cartPanelBody = document.getElementById('cart-panel-body');
@@ -1035,7 +1065,7 @@
 
                 if (cartPanelToggle) cartPanelToggle.addEventListener('click', toggleCartPanel);
 
-                function fmt(n) { return '₱' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+                function fmt(n) { return 'â‚±' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
                 function renderCartPanel(data, autoExpand) {
                     // Hide cart completely if 0 items
@@ -1066,12 +1096,12 @@
                                 <div class="cart-list-variant">${i.variant}</div>
                             </div>
                             <div class="cart-list-qty">
-                                <button onclick="cartQtyChange(${i.id},'dec')">−</button>
+                                <button onclick="cartQtyChange(${i.id},'dec')">âˆ’</button>
                                 <span>${i.quantity}</span>
                                 <button onclick="cartQtyChange(${i.id},'inc')">+</button>
                             </div>
                             <div class="cart-list-price">${fmt(i.subtotal)}</div>
-                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">×</button>
+                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">Ã—</button>
                         </div>
                     `).join('');
 
@@ -1152,3 +1182,4 @@
         </script>
     @endpush
 @endsection
+

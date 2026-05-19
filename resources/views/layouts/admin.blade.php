@@ -49,6 +49,30 @@
         color: var(--sidebar-text) !important;
         background-color: var(--sidebar-bg-hover) !important;
     }
+
+    aside .nav-link {
+        position: relative;
+    }
+
+    aside .nav-link.active {
+        background: rgba(241, 241, 241, 0.22) !important;
+        box-shadow: 0 8px 20px rgba(90, 58, 58, 0.1);
+    }
+
+    aside .nav-link.active::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 10px;
+        bottom: 10px;
+        width: 4px;
+        border-radius: 999px;
+        background: var(--brand-brown);
+    }
+
+    aside .nav-link.active span.inline-flex {
+        background: rgba(90, 58, 58, 0.16) !important;
+    }
     
     aside .text-white,
     aside .text-gray-200,

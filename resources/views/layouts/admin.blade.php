@@ -102,6 +102,15 @@
             </span>
             Products
         </a>
+
+        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="categories" style="color: #440E03;">
+            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="#440E03" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path>
+                </svg>
+            </span>
+            Categories
+        </a>
         
         <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="inventory" style="color: #440E03;">
             <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">

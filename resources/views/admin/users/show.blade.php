@@ -46,29 +46,10 @@
                 </div>
 
                 <div class="rounded-3xl bg-white p-6 shadow-soft">
-                    <h2 class="mb-4 text-xl font-semibold">Edit User</h2>
-                    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="space-y-3">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="user_status" value="{{ request('user_status', 'all') }}">
-                        <input type="hidden" name="user_search" value="{{ request('user_search', '') }}">
-                        <input type="hidden" name="user_page" value="{{ request('user_page', 1) }}">
-
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-slate-600">Name</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-slate-600">Email</label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-slate-600">Phone</label>
-                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
-                        </div>
-
-                        <button type="submit" class="w-full rounded-xl bg-slate-700 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Save Changes</button>
-                    </form>
+                    <h2 class="mb-2 text-xl font-semibold">User Details</h2>
+                    <p class="text-sm text-slate-500">
+                        User profile information is read-only in the admin panel.
+                    </p>
                 </div>
 
                 <div class="rounded-3xl bg-white p-6 shadow-soft">

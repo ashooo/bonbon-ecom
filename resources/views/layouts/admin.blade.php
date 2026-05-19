@@ -7,7 +7,6 @@
     <title>{{ config('app.name', 'Bonbon Ecom') }} | Admin</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
 <style>
     :root {
         --pink-light: #F5E6E8;
@@ -165,8 +164,7 @@
 
                     <div class="flex items-center gap-3 justify-end">
                         @php
-                            $__store_settings = \App\Models\StoreSetting::query()->first();
-                            $__admin_avatar = $__store_settings?->chat_avatar_url ?? 'https://via.placeholder.com/32';
+                            $__admin_avatar = $storeSettings?->chat_avatar_url ?? 'https://via.placeholder.com/32';
                         @endphp
                         <button class="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-50 px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100" id="adminProfileToggle">
                             <img src="{{ $__admin_avatar }}" alt="Admin" class="h-8 w-8 rounded-full object-cover" />

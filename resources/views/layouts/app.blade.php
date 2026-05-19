@@ -7,7 +7,6 @@
     <title>{{ config('app.name', 'Bonbon Ecom') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=great-vibes:400|instrument-sans:400,500,600" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
             --pink-light: #F5E6E8;

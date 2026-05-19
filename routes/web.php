@@ -574,7 +574,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->withTrashed()->name('admin.users.show');
-    Route::patch('/users/{user}', [AdminUserController::class, 'update'])->withTrashed()->name('admin.users.update');
     Route::patch('/users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::patch('/users/{user}/restore', [AdminUserController::class, 'restore'])->withTrashed()->name('admin.users.restore');

@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\UserNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class OrderController extends Controller
 {
@@ -35,6 +36,15 @@ class OrderController extends Controller
         ], fn ($value) => $value !== null && $value !== '');
 
         return view('admin.orders.show', compact('order', 'backQuery'));
+    }
+
+    public function printSlip(Order $order): Response
+    {
+        $order->load(['items.variant.product', 'user']);
+
+        return response()
+            ->view('admin.orders.print-slip', compact('order'))
+            ->header('Content-Disposition', 'inline; filename="slip-' . $order->order_number . '.html"');
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse

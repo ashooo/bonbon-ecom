@@ -1,297 +1,281 @@
 <!-- Orders Section -->
 <div id="orders-section" class="admin-section hidden">
     <div class="space-y-6">
-<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-    <div>
-        <h1 class="text-3xl font-bold">Orders Management</h1>
-        <p class="mt-1 text-sm text-slate-500">Manage and track all customer orders</p>
-    </div>
-    <div class="flex flex-wrap gap-2">
-        <a href="{{ route('admin.orders.index', ['status' => 'all', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? 'all') === 'all' ? 'bg-pink-600 text-white' : 'bg-pink-50 text-pink-700 hover:bg-pink-100' }}">
-            All <span class="ml-1">{{ $orderCounts['all'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('admin.orders.index', ['status' => 'pending', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? '') === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-50 text-yellow-800 hover:bg-yellow-100' }}">
-            Pending <span class="ml-1">{{ $orderCounts['pending'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('admin.orders.index', ['status' => 'confirmed', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? '') === 'confirmed' ? 'bg-indigo-500 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100' }}">
-            Confirmed <span class="ml-1">{{ $orderCounts['confirmed'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('admin.orders.index', ['status' => 'ready', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? '') === 'ready' ? 'bg-indigo-700 text-white' : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100' }}">
-            Ready <span class="ml-1">{{ $orderCounts['ready'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('admin.orders.index', ['status' => 'completed', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? '') === 'completed' ? 'bg-green-700 text-white' : 'bg-green-50 text-green-800 hover:bg-green-100' }}">
-            Completed <span class="ml-1">{{ $orderCounts['completed'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('admin.orders.index', ['status' => 'cancelled', 'search' => $orderFilters['search'] ?? null]) }}" class="rounded-2xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 {{ ($orderFilters['status'] ?? '') === 'cancelled' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-800 hover:bg-red-100' }}">
-            Cancelled <span class="ml-1">{{ $orderCounts['cancelled'] ?? 0 }}</span>
-        </a>
-    </div>
-</div>
+        <div class="space-y-1">
+            <h1 class="text-2xl font-semibold tracking-tight text-[#4B2E38]">Orders overview</h1>
+            <p class="text-sm text-[#8A6A76]">Track the pipeline and process orders efficiently</p>
+        </div>
 
-        <div class="rounded-3xl bg-white p-6 shadow-soft">
-            @if (session('success'))
-                <div class="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-                    {{ session('success') }}
-                </div>
-            @endif
+        <div class="grid grid-cols-2 gap-4 xl:grid-cols-6">
+            <div class="rounded-2xl border border-pink-200 bg-pink-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-pink-700">All</p><p class="mt-2 text-3xl font-semibold text-[#4D2E38]">{{ $orderCounts['all'] ?? 0 }}</p></div>
+            <div class="rounded-2xl border border-amber-300 bg-amber-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-amber-700">Pending</p><p class="mt-2 text-3xl font-semibold text-amber-800">{{ $orderCounts['pending'] ?? 0 }}</p></div>
+            <div class="rounded-2xl border border-sky-300 bg-sky-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-sky-700">Confirmed</p><p class="mt-2 text-3xl font-semibold text-sky-800">{{ $orderCounts['confirmed'] ?? 0 }}</p></div>
+            <div class="rounded-2xl border border-violet-300 bg-violet-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-violet-700">Ready</p><p class="mt-2 text-3xl font-semibold text-violet-800">{{ $orderCounts['ready'] ?? 0 }}</p></div>
+            <div class="rounded-2xl border border-emerald-300 bg-emerald-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-emerald-700">Completed</p><p class="mt-2 text-3xl font-semibold text-emerald-800">{{ $orderCounts['completed'] ?? 0 }}</p></div>
+            <div class="rounded-2xl border border-rose-300 bg-rose-100 p-4 shadow-sm"><p class="text-xs uppercase tracking-[0.16em] text-rose-700">Cancelled</p><p class="mt-2 text-3xl font-semibold text-rose-800">{{ $orderCounts['cancelled'] ?? 0 }}</p></div>
+        </div>
 
-            @if ($errors->any())
-                <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                    <ul class="list-disc pl-5">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
+        <div class="rounded-3xl border border-[#ECD8E0] bg-white p-6 shadow-sm">
+            <div class="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-[1fr_auto]">
+                <form id="orders-filter-form" method="GET" action="{{ route('admin.orders.index') }}" class="grid grid-cols-1 gap-2 rounded-2xl border border-[#ECD8E0] bg-[#FFF8FB] p-3 sm:grid-cols-2 xl:grid-cols-[280px_220px]">
+                    <input type="hidden" name="section" value="orders">
+                    <input type="text" name="search" value="{{ $orderFilters['search'] ?? '' }}" placeholder="Search order no, customer, email..." class="w-full rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">
+                    <select name="status" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">
+                        @foreach (['all', 'pending', 'confirmed', 'ready', 'completed', 'cancelled'] as $statusOption)
+                            <option value="{{ $statusOption }}" @selected(($orderFilters['status'] ?? 'all') === $statusOption)>{{ ucfirst($statusOption) }}</option>
                         @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="mb-6 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_auto]">
-                <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-col gap-3 md:flex-row">
-                    <input type="hidden" name="status" value="{{ $orderFilters['status'] ?? 'all' }}">
-                    <div class="relative flex-1">
-                        <input
-                            type="text"
-                            name="search"
-                            value="{{ $orderFilters['search'] ?? '' }}"
-                            placeholder="Search by order number, name, or email"
-                            class="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200 pl-10"
-                        >
-                        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <button type="submit" class="relative group rounded-xl bg-pink-600 px-4 text-sm font-semibold text-white hover:bg-pink-700 transition-all duration-200 shadow-md inline-flex items-center justify-center gap-2" aria-label="Search" style="height: 42px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Search Orders</span>
-                    </button>
+                    </select>
                 </form>
-
-                <form method="GET" action="{{ route('admin.orders.export') }}" class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto_auto]">
-                    <div>
-                        <label for="orders_export_start_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Date</label>
-                        <input id="orders_export_start_date" type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200" required>
-                    </div>
-                    <div>
-                        <label for="orders_export_end_date" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">End Date</label>
-                        <input id="orders_export_end_date" type="date" name="end_date" value="{{ now()->toDateString() }}" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200" required>
-                    </div>
-                    <div>
-                        <label for="orders_export_format" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Format</label>
-                        <select id="orders_export_format" name="format" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none transition-all duration-200">
-                            <option value="csv">CSV</option>
-                            <option value="excel">Excel</option>
-                            <option value="pdf">PDF</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" class="relative group w-full rounded-xl bg-pink-600 px-3 py-2 text-sm font-semibold text-white hover:bg-pink-700 transition-all duration-200 shadow-md inline-flex items-center justify-center gap-2" style="min-height: 42px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Export Orders</span>
-                        </button>
-                    </div>
-                </form>
+                <details class="rounded-2xl border border-[#ECD8E0] bg-white">
+                    <summary class="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-[#6B4A57]">Export orders</summary>
+                    <form method="GET" action="{{ route('admin.orders.export') }}" class="grid grid-cols-1 gap-2 border-t border-[#F2DFE6] p-3 sm:grid-cols-[1fr_1fr_120px_auto]">
+                        <input type="date" name="start_date" value="{{ now()->startOfMonth()->toDateString() }}" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843]" required>
+                        <input type="date" name="end_date" value="{{ now()->toDateString() }}" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843]" required>
+                        <select name="format" class="rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843]"><option value="csv">CSV</option><option value="excel">Excel</option><option value="pdf">PDF</option></select>
+                        <button type="submit" class="rounded-xl bg-[#C47A90] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B66880]">Export</button>
+                    </form>
+                </details>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="border-b border-slate-200">
+            <div class="overflow-x-auto rounded-2xl border border-[#F1E2E8]">
+                <table id="orders-table" class="w-full min-w-[1100px]">
+                    <thead class="bg-[#FBF2F6]">
                         <tr>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Order</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Customer</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Items</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Schedule</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Status</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Total</th>
-                            <th class="px-4 py-3 text-left text-sm font-medium text-slate-500">Actions</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Order</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Items</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Schedule</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Total</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[#7D5A67]">Actions</th>
                         </tr>
                     </thead>
-<tbody class="divide-y divide-slate-100">
-    @forelse(($orders ?? collect()) as $order)
-        @php
-            $status = $order->status ?? 'pending';
-            $statusClass = match ($status) {
-                'completed' => 'bg-green-100 text-green-800',
-                'cancelled' => 'bg-red-100 text-red-800',
-                'confirmed' => 'bg-slate-100 text-slate-700',
-                'ready' => 'bg-indigo-100 text-indigo-800',
-                default => 'bg-yellow-100 text-yellow-800',
-            };
-        @endphp
-        <tr class="hover:bg-slate-50/50 transition-colors duration-150">
-            <td class="px-4 py-4 text-sm">
-                <a href="{{ route('admin.orders.show', ['order' => $order, 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? '', 'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1]) }}" class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
-                    {{ $order->order_number }}
-                </a>
-                <p class="text-xs text-slate-500">{{ $order->created_at?->format('M d, Y h:i A') }}</p>
-            </td>
-            <td class="px-4 py-4 text-sm">
-                <p class="font-medium">{{ $order->customer_name }}</p>
-                <p class="text-xs text-slate-500">{{ $order->customer_email }}</p>
-                <p class="text-xs text-slate-500">{{ $order->customer_phone }}</p>
-            </td>
-            <td class="px-4 py-4 text-sm">
-                <p>{{ $order->items->sum('quantity') }} item(s)</p>
-                <p class="text-xs text-slate-500">
-                    {{ $order->items->first()?->variant?->product?->name ?? 'No items' }}
-                    @if ($order->items->count() > 1)
-                        +{{ $order->items->count() - 1 }} more
-                    @endif
-                </p>
-            </td>
-            <td class="px-4 py-4 text-sm">
-                <p class="font-medium">{{ ucfirst((string) $order->order_type) }}</p>
-                <p class="text-xs text-slate-500">
-                    {{ $order->fulfillment_date?->format('M d, Y') ?? 'N/A' }}
-                    {{ $order->fulfillment_time ? \Illuminate\Support\Str::of($order->fulfillment_time)->substr(0, 5) : '' }}
-                </p>
-            </td>
-            <td class="px-4 py-4">
-                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">
-                    {{ ucfirst($status) }}
-                </span>
-            </td>
-            <td class="px-4 py-4 text-sm font-semibold">₱{{ number_format((float) $order->total, 2) }}</td>
-            <td class="px-4 py-4">
-                <div class="flex items-center gap-2">
-                    <!-- Update Status Form -->
-                    <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="update-status-form inline" data-status="{{ $status }}">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="redirect_status" value="{{ $orderFilters['status'] ?? 'all' }}">
-                        <input type="hidden" name="redirect_search" value="{{ $orderFilters['search'] ?? '' }}">
-                        <input type="hidden" name="redirect_page" value="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}">
-                        <select name="status" class="status-select rounded-xl border border-slate-200 px-2 py-1.5 text-xs focus:border-pink-400 focus:ring-2 focus:ring-pink-200 focus:outline-none">
-                            @foreach (['pending', 'confirmed', 'ready', 'completed', 'cancelled'] as $optionStatus)
-                                <option value="{{ $optionStatus }}" @selected($status === $optionStatus)>{{ ucfirst($optionStatus) }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="update-btn group relative rounded-xl bg-pink-600 p-1.5 text-white hover:bg-pink-700 transition-all duration-200 shadow-sm" title="Update Status">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
-                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Update Status</span>
-                        </button>
-                    </form>
-
-                    <!-- View Details Button -->
-                    <a href="{{ route('admin.orders.show', ['order' => $order, 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? '', 'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1]) }}" class="group relative text-indigo-600 hover:text-indigo-800 transition-colors" title="View Details">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">View Details</span>
-                    </a>
-
-                    @if ($order->invoice)
-                        <!-- Print Invoice Button -->
-                        <button type="button" class="js-admin-print-invoice group relative text-pink-600 hover:text-pink-800 transition-colors" data-print-url="{{ route('admin.invoices.print', $order->invoice) }}" data-track-url="{{ route('admin.invoices.track-print', $order->invoice) }}" title="Print Invoice">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                            </svg>
-                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Print Invoice</span>
-                        </button>
-
-                        <!-- Download Invoice Button -->
-                        <a href="{{ route('admin.invoices.download', $order->invoice) }}" class="group relative text-slate-600 hover:text-slate-800 transition-colors" title="Download">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                            </svg>
-                            <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Download Invoice</span>
-                        </a>
-                    @endif
-                </div>
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">
-                No orders found for the selected filters.
-            </td>
-        </tr>
-    @endforelse
-</tbody>
-
-<script>
-document.querySelectorAll('.update-status-form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const select = this.querySelector('.status-select');
-        const newStatus = select.value;
-        const currentStatus = this.dataset.status;
-        
-        let confirmMessage = '';
-        switch(newStatus) {
-            case 'ready':
-                confirmMessage = 'Are you sure you want to mark this order as READY?';
-                break;
-            case 'completed':
-                confirmMessage = 'Are you sure you want to mark this order as COMPLETED?';
-                break;
-            case 'confirmed':
-                confirmMessage = 'Are you sure you want to CONFIRM this order?';
-                break;
-            case 'cancelled':
-                confirmMessage = 'Are you sure you want to CANCEL this order? This action cannot be undone.';
-                break;
-            case 'pending':
-                confirmMessage = 'Are you sure you want to change status back to PENDING?';
-                break;
-            default:
-                confirmMessage = `Are you sure you want to update this order status to ${newStatus.toUpperCase()}?`;
-        }
-        
-        if (confirm(confirmMessage)) {
-            this.submit();
-        }
-    });
-});
-</script>
+                    <tbody class="divide-y divide-[#F4E5EB] bg-white">
+                        @forelse(($orders ?? collect()) as $order)
+                            @php
+                                $status = $order->status ?? 'pending';
+                                $statusClass = match ($status) {
+                                    'completed' => 'bg-emerald-50 text-emerald-700',
+                                    'cancelled' => 'bg-rose-50 text-rose-700',
+                                    'confirmed' => 'bg-sky-50 text-sky-700',
+                                    'ready' => 'bg-violet-50 text-violet-700',
+                                    default => 'bg-amber-50 text-amber-700',
+                                };
+                                $nextStatus = match ($status) { 'pending' => 'confirmed', 'confirmed' => 'ready', 'ready' => 'completed', default => null };
+                            @endphp
+                            <tr class="js-order-row cursor-pointer hover:bg-[#FFFCFD]" data-order-url="{{ route('admin.orders.show', ['order' => $order, 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? '', 'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1]) }}">
+                                <td class="px-4 py-4 text-sm">
+                                    <a href="{{ route('admin.orders.show', ['order' => $order, 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? '', 'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1]) }}" class="font-semibold text-[#B66880] hover:text-[#9E536A] hover:underline">{{ $order->order_number }}</a>
+                                    <p class="text-xs text-[#8A6A76]">{{ $order->created_at?->format('M d, g:i A') }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm">
+                                    <p class="font-medium text-[#4E303A]">{{ $order->customer_name }}</p>
+                                    <p class="text-xs text-[#8A6A76]">{{ $order->customer_email }}</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-[#6B4A57]">
+                                    @php $itemCount = (int) $order->items->sum('quantity'); @endphp
+                                    <p>{{ $itemCount }} {{ \Illuminate\Support\Str::plural('item', $itemCount) }}</p>
+                                    <p class="text-xs text-[#8A6A76]">{{ $order->items->first()?->variant?->product?->name ?? 'No items' }}@if ($order->items->count() > 1) +{{ $order->items->count() - 1 }} more @endif</p>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-[#6B4A57]">
+                                    <p class="font-medium">{{ ucfirst((string) $order->order_type) }}</p>
+                                    <p class="text-xs">{{ $order->fulfillment_date?->format('M d, Y') ?? 'N/A' }} {{ $order->fulfillment_time ? \Carbon\Carbon::createFromFormat('H:i:s', $order->fulfillment_time)->format('g:i A') : '' }}</p>
+                                </td>
+                                <td class="px-4 py-4"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">{{ ucfirst($status) }}</span></td>
+                                <td class="px-4 py-4 text-sm font-semibold text-[#4E303A]">&#8369;{{ number_format((float) $order->total, 2) }}</td>
+                                <td class="js-row-actions px-4 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <a
+                                            href="{{ route('admin.orders.show', ['order' => $order, 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? '', 'page' => method_exists($orders, 'currentPage') ? $orders->currentPage() : 1]) }}"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#E3CDD7] text-[#6B4A57] hover:bg-[#F7EBF0]"
+                                            title="View order details"
+                                            aria-label="View order details"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        </a>
+                                        <a
+                                            href="{{ route('admin.orders.print-slip', $order) }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#E3CDD7] text-[#6B4A57] hover:bg-[#F7EBF0]"
+                                            title="Print delivery slip"
+                                            aria-label="Print delivery slip"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M6 9V4h12v5"/>
+                                                <rect x="6" y="14" width="12" height="6" rx="1"/>
+                                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                                <path d="M16 18h.01"/>
+                                            </svg>
+                                        </a>
+                                        @if($nextStatus)
+                                            <form method="POST" action="{{ route('admin.orders.status.update', $order) }}" class="inline js-status-update-form" data-next-status="{{ $nextStatus }}">
+                                                @csrf @method('PATCH')
+                                                <input type="hidden" name="status" value="{{ $nextStatus }}">
+                                                <input type="hidden" name="redirect_status" value="{{ $orderFilters['status'] ?? 'all' }}">
+                                                <input type="hidden" name="redirect_search" value="{{ $orderFilters['search'] ?? '' }}">
+                                                <input type="hidden" name="redirect_page" value="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}">
+                                                <button type="submit" class="rounded-lg bg-[#C47A90] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B66880]">Mark {{ ucfirst($nextStatus) }}</button>
+                                            </form>
+                                        @endif
+                                        <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[#E3CDD7] text-[#6B4A57] hover:bg-[#F7EBF0] js-more-actions-btn"
+                                            data-order-id="{{ $order->id }}"
+                                            data-order-status="{{ $status }}"
+                                            data-redirect-status="{{ $orderFilters['status'] ?? 'all' }}"
+                                            data-redirect-search="{{ $orderFilters['search'] ?? '' }}"
+                                            data-redirect-page="{{ method_exists($orders, 'currentPage') ? $orders->currentPage() : 1 }}"
+                                            data-has-invoice="{{ $order->invoice ? '1' : '0' }}"
+                                            data-print-url="{{ $order->invoice ? route('admin.invoices.print', $order->invoice) : '' }}"
+                                            data-track-url="{{ $order->invoice ? route('admin.invoices.track-print', $order->invoice) : '' }}"
+                                            data-download-url="{{ $order->invoice ? route('admin.invoices.download', $order->invoice) : '' }}"
+                                            aria-label="More actions">•••</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-[#8A6A76]">No orders found for the selected filters.</td></tr>
+                        @endforelse
+                    </tbody>
                 </table>
             </div>
 
             @if (isset($orders) && method_exists($orders, 'links'))
-                <div class="mt-6">
-                    {{ $orders->appends(['section' => 'orders'])->links() }}
-                </div>
+                <div class="mt-6">{{ $orders->appends(['section' => 'orders', 'status' => $orderFilters['status'] ?? 'all', 'search' => $orderFilters['search'] ?? null])->links() }}</div>
             @endif
         </div>
     </div>
 </div>
 
+<div id="status-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4" aria-hidden="true">
+    <div class="w-full max-w-md rounded-2xl border border-[#ECD8E0] bg-white p-6 shadow-lg">
+        <h3 class="text-lg font-semibold text-[#4B2E38]" id="status-confirm-title">Confirm Status Change</h3>
+        <p class="mt-2 text-sm text-[#7E5E6A]" id="status-confirm-message">Are you sure you want to continue?</p>
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button type="button" id="status-confirm-cancel" class="rounded-xl border border-[#E5D2DA] bg-white px-4 py-2 text-sm font-semibold text-[#6B4A57] hover:bg-[#F8EFF3]">Cancel</button>
+            <button type="button" id="status-confirm-submit" class="rounded-xl bg-[#C47A90] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B66880]">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="order-actions-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4" aria-hidden="true">
+    <div class="w-full max-w-md rounded-2xl border border-[#ECD8E0] bg-white p-6 shadow-lg">
+        <h3 class="text-lg font-semibold text-[#4B2E38]">More actions</h3>
+        <div id="order-actions-content" class="mt-4 space-y-2"></div>
+        <div class="mt-4 flex justify-end">
+            <button type="button" id="order-actions-close" class="rounded-xl border border-[#E5D2DA] bg-white px-4 py-2 text-sm font-semibold text-[#6B4A57] hover:bg-[#F8EFF3]">Close</button>
+        </div>
+    </div>
+</div>
+
+<form id="order-status-action-form" method="POST" class="hidden">@csrf @method('PATCH')</form>
+
+@push('scripts')
 <script>
-    (function () {
-        document.querySelectorAll('#orders-section tbody tr[data-order-url]').forEach((row) => {
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.getElementById('orders-filter-form');
+        let searchTimer = null;
+        filterForm?.querySelector('select[name="status"]')?.addEventListener('change', () => filterForm.submit());
+        filterForm?.querySelector('input[name="search"]')?.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => filterForm.submit(), 300);
+        });
+
+        const confirmModal = document.getElementById('status-confirm-modal');
+        const confirmMsg = document.getElementById('status-confirm-message');
+        const confirmCancel = document.getElementById('status-confirm-cancel');
+        const confirmSubmit = document.getElementById('status-confirm-submit');
+        let pendingStatusForm = null;
+        const openConfirm = (form, status) => {
+            pendingStatusForm = form;
+            confirmMsg.textContent = `Are you sure you want to mark this order as ${String(status).toUpperCase()}?`;
+            confirmModal.classList.remove('hidden');
+            confirmModal.classList.add('flex');
+        };
+        const closeConfirm = () => {
+            confirmModal.classList.add('hidden');
+            confirmModal.classList.remove('flex');
+            pendingStatusForm = null;
+        };
+        document.querySelectorAll('.js-status-update-form').forEach((form) => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                openConfirm(form, form.dataset.nextStatus || form.querySelector('input[name="status"]')?.value || 'updated');
+            });
+        });
+        confirmCancel?.addEventListener('click', closeConfirm);
+        confirmModal?.addEventListener('click', (e) => { if (e.target === confirmModal) closeConfirm(); });
+        confirmSubmit?.addEventListener('click', () => { if (pendingStatusForm) pendingStatusForm.submit(); });
+
+        const actionsModal = document.getElementById('order-actions-modal');
+        const actionsContent = document.getElementById('order-actions-content');
+        const actionsClose = document.getElementById('order-actions-close');
+        const actionForm = document.getElementById('order-status-action-form');
+        const openActions = (data) => {
+            const statuses = ['pending', 'confirmed', 'ready', 'completed', 'cancelled'].filter((s) => s !== data.orderStatus);
+            actionsContent.innerHTML = '';
+            statuses.forEach((status) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full rounded-lg border border-[#E3CDD7] px-3 py-2 text-left text-sm text-[#6B4A57] hover:bg-[#F7EBF0]';
+                btn.textContent = `Set ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+                btn.addEventListener('click', () => {
+                    actionForm.action = `/admin/orders/${data.orderId}/status`;
+                    actionForm.innerHTML = `@csrf @method('PATCH')
+                        <input type="hidden" name="status" value="${status}">
+                        <input type="hidden" name="redirect_status" value="${data.redirectStatus}">
+                        <input type="hidden" name="redirect_search" value="${data.redirectSearch}">
+                        <input type="hidden" name="redirect_page" value="${data.redirectPage}">`;
+                    closeActions();
+                    openConfirm(actionForm, status);
+                });
+                actionsContent.appendChild(btn);
+            });
+            if (data.hasInvoice === '1') {
+                const printBtn = document.createElement('button');
+                printBtn.type = 'button';
+                printBtn.className = 'w-full rounded-lg border border-[#E3CDD7] px-3 py-2 text-left text-sm text-[#6B4A57] hover:bg-[#F7EBF0]';
+                printBtn.textContent = 'Print invoice';
+                printBtn.addEventListener('click', async () => {
+                    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+                    try { await fetch(data.trackUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' } }); } catch {}
+                    window.open(data.printUrl, '_blank', 'noopener');
+                });
+                actionsContent.appendChild(printBtn);
+                const download = document.createElement('a');
+                download.className = 'block w-full rounded-lg border border-[#E3CDD7] px-3 py-2 text-left text-sm text-[#6B4A57] hover:bg-[#F7EBF0]';
+                download.href = data.downloadUrl;
+                download.textContent = 'Download invoice';
+                actionsContent.appendChild(download);
+            }
+            actionsModal.classList.remove('hidden');
+            actionsModal.classList.add('flex');
+        };
+        const closeActions = () => {
+            actionsModal.classList.add('hidden');
+            actionsModal.classList.remove('flex');
+        };
+        document.querySelectorAll('.js-more-actions-btn').forEach((btn) => {
+            btn.addEventListener('click', () => openActions(btn.dataset));
+        });
+        actionsClose?.addEventListener('click', closeActions);
+        actionsModal?.addEventListener('click', (e) => { if (e.target === actionsModal) closeActions(); });
+
+        document.querySelectorAll('.js-row-actions').forEach((cell) => {
+            cell.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+        });
+
+        document.querySelectorAll('#orders-table tbody tr.js-order-row[data-order-url]').forEach((row) => {
             row.addEventListener('click', (event) => {
-                const interactive = event.target.closest('a, button, form, select, input, textarea, label');
+                const interactive = event.target.closest('a, button, form, select, input, textarea, label, summary, details, .js-row-actions');
                 if (interactive) return;
                 window.location.href = row.dataset.orderUrl;
             });
         });
-
-        document.querySelectorAll('.js-admin-print-invoice').forEach((button) => {
-            button.addEventListener('click', async () => {
-                const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-
-                try {
-                    await fetch(button.dataset.trackUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json',
-                        },
-                    });
-                } catch (error) {
-                    console.warn('Invoice print tracking failed.', error);
-                }
-
-                window.open(button.dataset.printUrl, '_blank', 'noopener');
-            });
-        });
-    })();
+    });
 </script>
+@endpush

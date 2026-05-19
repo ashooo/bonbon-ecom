@@ -132,7 +132,7 @@
                         </div>
                         <h3 class="text-xl font-bold text-[#5A3A3A] mb-2">Your cart is empty</h3>
                         <p class="text-[#8C6770] mb-8">Looks like you haven't added any sweet treats yet!</p>
-                        <a href="/products" class="inline-flex items-center gap-2 bg-[#5A3A3A] hover:bg-[#7A5252] text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg shadow-[#5A3A3A]/20">
+                        <a href="/#shop" class="inline-flex items-center gap-2 bg-[#5A3A3A] hover:bg-[#7A5252] text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg shadow-[#5A3A3A]/20">
                             <span>Browse Shop</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />

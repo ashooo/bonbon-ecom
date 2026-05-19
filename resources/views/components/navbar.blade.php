@@ -13,7 +13,7 @@
 
         <nav class="hidden md:flex space-x-6">
             <a href="/" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a>
-            <a href="{{ url('/products') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
+            <a href="{{ url('/#shop') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
             <a href="{{ route('orders.index') }}" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
             <a href="/customize" class="text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
         </nav>

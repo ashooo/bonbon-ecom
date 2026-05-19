@@ -96,7 +96,7 @@
                 <a href="/checkout" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
                     Proceed to Checkout
                 </a>
-                <a href="/products" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
+                <a href="/#shop" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
                     Continue Shopping
                 </a>
             </div>
@@ -109,7 +109,7 @@
             </svg>
             <h2 class="text-2xl font-bold text-gray-600 mb-4">Your cart is empty</h2>
             <p class="text-gray-500 mb-8">Looks like you haven't added any cakes to your cart yet.</p>
-            <a href="/products" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg inline-block transition duration-300">
+            <a href="/#shop" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg inline-block transition duration-300">
                 Start Shopping
             </a>
         </div>

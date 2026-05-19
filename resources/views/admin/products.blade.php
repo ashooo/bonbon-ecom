@@ -116,7 +116,7 @@
                                         </svg>
                                         <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Edit</span>
                                     </a>
-                                    <form action="{{ route('admin.products.destroy', ['product' => $product->id]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this product?')">
+                                    <form action="{{ route('admin.products.destroy', ['product' => $product->id]) }}" method="POST" class="inline js-confirm-delete-form" data-confirm-title="Delete Product" data-confirm-message="Are you sure you want to delete this product?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="group relative text-red-500 hover:text-red-700 transition-colors" title="Delete">
@@ -198,7 +198,7 @@
                                         </svg>
                                         <span class="absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 text-white text-xs px-2 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">Edit</span>
                                     </a>
-                                    <form action="{{ route('admin.categories.destroy', ['category' => $category->id]) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this category?')">
+                                    <form action="{{ route('admin.categories.destroy', ['category' => $category->id]) }}" method="POST" class="inline js-confirm-delete-form" data-confirm-title="Delete Category" data-confirm-message="Are you sure you want to delete this category?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="group relative text-red-500 hover:text-red-700 transition-colors" title="Delete">
@@ -224,3 +224,71 @@
         </div>
     </div>
 </div>
+
+<div id="delete-confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 px-4" aria-hidden="true">
+    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-soft">
+        <h3 id="delete-confirm-title" class="text-lg font-semibold text-slate-900">Confirm Delete</h3>
+        <p id="delete-confirm-message" class="mt-2 text-sm text-slate-600">Are you sure you want to continue?</p>
+        <div class="mt-6 flex items-center justify-end gap-3">
+            <button type="button" id="delete-confirm-cancel" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200">
+                Cancel
+            </button>
+            <button type="button" id="delete-confirm-submit" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('delete-confirm-modal');
+        const titleEl = document.getElementById('delete-confirm-title');
+        const messageEl = document.getElementById('delete-confirm-message');
+        const cancelBtn = document.getElementById('delete-confirm-cancel');
+        const submitBtn = document.getElementById('delete-confirm-submit');
+        let pendingForm = null;
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            pendingForm = null;
+        };
+
+        const openModal = (form) => {
+            pendingForm = form;
+            titleEl.textContent = form.dataset.confirmTitle || 'Confirm Delete';
+            messageEl.textContent = form.dataset.confirmMessage || 'Are you sure you want to continue?';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+        };
+
+        document.querySelectorAll('.js-confirm-delete-form').forEach((form) => {
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                openModal(form);
+            });
+        });
+
+        cancelBtn?.addEventListener('click', closeModal);
+        modal?.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+        submitBtn?.addEventListener('click', () => {
+            if (pendingForm) {
+                pendingForm.submit();
+            }
+        });
+    });
+</script>
+@endpush

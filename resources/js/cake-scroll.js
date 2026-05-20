@@ -134,6 +134,40 @@ export function initCakeScrollytelling() {
         duration: 10, ease: 'power2.out',
     }, 88);
 
+    
+    // ═══════════════════════════════════════
+    // Navbar color transition sync
+    // ═══════════════════════════════════════
+    const navStart = 35; // Start fading when entering deep pink/black
+    const navDur = 40;
+
+    tl.to('#main-navbar', {
+        backgroundColor: 'rgba(21, 9, 6, 0.95)',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(12px)',
+        duration: navDur,
+        ease: 'power2.inOut',
+    }, navStart);
+
+    tl.to('#navbar-brand', { color: '#FBEAF1', duration: navDur, ease: 'power2.inOut' }, navStart);
+    tl.to('.nav-link-item', { color: '#FBEAF1', duration: navDur, ease: 'power2.inOut' }, navStart);
+    
+    tl.to('#navbar-cart-btn, #navbar-notification-btn', { 
+        borderColor: 'rgba(255, 255, 255, 0.2)', 
+        backgroundColor: 'transparent', 
+        color: '#FBEAF1', 
+        duration: navDur,
+        ease: 'power2.inOut'
+    }, navStart);
+
+    tl.to('#navbar-account-btn', { 
+        borderColor: 'rgba(255, 255, 255, 0.2)', 
+        backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+        color: '#FBEAF1', 
+        duration: navDur,
+        ease: 'power2.inOut'
+    }, navStart);
+
     // ═══════════════════════════════════════
     // Cupcake + Signboard appear (90-100%)
     // ═══════════════════════════════════════
@@ -670,7 +704,13 @@ export function initCakeScrollytelling() {
     // Attach gallery trigger
     const ctaBtn = document.getElementById('story-cta-btn');
     if (ctaBtn) {
-        ctaBtn.addEventListener('click', activateGallery);
+        ctaBtn.addEventListener('click', () => {
+            const shelf = document.getElementById('cake-shelf');
+            if (shelf) {
+                shelf.style.display = 'block';
+                shelf.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
     }
 
     const backBtn = document.getElementById('gallery-back-btn');

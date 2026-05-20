@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1 class="text-3xl font-bold mb-8">Your Cart</h1>
+    <h1 class="text-3xl font-bold text-[#4D2E38] mb-8">Your Cart</h1>
 
     @if (session('success'))
         <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
@@ -19,38 +19,38 @@
                             $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
                             $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design');
                         @endphp
-                        <div class="bg-white rounded-lg shadow-md p-6 flex items-center space-x-4">
+                        <div class="bg-[#FFFFFF] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#ECD8E0] p-6 flex items-center space-x-4">
                             @if (!empty($item->customization_payload['preview_svg']))
                                 <div class="h-20 w-20 overflow-hidden rounded bg-white [&_svg]:h-full [&_svg]:w-full">
                                     {!! $item->customization_payload['preview_svg'] !!}
                                 </div>
                             @elseif ($item->product?->main_image_url)
-                                <img src="{{ $item->product->main_image_url }}" alt="{{ $itemName }}" class="w-20 h-20 rounded object-cover">
+                                <img src="{{ $item->product->main_image_url }}" alt="{{ $itemName }}" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#FBEAF1]/50">
                             @else
                                 <x-custom-cake-thumbnail :payload="$item->customization_payload" width="80" height="80" class="h-20 w-20 rounded object-cover" />
                             @endif
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold">{{ $itemName }}</h3>
-                                <p class="text-gray-600">{{ $itemVariantLabel }}</p>
+                                <h3 class="text-lg font-bold text-[#4D2E38]">{{ $itemName }}</h3>
+                                <p class="text-[#8A6A76]">{{ $itemVariantLabel }}</p>
                                 @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
-                                    <p class="mt-1 text-xs text-gray-500">
+                                    <p class="mt-1 text-xs text-[#8F6172]">
                                         @foreach($item->customization_payload as $key => $value)
                                             @continue(in_array($key, ['preview_image', 'preview_svg'], true))
                                             <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
                                         @endforeach
                                     </p>
                                 @endif
-                                <p class="text-pink-600 font-bold">&#8369;{{ number_format($item->unit_price, 2) }}</p>
+                                <p class="text-[#C47A90] font-bold">&#8369;{{ number_format($item->unit_price, 2) }}</p>
                             </div>
                             <div class="flex items-center space-x-2">
                                 <form method="POST" action="{{ route('cart.decrement', $item) }}" class="inline">
                                     @csrf
-                                    <button type="submit" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">-</button>
+                                    <button type="submit" class="bg-[#FBEAF1] hover:bg-[#E9C7D4] px-2 py-1 rounded">-</button>
                                 </form>
                                 <span class="text-lg font-semibold">{{ $item->quantity }}</span>
                                 <form method="POST" action="{{ route('cart.increment', $item) }}" class="inline">
                                     @csrf
-                                    <button type="submit" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">+</button>
+                                    <button type="submit" class="bg-[#FBEAF1] hover:bg-[#E9C7D4] px-2 py-1 rounded">+</button>
                                 </form>
                             </div>
                             <form method="POST" action="{{ route('cart.remove', $item) }}" class="inline">
@@ -68,8 +68,8 @@
             </div>
 
             <!-- Order Summary -->
-            <div class="bg-white rounded-lg shadow-md p-6 h-fit">
-                <h2 class="text-xl font-bold mb-4">Order Summary</h2>
+            <div class="bg-[#FFFFFF] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#ECD8E0] p-6 h-fit">
+                <h2 class="text-xl font-bold text-[#4D2E38] mb-4">Order Summary</h2>
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
@@ -84,15 +84,15 @@
                         <span>&#8369;{{ number_format($tax, 2) }}</span>
                     </div>
                 </div>
-                <hr class="my-4">
+                <hr class="my-4 border-[#ECD8E0]">
                 <div class="flex justify-between text-lg font-bold mb-6">
                     <span>Total</span>
                     <span>&#8369;{{ number_format($total, 2) }}</span>
                 </div>
-                <a href="/checkout" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
+                <a href="/checkout" class="w-full bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
                     Proceed to Checkout
                 </a>
-                <a href="/#shop" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
+                <a href="/#shop" class="w-full bg-[#FBEAF1] hover:bg-[#E9C7D4] text-[#4D2E38] font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
                     Continue Shopping
                 </a>
             </div>
@@ -100,12 +100,12 @@
     @else
         <!-- Empty Cart -->
         <div class="text-center py-12">
-            <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-24 h-24 text-[#8F6172] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"></path>
             </svg>
-            <h2 class="text-2xl font-bold text-gray-600 mb-4">Your cart is empty</h2>
-            <p class="text-gray-500 mb-8">Looks like you haven't added any cakes to your cart yet.</p>
-            <a href="/#shop" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 px-6 rounded-lg inline-block transition duration-300">
+            <h2 class="text-2xl font-bold text-[#4D2E38] mb-4">Your cart is empty</h2>
+            <p class="text-[#8F6172] mb-8">Looks like you haven't added any cakes to your cart yet.</p>
+            <a href="/#shop" class="bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg inline-block transition duration-300">
                 Start Shopping
             </a>
         </div>

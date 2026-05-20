@@ -122,7 +122,7 @@
                         <p id="gallery-modal-price" class="gallery-modal-price"></p>
                         <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
                         <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
-                        
+
                         <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
                             @csrf
                             <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
@@ -165,6 +165,7 @@
         </div>
 
         <div class="shelf-layout">
+            <div id="menu-card-backdrop" class="menu-card-backdrop"></div>
             <aside id="menu-card" class="menu-card" style="display:none;">
                 <button id="menu-card-close" class="menu-card-close" aria-label="Close">&times;</button>
                 <div id="menu-card-img" class="menu-card-img"></div>
@@ -190,7 +191,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
                             Add to Cart
                         </button>
-                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details →</a>
+                        <a id="menu-card-view-link" href="#" class="menu-card-view-link"></a>
                     </form>
                 </div>
             </aside>
@@ -967,7 +968,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-    
+
         /* Pink Theme Overrides */
         :root {
             --bb-pink-50: #fff5f8;
@@ -1287,11 +1288,15 @@
                     item.classList.add('shelf-item-active');
 
                     card.style.display = '';
+                    const backdrop = document.getElementById('menu-card-backdrop');
+                    if(backdrop) backdrop.style.display = 'block';
                 }
 
                 function closeMenuCard() {
                     card.style.display = 'none';
                     items.forEach(i => i.classList.remove('shelf-item-active'));
+                    const backdrop = document.getElementById('menu-card-backdrop');
+                    if(backdrop) backdrop.style.display = 'none';
                 }
 
                 // Click on cake → open card
@@ -1301,6 +1306,8 @@
 
                 // Close button
                 if (cardClose) cardClose.addEventListener('click', closeMenuCard);
+                const backdrop = document.getElementById('menu-card-backdrop');
+                if (backdrop) backdrop.addEventListener('click', closeMenuCard);
 
                 // Qty +/-
                 document.getElementById('menu-card-qty-minus')?.addEventListener('click', () => {

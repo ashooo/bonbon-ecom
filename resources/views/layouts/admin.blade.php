@@ -153,11 +153,11 @@
 </aside>
 
         <div class="flex flex-col">
-            <header class="relative border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
+            <header class="relative border-b border-[#ECD8E0] bg-[#FBF2F6] px-6 py-4 shadow-sm">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex-1 flex flex-col gap-4 sm:flex-row sm:items-center">
                         <div class="flex items-center gap-3">
-                            <div class="rounded-2xl bg-slate-50 px-4 py-2 text-sm text-slate-600 shadow-sm">
+                            <div class="rounded-2xl bg-[#FFFFFF] px-4 py-2 text-sm text-[#8A6A76] border border-[#ECD8E0] shadow-sm">
                                 <span id="admin-clock">--:-- --</span>
                             </div>
                         </div>
@@ -174,15 +174,15 @@
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
 
-                        <div id="adminProfileMenu" class="hidden absolute right-6 top-20 z-30 w-56 rounded-2xl border border-slate-200 bg-white shadow-soft">
-                            <div class="p-4 border-b border-slate-200">
+                        <div id="adminProfileMenu" class="hidden absolute right-6 top-20 z-30 w-56 rounded-2xl border border-[#ECD8E0] bg-[#FBF2F6] shadow-soft">
+                            <div class="p-4 border-b border-[#ECD8E0]">
                                 <p class="font-semibold">Admin Name</p>
-                                <p class="text-sm text-slate-500">admin@bonbon.com</p>
+                                <p class="text-sm text-[#8F6172]">admin@bonbon.com</p>
                             </div>
                             <div class="flex flex-col p-3 gap-2">
                                 <form method="POST" action="{{ route('admin.logout') }}">
                                     @csrf
-                                    <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100">
+                                    <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm text-[#4D2E38] hover:bg-[#FBEAF1]">
                                         Logout
                                     </button>
                                 </form>
@@ -192,7 +192,7 @@
                 </div>
             </header>
 
-            <main class="flex-1 overflow-y-auto bg-slate-100 p-6">
+            <main class="flex-1 overflow-y-auto bg-[#FBEAF1] p-6">
                 @yield('content')
             </main>
         </div>

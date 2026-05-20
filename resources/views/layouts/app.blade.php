@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=great-vibes:400|instrument-sans:400,500,600" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/bonbon-loader.css">
+    <script src="/js/bonbon-loader.js" defer></script>
     <style>
         :root {
             --pink-light: #F5E6E8;
@@ -92,6 +94,7 @@
     @endif
 </head>
 <body class="bg-[#F5F5F5] text-[#2E2E2E]">
+    @unless (View::hasSection('hideGlobalLoader'))
     <!-- Page Loading Overlay -->
     <div id="page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F5F5F5;transition:opacity 0.5s ease, visibility 0.5s ease;">
         <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
@@ -145,6 +148,8 @@
             }
         });
     </script>
+    @endunless
+    @unless (View::hasSection('hideChatbot'))
     <div id="bonbon-chat-backdrop" class="pointer-events-none fixed inset-0 z-30 bg-[#2E2E2E]/25 opacity-0 transition-opacity lg:hidden"></div>
 
     <aside id="bonbon-chat-panel" class="fixed inset-y-0 right-0 z-40 flex h-screen max-w-full flex-col overflow-hidden border-l border-[#EED9DE] bg-[linear-gradient(180deg,_#fffefe,_#fff7f8)] shadow-[-18px_0_45px_rgba(90,58,58,0.14)]">
@@ -254,6 +259,7 @@
             </form>
         </div>
     </aside>
+    @endunless
 
     <div id="app-shell">
         @include('components.navbar')
@@ -274,9 +280,12 @@
             @yield('content')
         </main>
 
-        @include('components.footer')
+        @unless (View::hasSection('hideFooter'))
+            @include('components.footer')
+        @endunless
     </div>
 
+    @unless (View::hasSection('hideChatbot'))
     <button
         id="bonbon-chat-open"
         type="button"
@@ -292,9 +301,11 @@
             <span class="block text-sm font-semibold">Open Bonbon Chat</span>
         </span>
     </button>
+    @endunless
 
     @stack('scripts')
 
+    @unless (View::hasSection('hideChatbot'))
     <script>
         (() => {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -1024,5 +1035,6 @@
             @endif
         })();
     </script>
+    @endunless
 </body>
 </html>

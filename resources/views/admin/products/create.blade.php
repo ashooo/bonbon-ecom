@@ -3,10 +3,10 @@
 @section('title', 'Add Product')
 
 @section('content')
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="rounded-3xl border border-[#ECD8E0] bg-white p-6 shadow-sm">
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Add New Product</h1>
-        <a href="{{ route('admin.dashboard', ['section' => 'products']) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+        <h1 class="text-2xl font-semibold text-[#4B2E38]">Add New Product</h1>
+        <a href="{{ route('admin.dashboard', ['section' => 'products']) }}" class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] hover:bg-[#FAF1F5] transition">
             <i class="fas fa-arrow-left mr-2"></i>Back to Products
         </a>
     </div>
@@ -14,12 +14,14 @@
     <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
+        <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <h2 class="mb-4 text-base font-semibold text-slate-800">General information</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Name -->
             <div>
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                <label for="name" class="mb-2 block text-sm font-medium text-[#6B4A57]">Product Name *</label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('name') border-red-500 @enderror"
+                       class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('name') border-red-500 @enderror"
                        required>
                 @error('name')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -28,9 +30,9 @@
 
             <!-- Category -->
             <div>
-                <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                <label for="category_id" class="mb-2 block text-sm font-medium text-[#6B4A57]">Category *</label>
                 <select id="category_id" name="category_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('category_id') border-red-500 @enderror"
+                        class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('category_id') border-red-500 @enderror"
                         required>
                     <option value="">Select Category</option>
                     @foreach($categories as $category)
@@ -46,9 +48,9 @@
 
             <!-- Price -->
             <div>
-                <label for="price" class="block text-sm font-medium text-gray-700 mb-2">Price *</label>
+                <label for="price" class="mb-2 block text-sm font-medium text-[#6B4A57]">Price *</label>
                 <input type="number" id="price" name="price" value="{{ old('price') }}" step="0.01" min="0"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('price') border-red-500 @enderror"
+                       class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('price') border-red-500 @enderror"
                        required>
                 @error('price')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -57,10 +59,10 @@
 
             <!-- Discount Price -->
             <div>
-                <label for="discount_price" class="block text-sm font-medium text-gray-700 mb-2">Discount Price</label>
+                <label for="discount_price" class="mb-2 block text-sm font-medium text-[#6B4A57]">Discount Price</label>
                 <input type="number" id="discount_price" name="discount_price" value="{{ old('discount_price') }}" step="0.01" min="0"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('discount_price') border-red-500 @enderror">
-                <p class="mt-1 text-sm text-gray-500">Leave empty if no discount</p>
+                       class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('discount_price') border-red-500 @enderror">
+                <p class="mt-1 text-sm text-[#8A6A76]">Leave empty if no discount</p>
                 @error('discount_price')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -68,9 +70,9 @@
 
             <!-- Stock Quantity -->
             <div>
-                <label for="stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
+                <label for="stock_quantity" class="mb-2 block text-sm font-medium text-[#6B4A57]">Stock Quantity *</label>
                 <input type="number" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 0) }}" min="0"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('stock_quantity') border-red-500 @enderror"
+                       class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('stock_quantity') border-red-500 @enderror"
                        required>
                 @error('stock_quantity')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -79,37 +81,43 @@
 
             <!-- Pre-order Days -->
             <div>
-                <label for="pre_order_days" class="block text-sm font-medium text-gray-700 mb-2">Pre-order Days</label>
+                <label for="pre_order_days" class="mb-2 block text-sm font-medium text-[#6B4A57]">Pre-order Days</label>
                 <input type="number" id="pre_order_days" name="pre_order_days" value="{{ old('pre_order_days') }}" min="0"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('pre_order_days') border-red-500 @enderror">
-                <p class="mt-1 text-sm text-gray-500">Days needed for production (0 for immediate availability)</p>
+                       class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('pre_order_days') border-red-500 @enderror">
+                <p class="mt-1 text-sm text-[#8A6A76]">Days needed for production (0 for immediate availability)</p>
                 @error('pre_order_days')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
         </div>
+        </section>
 
         <!-- Description -->
+        <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <h2 class="mb-3 text-base font-semibold text-slate-800">Description</h2>
         <div>
-            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+            <label for="description" class="mb-2 block text-sm font-medium text-[#6B4A57]">
                 Description <span class="text-red-500">*</span>
             </label>
 
             <textarea id="description" name="description" rows="4"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
+                    class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('description') border-red-500 @enderror">{{ old('description') }}</textarea>
 
             @error('description')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
+        </section>
 
         <!-- Main Image -->
+        <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <h2 class="mb-3 text-base font-semibold text-slate-800">Product media</h2>
         <div>
-            <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">Main Product Image</label>
+            <label for="main_image" class="mb-2 block text-sm font-medium text-[#6B4A57]">Main Product Image</label>
             <input type="file" id="main_image" name="main_image" accept="image/*"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_image') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-gray-500">This will be the primary image. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+                   class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('main_image') border-red-500 @enderror">
+            <p class="mt-1 text-sm text-[#8A6A76]">This will be the primary image. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
             @error('main_image')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -117,24 +125,26 @@
 
         <!-- Additional Images -->
         <div>
-            <label for="images" class="block text-sm font-medium text-gray-700 mb-2">Additional Images</label>
+            <label for="images" class="mb-2 block text-sm font-medium text-[#6B4A57]">Additional Images</label>
             <input type="file" id="images" name="images[]" accept="image/*" multiple
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('images.*') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-gray-500">Select multiple images. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB each</p>
+                   class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('images.*') border-red-500 @enderror">
+            <p class="mt-1 text-sm text-[#8A6A76]">Select multiple images. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB each</p>
             @error('images.*')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
+        </section>
 
         <!-- Variants -->
+        <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
         <div>
             <div class="flex items-center justify-between mb-2">
                 <label class="block text-sm font-medium text-gray-700">Variants *</label>
-                <button type="button" id="add-variant-btn" class="rounded-lg bg-slate-700 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800">
+                <button type="button" id="add-variant-btn" class="rounded-xl bg-[#C47A90] px-3 py-2 text-xs font-semibold text-white hover:bg-[#B66880]">
                     Add Variant
                 </button>
             </div>
-            <p class="mb-3 text-xs text-gray-500">Define at least one variant. One variant must be default.</p>
+            <p class="mb-3 text-xs text-[#8A6A76]">Define at least one variant. One variant must be default.</p>
 
             @error('variants')
                 <p class="mb-3 text-sm text-red-600">{{ $message }}</p>
@@ -142,29 +152,29 @@
 
             <div id="variants-container" class="space-y-3"></div>
             <template id="variant-template">
-                <div class="variant-row rounded-lg border border-gray-200 p-3">
+                <div class="variant-row rounded-xl border border-[#ECD8E0] bg-[#FFFCFD] p-3">
                     <input type="hidden" data-name="id" value="">
                     <input type="hidden" data-name="remove" value="0">
                     <input type="hidden" data-name="is_default" value="0">
                     <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                            <label class="mb-1 block text-xs font-medium text-[#8A6A76]">Name</label>
                             <input type="text" data-name="name" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">SKU</label>
+                            <label class="mb-1 block text-xs font-medium text-[#8A6A76]">SKU</label>
                             <input type="text" data-name="sku" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" required>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Price</label>
+                            <label class="mb-1 block text-xs font-medium text-[#8A6A76]">Variant Price</label>
                             <input type="number" step="0.01" data-name="price_adjustment" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                            <label class="mb-1 block text-xs font-medium text-[#8A6A76]">Stock</label>
                             <input type="number" min="0" data-name="stock_quantity" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">Variant Image</label>
+                            <label class="mb-1 block text-xs font-medium text-[#8A6A76]">Variant Image</label>
                             <input type="file" data-name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
                         </div>
                         <div class="flex items-center gap-3">
@@ -180,18 +190,21 @@
                         </div>
                     </div>
                     <div class="mt-2">
-                        <button type="button" class="remove-variant text-xs text-red-600 hover:text-red-700">Remove</button>
+                        <button type="button" class="remove-variant text-xs text-rose-600 hover:text-rose-700">Remove</button>
                     </div>
                 </div>
             </template>
         </div>
+        </section>
 
         <!-- Status and Flags -->
+        <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <h2 class="mb-3 text-base font-semibold text-slate-800">Publishing</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+                <label for="status" class="mb-2 block text-sm font-medium text-[#6B4A57]">Status *</label>
                 <select id="status" name="status"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('status') border-red-500 @enderror"
+                        class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('status') border-red-500 @enderror"
                         required>
                     <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>Active (visible to customers)</option>
                     <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive (hidden from customers)</option>
@@ -204,27 +217,28 @@
 
             <div class="flex items-center">
                 <input type="checkbox" id="is_featured" name="is_featured" value="1" {{ old('is_featured') ? 'checked' : '' }}
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                <label for="is_featured" class="ml-2 block text-sm text-gray-900">
+                       class="h-4 w-4 rounded border-[#D8C1CB] text-[#C47A90] focus:ring-[#F5DDE6]">
+                <label for="is_featured" class="ml-2 block text-sm text-[#4E303A]">
                     Featured Product
                 </label>
             </div>
 
             <div class="flex items-center">
                 <input type="checkbox" id="is_best_seller" name="is_best_seller" value="1" {{ old('is_best_seller') ? 'checked' : '' }}
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                <label for="is_best_seller" class="ml-2 block text-sm text-gray-900">
+                       class="h-4 w-4 rounded border-[#D8C1CB] text-[#C47A90] focus:ring-[#F5DDE6]">
+                <label for="is_best_seller" class="ml-2 block text-sm text-[#4E303A]">
                     Best Seller
                 </label>
             </div>
         </div>
+        </section>
 
         <!-- Submit Buttons -->
         <div class="flex justify-end space-x-4">
-            <a href="{{ route('admin.dashboard', ['section' => 'products']) }}" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg">
+            <a href="{{ route('admin.dashboard', ['section' => 'products']) }}" class="rounded-xl border border-[#D6B7C3] bg-white px-6 py-2 text-[#6B4957] hover:bg-[#FAF1F5]">
                 Cancel
             </a>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+            <button type="submit" class="rounded-xl bg-[#C47A90] px-6 py-2 text-white hover:bg-[#B66880]">
                 <i class="fas fa-save mr-2"></i>Create Product
             </button>
         </div>
@@ -311,3 +325,4 @@
     })();
 </script>
 @endsection
+

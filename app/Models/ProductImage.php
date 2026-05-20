@@ -31,7 +31,12 @@ class ProductImage extends Model
             return $value;
         }
 
-        return asset('storage/' . ltrim($value, '/'));
+        $path = ltrim($value, '/');
+        if (str_starts_with($path, 'images/')) {
+            return asset($path);
+        }
+
+        return asset('storage/' . $path);
     }
 
     // Backward-compatible aliases used by current admin/product pages.

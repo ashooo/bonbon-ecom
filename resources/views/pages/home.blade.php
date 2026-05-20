@@ -1,10 +1,13 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('hideGlobalLoader', true)
+@section('hideChatbot', true)
+@section('hideFooter', true)
 
 @php
     $cakesCategory = $featuredCategories->first(fn ($category) => str_contains(strtolower($category->name), 'cake'));
     $cakesUrl = url('/#shop');
+    $shelfProducts = $shelfProducts ?? collect();
 @endphp
 
 @section('content')
@@ -28,7 +31,7 @@
             {{-- Vignette --}}
             <div class="cake-vignette" aria-hidden="true"></div>
 
-            {{-- Story Messages —  positioned bottom-left for desktop --}}
+            {{-- Story Messages â€”  positioned bottom-left for desktop --}}
             <div class="story-messages">
                 <div id="story-msg-1" class="story-msg" style="opacity: 0;">
                     <span class="story-label">The Crown</span>
@@ -46,12 +49,12 @@
                 </div>
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
-                    <h2 class="story-heading-final">Handcrafted<br>Cake for Every Occasions</h2>
+                    <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
                     <p class="story-sub">Three layers. One unforgettable moment.</p>
-                    <button id="story-cta-btn" type="button" class="story-cta" style="opacity: 0;">
+                    <a id="story-cta-btn" href="#cake-shelf" class="story-cta" style="opacity: 0;">
                         Explore Our Cakes
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -71,68 +74,12 @@
                 </a>
             </div> -->
 
-            {{-- Gallery Back Button --}}
-            <button id="gallery-back-btn" class="gallery-back-btn" style="display: none; opacity: 0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                Go Back
-            </button>
-
-            {{-- Gallery Filter Bar --}}
-            <div id="gallery-filter-bar" class="gallery-filter-bar" style="display: none; opacity: 0;">
-                <div class="filter-search-wrap">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text" id="gallery-search" placeholder="Search cakes...">
-                </div>
-                <select id="gallery-category" class="filter-select">
-                    <option value="">All Categories</option>
-                    @foreach($featuredCategories as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-                <select id="gallery-sort" class="filter-select">
-                    <option value="name_asc">Name: A-Z</option>
-                    <option value="name_desc">Name: Z-A</option>
-                    <option value="price_low">Price: Low to High</option>
-                    <option value="price_high">Price: High to Low</option>
-                </select>
-            </div>
-
-            {{-- Mobile Gallery Scroll Area --}}
-            <div id="gallery-scroll-overlay">
-                <div class="gallery-scroll-overlay-content" id="gallery-scroll-overlay-content"></div>
-            </div>
-
             {{-- Scroll indicator --}}
             <div class="scroll-indicator" id="scroll-indicator">
                 <div class="scroll-mouse">
                     <div class="scroll-wheel"></div>
                 </div>
                 <span>Scroll to discover</span>
-            </div>
-
-            {{-- Product Details Modal --}}
-            <div id="gallery-product-modal" class="gallery-product-modal" style="display: none; opacity: 0;">
-                <div class="gallery-modal-backdrop" id="gallery-modal-backdrop"></div>
-                <div class="gallery-modal-content">
-                    <button id="gallery-modal-close" class="gallery-modal-close">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-                    </button>
-                    <div class="gallery-modal-body">
-                        <h3 id="gallery-modal-title" class="gallery-modal-title"></h3>
-                        <p id="gallery-modal-price" class="gallery-modal-price"></p>
-                        <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
-                        <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
-
-                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
-                            @csrf
-                            <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="gallery-modal-add-btn">
-                                Add to Cart
-                            </button>
-                        </form>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -158,14 +105,13 @@
             </div>
             <select id="shelf-sort" class="shelf-sort">
                 <option value="default">Sort by</option>
-                <option value="price-low">Price: Low → High</option>
-                <option value="price-high">Price: High → Low</option>
-                <option value="name-az">Name: A → Z</option>
+                <option value="price-low">Price: Low â†’ High</option>
+                <option value="price-high">Price: High â†’ Low</option>
+                <option value="name-az">Name: A â†’ Z</option>
             </select>
         </div>
 
         <div class="shelf-layout">
-            <div id="menu-card-backdrop" class="menu-card-backdrop"></div>
             <aside id="menu-card" class="menu-card" style="display:none;">
                 <button id="menu-card-close" class="menu-card-close" aria-label="Close">&times;</button>
                 <div id="menu-card-img" class="menu-card-img"></div>
@@ -183,7 +129,7 @@
                         <input type="hidden" name="product_id" id="menu-card-product-id" />
                         <input type="hidden" name="variant_id" id="menu-card-variant-id" />
                         <div class="menu-card-qty">
-                            <button type="button" id="menu-card-qty-minus" class="qty-btn">−</button>
+                            <button type="button" id="menu-card-qty-minus" class="qty-btn">âˆ’</button>
                             <input type="number" name="quantity" id="menu-card-qty" value="1" min="1" max="99" />
                             <button type="button" id="menu-card-qty-plus" class="qty-btn">+</button>
                         </div>
@@ -191,7 +137,7 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
                             Add to Cart
                         </button>
-                        <a id="menu-card-view-link" href="#" class="menu-card-view-link"></a>
+                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details â†’</a>
                     </form>
                 </div>
             </aside>
@@ -222,7 +168,7 @@
                                 <div class="price-tag">
                                     <span class="tag-flavor">{{ Str::limit($product->name, 18) }}</span>
                                     <span class="tag-layers">{{ $product->category->name ?? '' }}</span>
-                                    <span class="tag-price">₱{{ number_format($product->effective_price, 0) }}</span>
+                                    <span class="tag-price">â‚±{{ number_format($product->effective_price, 0) }}</span>
                                 </div>
                             </div>
                             @endforeach
@@ -262,15 +208,15 @@
 
                     {{-- Order Summary --}}
                     <div class="cart-summary">
-                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₱0</span></div>
-                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">₱5.99</span></div>
-                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">₱0</span></div>
+                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">â‚±0</span></div>
+                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">â‚±5.99</span></div>
+                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">â‚±0</span></div>
                         <div class="cart-summary-divider"></div>
-                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">₱0</span></div>
+                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">â‚±0</span></div>
                     </div>
 
                     <a href="/checkout" class="cart-checkout-btn">Proceed to Checkout</a>
-                    <a href="/cart" class="cart-view-link">View Full Cart →</a>
+                    <a href="/cart" class="cart-view-link">View Full Cart â†’</a>
                 </div>
             </aside>
         </div>
@@ -281,271 +227,27 @@
     </section>
 
     <style>
-        /* ═══════════════════════════════════════════════════
-           CAKE SCROLLYTELLING — PROFESSIONAL DARK THEME
-           ═══════════════════════════════════════════════════ */
+        html,
+        body {
+            overflow-x: clip;
+        }
+
+        #app-shell main.container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+           CAKE SCROLLYTELLING â€” PROFESSIONAL DARK THEME
+           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
-        .gallery-back-btn {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding: 12px 24px;
-            border-radius: 30px;
-            cursor: pointer;
-            z-index: 100;
-            transition: all 0.3s ease;
-        }
-        .gallery-back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translateX(-50%) scale(1.05);
-        }
-
-        .gallery-filter-bar {
-            position: absolute;
-            top: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(20, 10, 5, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: 30px;
-            z-index: 999;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 600px;
-        }
-
-        .filter-search-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-grow: 1;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .filter-search-wrap input {
-            background: transparent;
-            border: none;
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            width: 100%;
-            outline: none;
-        }
-
-        .filter-search-wrap input::placeholder {
-            color: rgba(255,255,255,0.4);
-        }
-
-        .filter-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            padding: 6px 12px;
-            border-radius: 20px;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-        }
-
-        .filter-select option {
-            background: #1a0e0a;
-            color: #f5ebe0;
-        }
-
-        @media (max-width: 768px) {
-            .gallery-filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 12px;
-                border-radius: 12px;
-            }
-        }
-
-        .gallery-product-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .gallery-modal-backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 5, 2, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            cursor: pointer;
-        }
-
-        .gallery-modal-content {
-            position: relative;
-            background: rgba(255, 255, 255, 0.95);
-            width: 90%;
-            max-width: 450px;
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center;
-            z-index: 2001;
-        }
-
-        .gallery-modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            color: #8C6770;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .gallery-modal-close:hover {
-            background: rgba(200, 138, 146, 0.1);
-            color: #5A3A3A;
-            transform: scale(1.1);
-        }
-
-        .gallery-modal-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #5A3A3A;
-            margin-bottom: 8px;
-        }
-
-        .gallery-modal-price {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #C88A92;
-            margin-bottom: 12px;
-        }
-
-        .gallery-modal-stock {
-            display: inline-block;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: #F8E2E7;
-            color: #8C6770;
-            margin-bottom: 20px;
-        }
-
-        .gallery-modal-desc {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #6F4C54;
-            margin-bottom: 24px;
-        }
-
-        .gallery-modal-add-btn {
-            width: 100%;
-            background: #5A3A3A;
-            color: #fff;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 30px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(90, 58, 58, 0.2);
-        }
-
-        .gallery-modal-add-btn:hover {
-            background: #7A5252;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(90, 58, 58, 0.3);
-        }
-
-        #gallery-scroll-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            display: none;
-            z-index: 50; /* below the back button but above canvas */
-        }
-        .gallery-scroll-overlay-content {
-            width: 100%;
-            /* Height will be set dynamically via JS */
-        }
-
-        .gallery-label {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(20, 10, 5, 0.65);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 8px 12px;
-            pointer-events: none;
-            z-index: 40;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .gallery-label-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            color: #f5ebe0;
-            margin-bottom: 4px;
-        }
-        .gallery-label-price {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #d4a373;
-        }
-
         .cake-scroll-section {
             position: relative;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
+            width: 100%;
+            margin-left: 0;
             height: 500vh;
             background: linear-gradient(
                 180deg,
@@ -607,7 +309,7 @@
             );
         }
 
-        /* ─── Story Messages ─── */
+        /* â”€â”€â”€ Story Messages â”€â”€â”€ */
         .story-messages {
             position: absolute;
             z-index: 10;
@@ -648,7 +350,7 @@
             margin: 0;
         }
 
-        /* Final message — centered */
+        /* Final message â€” centered */
         .story-msg-final {
             left: 50% !important;
             bottom: auto !important;
@@ -713,7 +415,7 @@
             transform: translateX(3px);
         }
 
-        /* ─── Side Overlays (Signboard & Cupcake) ─── */
+        /* â”€â”€â”€ Side Overlays (Signboard & Cupcake) â”€â”€â”€ */
         .side-overlay {
             position: absolute;
             z-index: 12;
@@ -786,7 +488,7 @@
             transform: rotate(15deg) scale(1.1);
         }
 
-        /* ─── Scroll Indicator ─── */
+        /* â”€â”€â”€ Scroll Indicator â”€â”€â”€ */
         .scroll-indicator {
             position: absolute;
             bottom: 2rem;
@@ -838,7 +540,7 @@
             50% { opacity: 1; }
         }
 
-        /* ─── Preloader ─── */
+        /* â”€â”€â”€ Preloader â”€â”€â”€ */
         .cake-preloader {
             position: fixed;
             inset: 0;
@@ -885,7 +587,7 @@
             50% { opacity: 1; }
         }
 
-        /* ─── Responsive ─── */
+        /* â”€â”€â”€ Responsive â”€â”€â”€ */
         @media (max-width: 768px) {
             .story-msg {
                 left: 50% !important;
@@ -960,7 +662,7 @@
             }
         }
 
-        /* ─── Sticky Navbar Override ─── */
+        /* â”€â”€â”€ Sticky Navbar Override â”€â”€â”€ */
         header {
             position: sticky !important;
             top: 0;
@@ -968,73 +670,80 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-
+    
         /* Pink Theme Overrides */
         :root {
-            --bb-pink-50: #fff5f8;
-            --bb-pink-100: #ffe7ef;
-            --bb-pink-200: #ffcfe0;
-            --bb-pink-300: #ffb0cd;
-            --bb-pink-400: #ff8db7;
-            --bb-pink-500: #f86aa2;
-            --bb-pink-600: #e04f88;
-            --bb-pink-700: #ba3a6d;
-            --bb-pink-800: #8f2a53;
-            --bb-plum-900: #2b0f1e;
-            --bb-rose-900: #1c0a14;
-            --bb-text: #fff4f8;
-            --bb-soft-text: rgba(255, 244, 248, 0.72);
-            --bb-accent: #ff9cc4;
+            --bb-pink-50: #fff9fc;
+            --bb-pink-100: #ffeef6;
+            --bb-pink-200: #ffd7e9;
+            --bb-pink-300: #ffbedd;
+            --bb-pink-400: #f8a2cb;
+            --bb-pink-500: #ed86b8;
+            --bb-pink-600: #db699f;
+            --bb-pink-700: #c65187;
+            --bb-pink-800: #a83d70;
+            --bb-plum-900: #5a2f46;
+            --bb-rose-900: #6c3751;
+            --bb-text: #4d2b3d;
+            --bb-soft-text: rgba(77, 43, 61, 0.72);
+            --bb-accent: #f49ac4;
         }
 
         .cake-scroll-section {
             background: linear-gradient(
                 180deg,
-                #ffd7e8 0%,
-                #ffb7d4 14%,
-                #f985b7 36%,
-                #9a3a6f 68%,
-                #2b0f1e 100%
+                #fff8fc 0%,
+                #ffe9f4 24%,
+                #ffd3e8 54%,
+                #ffc0de 78%,
+                #f6afd2 100%
             ) !important;
         }
 
         .cake-grain {
-            opacity: 0.06 !important;
-            background-image: radial-gradient(circle, rgba(255, 181, 210, 0.45) 1px, transparent 1px) !important;
+            opacity: 0.04 !important;
+            background-image: radial-gradient(circle, rgba(243, 160, 198, 0.28) 1px, transparent 1px) !important;
         }
 
         .cake-vignette {
             background: radial-gradient(
                 ellipse 72% 62% at 50% 50%,
-                transparent 30%,
-                rgba(28, 10, 20, 0.58) 100%
+                rgba(255, 255, 255, 0.0) 36%,
+                rgba(232, 167, 200, 0.34) 100%
             ) !important;
         }
 
+        .cake-canvas-container canvas {
+            filter: saturate(1.03) brightness(1.08);
+        }
+
         .story-label {
-            color: var(--bb-pink-100) !important;
-            background: rgba(255, 186, 215, 0.14) !important;
-            border-color: rgba(255, 186, 215, 0.35) !important;
+            color: #7b3757 !important;
+            background: rgba(255, 236, 246, 0.88) !important;
+            border-color: rgba(219, 137, 179, 0.36) !important;
         }
 
         .story-heading,
         .story-heading-final {
-            color: var(--bb-text) !important;
-            text-shadow: 0 8px 34px rgba(43, 15, 30, 0.45) !important;
+            color: #fff9fd !important;
+            text-shadow:
+                0 2px 8px rgba(74, 31, 53, 0.65),
+                0 8px 20px rgba(74, 31, 53, 0.45) !important;
         }
 
         .story-sub {
-            color: var(--bb-soft-text) !important;
+            color: rgba(255, 247, 252, 0.94) !important;
+            text-shadow: 0 2px 8px rgba(74, 31, 53, 0.35) !important;
         }
 
         .story-cta {
-            color: #4b1732 !important;
-            background: linear-gradient(135deg, #ffd5e7 0%, #ff9ec6 45%, #f66ca3 100%) !important;
-            box-shadow: 0 10px 34px rgba(248, 106, 162, 0.34), 0 4px 14px rgba(43, 15, 30, 0.32) !important;
+            color: #5b2440 !important;
+            background: linear-gradient(135deg, #fff7fb 0%, #ffd8ea 52%, #f6a7cb 100%) !important;
+            box-shadow: 0 10px 30px rgba(237, 134, 184, 0.34), 0 4px 14px rgba(198, 93, 145, 0.25) !important;
         }
 
         .story-cta:hover {
-            box-shadow: 0 14px 40px rgba(248, 106, 162, 0.44), 0 4px 16px rgba(43, 15, 30, 0.35) !important;
+            box-shadow: 0 14px 40px rgba(237, 134, 184, 0.44), 0 4px 16px rgba(198, 93, 145, 0.35) !important;
         }
 
         .side-overlay-btn-sign {
@@ -1060,11 +769,11 @@
         }
 
         .scroll-indicator span {
-            color: rgba(255, 231, 239, 0.62) !important;
+            color: rgba(102, 53, 75, 0.72) !important;
         }
 
         .scroll-mouse {
-            border-color: rgba(255, 221, 235, 0.45) !important;
+            border-color: rgba(180, 97, 138, 0.45) !important;
         }
 
         .scroll-wheel {
@@ -1104,17 +813,31 @@
         }
 
         header {
-            background: rgba(43, 15, 30, 0.36) !important;
+            background: rgba(255, 242, 249, 0.86) !important;
         }
     </style>
-    <link rel="stylesheet" href="/css/shelf.css">
-@endsection
+    @if (file_exists(public_path('css/shelf.css')))
+        <link rel="stylesheet" href="/css/shelf.css">
+    @endif
 
-@push('scripts')
-    @vite('resources/js/cake-entry.js')
-    <script>
-        window.__cakeProducts = @json($shelfProducts->values());
-    </script>
+    @push('scripts')
+        @vite('resources/js/cake-entry.js')
+
+        <script>
+            // Fallback: never let preloader block the page if a script fails.
+            (() => {
+                const hidePreloader = () => {
+                    const preloader = document.getElementById('cake-preloader');
+                    if (!preloader) return;
+                    preloader.style.opacity = '0';
+                    preloader.style.visibility = 'hidden';
+                    setTimeout(() => preloader.remove(), 500);
+                };
+
+                window.addEventListener('load', hidePreloader, { once: true });
+                setTimeout(hidePreloader, 2200);
+            })();
+        </script>
 
         <script>
             // Hide scroll indicator after first scroll
@@ -1134,7 +857,7 @@
         </script>
 
         <script>
-            // ═══ Shelf: Reveal, Search, Filter, Sort + Menu Card ═══
+            // â•â•â• Shelf: Reveal, Search, Filter, Sort + Menu Card â•â•â•
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
@@ -1145,6 +868,9 @@
                     shelf.style.display = '';
                     shelf.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
+
+                const ctaBtn = document.getElementById('story-cta-btn');
+                if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
 
                 document.querySelectorAll('a').forEach(a => {
                     if (a.textContent.trim() === 'Shop' && a.closest('header')) {
@@ -1213,7 +939,7 @@
                     });
                 }
 
-                // ═══ Menu Card ═══
+                // â•â•â• Menu Card â•â•â•
                 const card = document.getElementById('menu-card');
                 const cardClose = document.getElementById('menu-card-close');
                 const cardImg = document.getElementById('menu-card-img');
@@ -1252,9 +978,9 @@
 
                     // Price
                     if (salePrice && parseFloat(salePrice) > 0 && parseFloat(salePrice) < originalPrice) {
-                        cardPrice.innerHTML = `₱${Number(salePrice).toLocaleString()} <span class="original-price">₱${Number(originalPrice).toLocaleString()}</span>`;
+                        cardPrice.innerHTML = `â‚±${Number(salePrice).toLocaleString()} <span class="original-price">â‚±${Number(originalPrice).toLocaleString()}</span>`;
                     } else {
-                        cardPrice.textContent = `₱${Number(price).toLocaleString()}`;
+                        cardPrice.textContent = `â‚±${Number(price).toLocaleString()}`;
                     }
 
                     // Variants
@@ -1265,7 +991,7 @@
                             const chip = document.createElement('button');
                             chip.type = 'button';
                             chip.className = 'variant-chip' + (i === 0 ? ' active' : '') + (v.stock <= 0 ? ' out-of-stock' : '');
-                            chip.textContent = v.name + (v.price ? ` (₱${Number(v.price).toLocaleString()})` : '');
+                            chip.textContent = v.name + (v.price ? ` (â‚±${Number(v.price).toLocaleString()})` : '');
                             chip.dataset.variantId = v.id;
                             chip.addEventListener('click', () => {
                                 cardVariantsList.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('active'));
@@ -1288,26 +1014,20 @@
                     item.classList.add('shelf-item-active');
 
                     card.style.display = '';
-                    const backdrop = document.getElementById('menu-card-backdrop');
-                    if(backdrop) backdrop.style.display = 'block';
                 }
 
                 function closeMenuCard() {
                     card.style.display = 'none';
                     items.forEach(i => i.classList.remove('shelf-item-active'));
-                    const backdrop = document.getElementById('menu-card-backdrop');
-                    if(backdrop) backdrop.style.display = 'none';
                 }
 
-                // Click on cake → open card
+                // Click on cake â†’ open card
                 items.forEach(item => {
                     item.addEventListener('click', () => openMenuCard(item));
                 });
 
                 // Close button
                 if (cardClose) cardClose.addEventListener('click', closeMenuCard);
-                const backdrop = document.getElementById('menu-card-backdrop');
-                if (backdrop) backdrop.addEventListener('click', closeMenuCard);
 
                 // Qty +/-
                 document.getElementById('menu-card-qty-minus')?.addEventListener('click', () => {
@@ -1319,7 +1039,7 @@
                     if (v < 99) cardQty.value = v + 1;
                 });
 
-                // Add to cart via AJAX → show cart panel
+                // Add to cart via AJAX â†’ show cart panel
                 const cartPanel = document.getElementById('cart-panel');
                 const cartPanelToggle = document.getElementById('cart-panel-toggle');
                 const cartPanelBody = document.getElementById('cart-panel-body');
@@ -1345,7 +1065,7 @@
 
                 if (cartPanelToggle) cartPanelToggle.addEventListener('click', toggleCartPanel);
 
-                function fmt(n) { return '₱' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+                function fmt(n) { return 'â‚±' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
                 function renderCartPanel(data, autoExpand) {
                     // Hide cart completely if 0 items
@@ -1376,12 +1096,12 @@
                                 <div class="cart-list-variant">${i.variant}</div>
                             </div>
                             <div class="cart-list-qty">
-                                <button onclick="cartQtyChange(${i.id},'dec')">−</button>
+                                <button onclick="cartQtyChange(${i.id},'dec')">âˆ’</button>
                                 <span>${i.quantity}</span>
                                 <button onclick="cartQtyChange(${i.id},'inc')">+</button>
                             </div>
                             <div class="cart-list-price">${fmt(i.subtotal)}</div>
-                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">×</button>
+                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">Ã—</button>
                         </div>
                     `).join('');
 
@@ -1461,3 +1181,5 @@
             })();
         </script>
     @endpush
+@endsection
+

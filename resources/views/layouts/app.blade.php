@@ -7,9 +7,12 @@
     <title>{{ config('app.name', 'Bonbon Ecom') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=great-vibes:400|instrument-sans:400,500,600" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/css/bonbon-loader.css">
-    <script src="/js/bonbon-loader.js" defer></script>
+    @if (file_exists(public_path('css/bonbon-loader.css')))
+        <link rel="stylesheet" href="/css/bonbon-loader.css">
+    @endif
+    @if (file_exists(public_path('js/bonbon-loader.js')))
+        <script src="/js/bonbon-loader.js" defer></script>
+    @endif
     <style>
         :root {
             --pink-light: #F5E6E8;

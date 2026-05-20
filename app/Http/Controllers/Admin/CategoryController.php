@@ -13,7 +13,7 @@ class CategoryController extends Controller
     private function productManagementRedirect(string $message)
     {
         return redirect()
-            ->route('admin.dashboard', ['section' => 'products'])
+            ->route('admin.dashboard', ['section' => 'categories'])
             ->with('success', $message);
     }
 

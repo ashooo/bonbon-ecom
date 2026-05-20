@@ -80,8 +80,12 @@
                         <span>&#8369;{{ number_format($delivery, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Tax (10%)</span>
+                        <span>Tax ({{ number_format((float) ($taxRate ?? 10), 2) }}%)</span>
                         <span>&#8369;{{ number_format($tax, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Service Fee</span>
+                        <span>&#8369;{{ number_format((float) ($serviceFee ?? 0), 2) }}</span>
                     </div>
                 </div>
                 <hr class="my-4 border-[#ECD8E0]">

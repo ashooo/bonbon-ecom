@@ -113,7 +113,20 @@ class Product extends Model
     // Get the main image URL
     public function getMainImageUrlAttribute()
     {
-        return $this->main_image ? asset('storage/' . $this->main_image) : null;
+        if (! $this->main_image) {
+            return null;
+        }
+
+        if (str_starts_with($this->main_image, 'http://') || str_starts_with($this->main_image, 'https://')) {
+            return $this->main_image;
+        }
+
+        $path = ltrim($this->main_image, '/');
+        if (str_starts_with($path, 'images/')) {
+            return asset($path);
+        }
+
+        return asset('storage/' . $path);
     }
 
     // Check if product is in stock

@@ -31,12 +31,21 @@ class ProductImage extends Model
             return $value;
         }
 
-        $path = ltrim($value, '/');
-        if (str_starts_with($path, 'images/')) {
-            return asset($path);
+        $normalized = ltrim($value, '/');
+        if (str_starts_with($normalized, 'images/products_image/') && ! str_starts_with($normalized, 'images/products_image/Images/')) {
+            $normalized = 'images/products_image/Images/' . basename($normalized);
+        }
+        if (str_starts_with($normalized, 'images/')) {
+            return asset($normalized);
+        }
+        if (str_starts_with($normalized, 'storage/')) {
+            return asset($normalized);
+        }
+        if (! str_contains($normalized, '/')) {
+            return asset('images/products_image/Images/' . $normalized);
         }
 
-        return asset('storage/' . $path);
+        return asset('storage/' . $normalized);
     }
 
     // Backward-compatible aliases used by current admin/product pages.

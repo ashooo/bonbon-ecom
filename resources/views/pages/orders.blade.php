@@ -1,22 +1,69 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-5xl mx-auto">
+    <style>
+        .orders-shell {
+            border: 1px solid #E9C7D4;
+            border-radius: 22px;
+            background: linear-gradient(180deg, #FBEAF1 0%, #FFFFFF 42%, #FBF2F6 100%);
+            box-shadow: 0 18px 48px rgba(77, 46, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+            padding: 1.25rem;
+        }
+        .orders-panel {
+            border: 1px solid #ECD8E0;
+            border-radius: 1.4rem;
+            background: #FFFFFF;
+            box-shadow: 0 8px 30px rgba(77, 46, 56, 0.06);
+        }
+        .orders-input {
+            border: 1px solid #ECD8E0;
+            color: #533843;
+            background: #FFFFFF;
+        }
+        .orders-input:focus {
+            outline: none;
+            border-color: #C47A90;
+            box-shadow: 0 0 0 3px rgba(196, 122, 144, 0.15);
+        }
+        .orders-btn-primary {
+            background: linear-gradient(135deg, #C47A90, #B66880);
+            color: #FFFFFF;
+        }
+        .orders-btn-primary:hover { filter: brightness(0.97); }
+        .orders-btn-soft {
+            background: #FBEAF1;
+            color: #4D2E38;
+            border: 1px solid #E9C7D4;
+        }
+        .orders-btn-soft:hover { background: #F6DFE9; }
+        .orders-status {
+            background: #FBF2F6;
+            border: 1px solid #E9C7D4;
+            color: #8F6172;
+        }
+        .orders-status.orders-status-cancelled {
+            color: #B66880;
+            border-color: #C47A90;
+            background: #FBEAF1;
+        }
+    </style>
+
+    <div class="orders-shell max-w-5xl mx-auto">
         <div class="mb-8 flex items-center justify-between">
             <h1 class="text-3xl font-bold text-[#4D2E38]">Your Orders</h1>
             @if ($isGuestView)
-                <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">Guest View</span>
+                <span class="rounded-full border border-[#E9C7D4] bg-[#FBF2F6] px-3 py-1 text-xs font-semibold text-[#8F6172]">Guest View</span>
             @endif
         </div>
 
         @if (session('success'))
-            <div class="mb-6 rounded-[2rem] border border-green-200 bg-green-50 p-4 text-green-800">
+            <div class="mb-6 rounded-[1.4rem] border border-[#E9C7D4] bg-[#FBEAF1] p-4 text-[#8F6172]">
                 {{ session('success') }}
             </div>
         @endif
 
         @if ($errors->any())
-            <div class="mb-6 rounded-[2rem] border border-red-200 bg-red-50 p-4 text-red-800">
+            <div class="mb-6 rounded-[1.4rem] border border-[#C47A90] bg-[#FBEAF1] p-4 text-[#B66880]">
                 <ul class="list-disc pl-5">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -26,7 +73,7 @@
         @endif
 
         @if ($isGuestView)
-            <section class="mb-8 rounded-[2rem] bg-[#FFFFFF] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <section class="orders-panel mb-8 p-6">
                 <h2 class="mb-2 text-xl font-bold text-[#4D2E38]">Find an Order</h2>
                 <p class="mb-4 text-sm text-[#8A6A76]">Enter your order number and checkout email to add it to this device.</p>
 
@@ -34,20 +81,20 @@
                     @csrf
                     <div>
                         <label class="mb-2 block text-sm font-medium text-[#4D2E38]">Order Number</label>
-                        <input type="text" name="order_number" value="{{ old('order_number') }}" placeholder="ORD-XXXXXXXXXX" class="w-full rounded-md border border-[#ECD8E0] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" required>
+                        <input type="text" name="order_number" value="{{ old('order_number') }}" placeholder="ORD-XXXXXXXXXX" class="orders-input w-full rounded-md px-3 py-2" required>
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-[#4D2E38]">Email</label>
-                        <input type="email" name="customer_email" value="{{ old('customer_email') }}" placeholder="you@email.com" class="w-full rounded-md border border-[#ECD8E0] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" required>
+                        <input type="email" name="customer_email" value="{{ old('customer_email') }}" placeholder="you@email.com" class="orders-input w-full rounded-md px-3 py-2" required>
                     </div>
                     <div class="flex items-end">
-                        <button type="submit" class="w-full rounded-md bg-pink-600 px-4 py-2 font-semibold text-white transition hover:bg-pink-700">Find Order</button>
+                        <button type="submit" class="orders-btn-primary w-full rounded-md px-4 py-2 font-semibold transition">Find Order</button>
                     </div>
                 </form>
             </section>
         @endif
 
-        <section class="rounded-[2rem] bg-[#FFFFFF] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+        <section class="orders-panel p-6">
             <div class="mb-4 flex items-center justify-between">
                 <h2 class="text-xl font-bold text-[#4D2E38]">Order History</h2>
                 <span class="text-sm text-[#8F6172]">{{ $orders->count() }} order(s)</span>
@@ -58,11 +105,8 @@
                     $status = strtolower((string) $order->status);
                     $paymentMethodLabel = (string) $order->payment_method === 'paymongo' ? 'QRPH' : strtoupper((string) $order->payment_method);
                     $statusClass = match ($status) {
-                        'cancelled' => 'bg-red-100 text-red-800',
-                        'completed' => 'bg-green-100 text-green-800',
-                        'ready' => 'bg-indigo-100 text-indigo-800',
-                        'confirmed', 'preparing' => 'bg-blue-100 text-blue-800',
-                        default => 'bg-yellow-100 text-yellow-800',
+                        'cancelled' => 'orders-status orders-status-cancelled',
+                        default => 'orders-status',
                     };
 
                     $cancellationMessage = match ($status) {
@@ -74,7 +118,7 @@
                     };
                 @endphp
 
-                <div class="mb-4 rounded-[2rem] border border-[#ECD8E0] p-4 last:mb-0">
+                <div class="mb-4 rounded-[1.4rem] border border-[#ECD8E0] bg-[#FFFFFF] p-4 last:mb-0">
                     <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                         <div>
                             <h3 class="font-bold text-[#4D2E38]">{{ $order->order_number }}</h3>
@@ -86,12 +130,12 @@
 
                         <div class="space-y-2 text-left md:text-right">
                             <p class="text-sm text-[#8F6172]">Total</p>
-                            <p class="text-lg font-bold">&#8369;{{ number_format($order->total, 2) }}</p>
+                            <p class="text-lg font-bold text-[#4D2E38]">&#8369;{{ number_format($order->total, 2) }}</p>
 
-                            <a href="{{ route('orders.show', $order) }}" class="inline-block rounded-md bg-[#FBEAF1] px-3 py-2 text-sm font-semibold text-[#4D2E38] hover:bg-[#E9C7D4]">
+                            <a href="{{ route('orders.show', $order) }}" class="orders-btn-soft inline-block rounded-md px-3 py-2 text-sm font-semibold">
                                 View Details
                             </a>
-                            <a href="{{ route('orders.receipt', $order) }}" class="inline-block rounded-md bg-[#FBEAF1] px-3 py-2 text-sm font-semibold text-[#C47A90] hover:bg-[#E9C7D4]">
+                            <a href="{{ route('orders.receipt', $order) }}" class="orders-btn-soft inline-block rounded-md px-3 py-2 text-sm font-semibold text-[#C47A90]">
                                 Receipt
                             </a>
 
@@ -100,9 +144,9 @@
                                 <form method="POST" action="{{ route('orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?');" class="space-y-2">
                                     @csrf
                                     @if ($isGuestView)
-                                        <input type="email" name="customer_email" placeholder="Confirm checkout email" class="w-full rounded-md border border-[#ECD8E0] px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-pink-500 md:w-56" required>
+                                        <input type="email" name="customer_email" placeholder="Confirm checkout email" class="orders-input w-full rounded-md px-2 py-1 text-xs md:w-56" required>
                                     @endif
-                                    <button type="submit" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700 md:w-auto">Cancel Order</button>
+                                    <button type="submit" class="w-full rounded-md bg-[#B66880] px-3 py-2 text-sm font-semibold text-white hover:bg-[#A55D73] md:w-auto">Cancel Order</button>
                                 </form>
                             @elseif ($cancellationMessage)
                                 <p class="text-xs text-[#8F6172]">{{ $cancellationMessage }}</p>

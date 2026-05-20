@@ -113,20 +113,32 @@ class Product extends Model
     // Get the main image URL
     public function getMainImageUrlAttribute()
     {
-        if (! $this->main_image) {
+        $value = $this->main_image;
+        if (! $value) {
             return null;
         }
 
-        if (str_starts_with($this->main_image, 'http://') || str_starts_with($this->main_image, 'https://')) {
-            return $this->main_image;
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
         }
 
-        $path = ltrim($this->main_image, '/');
-        if (str_starts_with($path, 'images/')) {
-            return asset($path);
+        $normalized = ltrim($value, '/');
+        if (str_starts_with($normalized, 'images/products_image/') && ! str_starts_with($normalized, 'images/products_image/Images/')) {
+            $normalized = 'images/products_image/Images/' . basename($normalized);
+        }
+        if (str_starts_with($normalized, 'images/')) {
+            return asset($normalized);
+        }
+        if (str_starts_with($normalized, 'storage/')) {
+            return asset($normalized);
         }
 
-        return asset('storage/' . $path);
+        // Backward-compatibility for filename-only records like "CMC.jpeg"
+        if (! str_contains($normalized, '/')) {
+            return asset('images/products_image/Images/' . $normalized);
+        }
+
+        return asset('storage/' . $normalized);
     }
 
     // Check if product is in stock

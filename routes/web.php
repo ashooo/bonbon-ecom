@@ -89,7 +89,7 @@ Route::get('/test-products', function (Request $request) {
             default => $productsQuery->orderBy('name'),
         };
 
-        $products = $productsQuery->paginate(9)->withQueryString();
+        $products = $productsQuery->paginate(15)->withQueryString();
     }
 
     return view('products.index', compact('products', 'categories'));

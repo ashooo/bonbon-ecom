@@ -15,6 +15,34 @@ export function initCakeScrollytelling() {
     const cake = createCakeScene(container);
     const { state, camera, assembledPositions, mainCakeGroup, createGalleryCake, galleryCakes } = cake;
 
+    function setNavbarLightTheme() {
+        gsap.set('#main-navbar', { backgroundColor: 'rgba(255,255,255,1)', borderColor: '#F5F5F5' });
+        gsap.set('#navbar-brand, .nav-link-item, #navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', { color: '#5A3A3A' });
+        gsap.set('#navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', {
+            borderColor: '#E6D5D8',
+            backgroundColor: '#ffffff',
+        });
+    }
+
+    function setNavbarDarkTheme() {
+        gsap.set('#main-navbar', {
+            backgroundColor: 'rgba(21, 9, 6, 0.95)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(12px)',
+        });
+        gsap.set('#navbar-brand, .nav-link-item, #navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', { color: '#FBEAF1' });
+        gsap.set('#navbar-cart-btn, #navbar-notification-btn', {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'transparent',
+        });
+        gsap.set('#navbar-account-btn', {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        });
+    }
+
+    setNavbarLightTheme();
+
     // --- GSAP ScrollTrigger Timeline ---
     const tl = gsap.timeline({
         scrollTrigger: {
@@ -24,6 +52,27 @@ export function initCakeScrollytelling() {
             scrub: 1.5,
             pin: '#cake-sticky-panel',
             anticipatePin: 1,
+            onLeave: () => setNavbarLightTheme(),
+            onEnterBack: () => setNavbarDarkTheme(),
+            onLeaveBack: () => setNavbarLightTheme(),
+            onUpdate: (self) => {
+                const indicator = document.getElementById('scroll-indicator');
+                if (!indicator) return;
+                const p = self.progress;
+                if (p <= 0.06) {
+                    indicator.style.opacity = '1';
+                    indicator.style.transform = 'translateX(-50%)';
+                    return;
+                }
+                if (p >= 0.5) {
+                    indicator.style.opacity = '0';
+                    indicator.style.transform = 'translateX(-50%) translateY(-64px)';
+                    return;
+                }
+                const t = (p - 0.06) / 0.44;
+                indicator.style.opacity = String(1 - t);
+                indicator.style.transform = `translateX(-50%) translateY(${-64 * t}px)`;
+            },
         },
     });
 
@@ -46,6 +95,8 @@ export function initCakeScrollytelling() {
         opacity: 1, y: 0,
         duration: 10, ease: 'power2.out',
     }, 3);
+
+    
 
     tl.to('#story-msg-1', {
         opacity: 0, y: -30,
@@ -179,12 +230,14 @@ export function initCakeScrollytelling() {
         duration: 12, ease: 'back.out(1.2)',
     }, 88);
 
-    tl.fromTo('#signboard-overlay', {
-        opacity: 0, x: -40,
-    }, {
-        opacity: 1, x: 0,
-        duration: 10, ease: 'power2.out',
-    }, 92);
+    if (document.querySelector('#signboard-overlay')) {
+        tl.fromTo('#signboard-overlay', {
+            opacity: 0, x: -40,
+        }, {
+            opacity: 1, x: 0,
+            duration: 10, ease: 'power2.out',
+        }, 92);
+    }
 
     tl.to(state, { cupcakeVisible: true, duration: 0.1 }, 89);
     tl.fromTo(state, {
@@ -194,12 +247,14 @@ export function initCakeScrollytelling() {
         duration: 12, ease: 'back.out(1.2)',
     }, 89);
 
-    tl.fromTo('#cupcake-overlay', {
-        opacity: 0, x: 40,
-    }, {
-        opacity: 1, x: 0,
-        duration: 10, ease: 'power2.out',
-    }, 93);
+    if (document.querySelector('#cupcake-overlay')) {
+        tl.fromTo('#cupcake-overlay', {
+            opacity: 0, x: 40,
+        }, {
+            opacity: 1, x: 0,
+            duration: 10, ease: 'power2.out',
+        }, 93);
+    }
 
 
     // ═══════════════════════════════════════════════════════
@@ -283,7 +338,10 @@ export function initCakeScrollytelling() {
         // --- Phase 1: Fade out UI text & hide scene extras ---
         gsap.to('#story-msg-final', { opacity: 0, duration: 0.4 });
         gsap.to('#story-cta-btn', { opacity: 0, duration: 0.3 });
-        gsap.to('#signboard-overlay, #cupcake-overlay', { opacity: 0, duration: 0.25 });
+        const overlayTargets = ['#signboard-overlay', '#cupcake-overlay'].filter((selector) => document.querySelector(selector));
+        if (overlayTargets.length) {
+            gsap.to(overlayTargets, { opacity: 0, duration: 0.25 });
+        }
         gsap.to(state, { cupcakeVisible: false, signboardVisible: false, duration: 0.01 });
 
         const galleryTl = gsap.timeline();
@@ -420,7 +478,10 @@ export function initCakeScrollytelling() {
         // 3. Restore UI elements and decorations
         galleryTl.call(() => {
             gsap.to('#story-msg-final, #story-cta-btn', { opacity: 1, duration: 0.6 });
-            gsap.to('#signboard-overlay, #cupcake-overlay', { opacity: 1, duration: 0.6 });
+            const restoreTargets = ['#signboard-overlay', '#cupcake-overlay'].filter((selector) => document.querySelector(selector));
+            if (restoreTargets.length) {
+                gsap.to(restoreTargets, { opacity: 1, duration: 0.6 });
+            }
             state.cupcakeVisible = true;
             state.signboardVisible = true;
         }, null, null, 1.2);

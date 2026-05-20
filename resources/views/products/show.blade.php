@@ -17,9 +17,64 @@
         $initialImage = $fallbackImage;
     @endphp
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap');
+
+        .pd-shell {
+            border: 1px solid #E9C7D4;
+            border-radius: 22px;
+            background: linear-gradient(180deg, #FBEAF1 0%, #FFFFFF 42%, #FBF2F6 100%);
+            box-shadow: 0 18px 48px rgba(77, 46, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+            padding: 1.2rem;
+        }
+        .pd-title {
+            font-family: 'Playfair Display', serif;
+            color: #4D2E38;
+            letter-spacing: -0.01em;
+        }
+        .pd-panel {
+            border: 1px solid #E9C7D4;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 22px rgba(77, 46, 56, 0.08);
+        }
+        .pd-pill {
+            border: 1px solid #E9C7D4;
+            border-radius: 999px;
+            background: #F6DFE9;
+            color: #533843;
+        }
+        .pd-label {
+            color: #8A6A76;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+        .pd-input {
+            border: 1px solid #E9C7D4 !important;
+            border-radius: 12px !important;
+            background: #fff !important;
+            color: #4D2E38 !important;
+        }
+        .pd-input:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(196, 122, 144, 0.15) !important;
+            border-color: #C47A90 !important;
+        }
+        .pd-btn {
+            background: linear-gradient(135deg, #C47A90, #B66880) !important;
+            color: #fff !important;
+            border-radius: 14px !important;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        .pd-btn:hover { filter: brightness(0.97); }
+    </style>
+
+    <div class="pd-shell grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div>
-            <div class="mb-6 overflow-hidden rounded-3xl bg-white shadow-lg">
+            <div class="pd-panel mb-6 overflow-hidden rounded-3xl">
                 <img
                     id="main-product-image"
                     src="{{ $initialImage }}"
@@ -33,7 +88,7 @@
                     <button
                         type="button"
                         id="thumb-scroll-left"
-                        class="absolute left-3 top-[calc(50%+4px)] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#5A3A3A] shadow-md ring-1 ring-pink-100 transition hover:bg-pink-50"
+                        class="absolute left-3 top-[calc(50%+4px)] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#533843] shadow-md ring-1 ring-[#E9C7D4] transition hover:bg-[#FBEAF1]"
                         aria-label="Scroll thumbnails left"
                     >
                         <span aria-hidden="true">&lt;</span>
@@ -46,7 +101,7 @@
                         @foreach($galleryImages as $image)
                             <button
                                 type="button"
-                                class="product-image-thumb h-28 w-32 flex-none snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-2 ring-transparent transition hover:ring-pink-300"
+                                class="product-image-thumb h-28 w-32 flex-none snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-2 ring-transparent transition hover:ring-[#C47A90]"
                                 data-image="{{ $image }}"
                                 aria-label="Show product image"
                             >
@@ -57,7 +112,7 @@
                         @foreach($variants->filter(fn ($variant) => filled($variant->image_url)) as $variant)
                             <button
                                 type="button"
-                                class="variant-image-thumb h-28 w-32 flex-none snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-2 ring-transparent transition hover:ring-pink-300"
+                                class="variant-image-thumb h-28 w-32 flex-none snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-2 ring-transparent transition hover:ring-[#C47A90]"
                                 data-variant-id="{{ $variant->id }}"
                                 data-image="{{ $variant->image_url }}"
                                 aria-label="Show {{ $variant->name }} image"
@@ -70,7 +125,7 @@
                     <button
                         type="button"
                         id="thumb-scroll-right"
-                        class="absolute right-3 top-[calc(50%+4px)] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#5A3A3A] shadow-md ring-1 ring-pink-100 transition hover:bg-pink-50"
+                        class="absolute right-3 top-[calc(50%+4px)] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-[#533843] shadow-md ring-1 ring-[#E9C7D4] transition hover:bg-[#FBEAF1]"
                         aria-label="Scroll thumbnails right"
                     >
                         <span aria-hidden="true">&gt;</span>
@@ -81,66 +136,66 @@
 
         <div>
             <div class="mb-4 flex items-center gap-3">
-                <span class="rounded-full bg-[#F5E6E8] px-4 py-2 text-sm font-medium text-[#5A3A3A]">
+                <span class="pd-pill px-4 py-2 text-sm font-medium">
                     {{ $product->category?->name ?? 'Uncategorized' }}
                 </span>
 
                 @if($product->is_best_seller)
-                    <span class="rounded-full bg-[#C94F7C] px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white">
+                    <span class="rounded-full bg-[#C47A90] px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-white">
                         Best Seller
                     </span>
                 @endif
 
                 @if($product->status === 'pre_order')
-                    <span class="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#5A3A3A]">
+                    <span class="rounded-full bg-[#F6DFE9] px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#533843]">
                         Pre-order{{ ($product->pre_order_days ?? 0) > 0 ? ' • ' . $product->pre_order_days . ' days' : '' }}
                     </span>
                 @endif
             </div>
 
-            <h1 class="text-4xl font-bold mb-2">{{ $product->name }}</h1>
+            <h1 class="pd-title mb-2 text-4xl font-bold">{{ $product->name }}</h1>
             @if($defaultVariant)
-                <p id="selected-variant-name" class="mb-4 text-lg font-semibold text-[#8C6770]">
+                <p id="selected-variant-name" class="mb-4 text-lg font-semibold text-[#8F6172]">
                     {{ $defaultVariant->name }}
                 </p>
             @endif
 
             <div class="mb-6 flex items-baseline gap-3">
-                <p class="text-3xl font-bold text-[#5A3A3A]">&#8369;<span id="product-price">{{ number_format($initialPrice, 2) }}</span></p>
+                <p class="text-3xl font-bold text-[#4D2E38]">&#8369;<span id="product-price">{{ number_format($initialPrice, 2) }}</span></p>
                 @if($product->hasDiscount())
                     <p class="text-lg text-gray-400 line-through">&#8369;{{ number_format($product->price, 2) }}</p>
                 @endif
             </div>
 
-            <div class="mb-6 rounded-3xl bg-white p-6 shadow-sm">
-                <h2 class="mb-3 text-xl font-semibold">Description</h2>
-                <p class="leading-relaxed text-gray-700">
+            <div class="pd-panel mb-6 rounded-3xl p-6">
+                <h2 class="pd-title mb-3 text-xl font-semibold">Description</h2>
+                <p class="leading-relaxed text-[#533843]">
                     {{ $product->description ?: 'No description available for this product yet.' }}
                 </p>
             </div>
 
             <div class="mb-6 grid grid-cols-2 gap-4">
-                <div class="rounded-2xl bg-white p-5 shadow-sm">
-                    <p class="text-sm uppercase tracking-[0.18em] text-gray-500">Stock</p>
-                    <p id="product-stock" class="mt-2 text-2xl font-semibold {{ $initialStock > 0 || $product->status === 'pre_order' ? 'text-green-600' : 'text-red-600' }}">
+                <div class="pd-panel rounded-2xl p-4">
+                    <p class="pd-label">Stock</p>
+                    <p id="product-stock" class="mt-1 text-base font-semibold {{ $initialStock > 0 || $product->status === 'pre_order' ? 'text-[#8F6172]' : 'text-[#B66880]' }}">
                         {{ $product->status === 'pre_order' ? ($product->pre_order_days ? $product->pre_order_days . ' day lead time' : 'Available for pre-order') : ($initialStock > 0 ? $initialStock . ' available' : 'Out of stock') }}
                     </p>
                 </div>
-                <div class="rounded-2xl bg-white p-5 shadow-sm">
-                    <p class="text-sm uppercase tracking-[0.18em] text-gray-500">Status</p>
-                    <p id="product-status" class="mt-2 text-2xl font-semibold {{ $product->status === 'pre_order' ? 'text-[#5A3A3A]' : ($initialStock > 0 ? 'text-green-600' : 'text-red-600') }}">
+                <div class="pd-panel rounded-2xl p-4">
+                    <p class="pd-label">Status</p>
+                    <p id="product-status" class="mt-1 text-base font-semibold {{ $product->status === 'pre_order' ? 'text-[#8F6172]' : ($initialStock > 0 ? 'text-[#8F6172]' : 'text-[#B66880]') }}">
                         {{ $initialStatusText }}
                     </p>
                 </div>
             </div>
 
-            <form action="{{ route('cart.add') }}" method="POST" class="rounded-3xl bg-white p-6 shadow-sm">
+            <form action="{{ route('cart.add') }}" method="POST" class="pd-panel rounded-3xl p-6">
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 
                 @if($variants->isNotEmpty())
                     <div class="mb-5">
-                        <p class="mb-2 block text-sm font-medium text-gray-700">Variant</p>
+                        <p class="mb-2 block text-sm font-medium text-[#533843]">Variant</p>
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             @foreach($variants as $variant)
                                 @php
@@ -149,12 +204,12 @@
                                     $isActive = (bool) $variant->is_active;
                                     $isAvailable = $isActive && ($product->status === 'pre_order' || $variantStock > 0);
                                 @endphp
-                                <label class="flex items-start gap-3 rounded-2xl border border-gray-200 p-4 transition has-[:checked]:border-pink-500 has-[:checked]:bg-pink-50 {{ $isAvailable ? 'cursor-pointer hover:border-pink-300' : 'cursor-not-allowed opacity-60' }}">
+                                <label class="flex items-start gap-3 rounded-2xl border border-[#E9C7D4] p-4 transition has-[:checked]:border-[#C47A90] has-[:checked]:bg-[#FBEAF1] {{ $isAvailable ? 'cursor-pointer hover:border-[#C47A90]' : 'cursor-not-allowed opacity-60' }}">
                                     <input
                                         type="radio"
                                         name="variant_id"
                                         value="{{ $variant->id }}"
-                                        class="mt-1 text-pink-600 focus:ring-pink-500"
+                                        class="mt-1 text-[#C47A90] focus:ring-[#C47A90]"
                                         data-name="{{ $variant->name }}"
                                         data-price="{{ number_format($variantPrice, 2, '.', '') }}"
                                         data-stock="{{ $variantStock }}"
@@ -163,8 +218,8 @@
                                         @disabled(! $isAvailable)
                                     >
                                     <span>
-                                        <span class="block font-semibold text-[#5A3A3A]">{{ $variant->name }}</span>
-                                        <span class="block text-sm text-gray-600">&#8369;{{ number_format($variantPrice, 2) }}</span>
+                                        <span class="block font-semibold text-[#4D2E38]">{{ $variant->name }}</span>
+                                        <span class="block text-sm text-[#8A6A76]">&#8369;{{ number_format($variantPrice, 2) }}</span>
                                         <span class="block text-xs {{ $isAvailable ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ! $isActive ? 'Not available' : ($product->status === 'pre_order' ? 'Pre-order available' : ($variantStock > 0 ? $variantStock . ' available' : 'Out of stock')) }}
                                         </span>
@@ -179,20 +234,20 @@
                 @endif
 
                 <div class="mb-4">
-                    <label for="quantity" class="mb-2 block text-sm font-medium text-gray-700">Quantity</label>
+                    <label for="quantity" class="mb-2 block text-sm font-medium text-[#533843]">Quantity</label>
                     <input
                         id="quantity"
                         name="quantity"
                         type="number"
                         min="1"
                         value="1"
-                        class="w-28 rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        class="pd-input w-28 px-4 py-3"
                     >
                 </div>
 
                 <button
                     type="submit"
-                    class="w-full rounded-2xl bg-pink-600 px-6 py-3 text-lg font-bold text-white transition duration-300 hover:bg-pink-700"
+                    class="pd-btn w-full px-6 py-3 text-lg font-bold transition duration-300"
                 >
                     Add to Cart
                 </button>
@@ -202,23 +257,23 @@
 
     @if($relatedProducts->isNotEmpty())
         <section class="mt-12">
-            <h2 class="mb-6 text-2xl font-bold">You Might Also Like</h2>
+            <h2 class="pd-title mb-6 text-2xl font-bold">You Might Also Like</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach($relatedProducts as $relatedProduct)
-                    <a href="{{ route('products.show', $relatedProduct->slug) }}" class="overflow-hidden rounded-3xl bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                    <a href="{{ route('products.show', $relatedProduct->slug) }}" class="overflow-hidden rounded-3xl border border-[#E9C7D4] bg-white shadow-md transition duration-300 hover:-translate-y-1 hover:shadow-lg">
                         <img
                             src="{{ $relatedProduct->main_image_url ?: 'https://via.placeholder.com/300x200?text=' . urlencode($relatedProduct->name) }}"
                             alt="{{ $relatedProduct->name }}"
                             class="h-48 w-full object-cover"
                         >
                         <div class="p-5">
-                            <h3 class="text-lg font-semibold">{{ $relatedProduct->name }}</h3>
+                            <h3 class="text-lg font-semibold text-[#4D2E38]">{{ $relatedProduct->name }}</h3>
                             @if($relatedProduct->status === 'pre_order' && ($relatedProduct->pre_order_days ?? 0) > 0)
-                                <p class="mt-1 text-sm font-medium text-amber-700">
+                            <p class="mt-1 text-sm font-medium text-[#8F6172]">
                                     Pre-order: {{ $relatedProduct->pre_order_days }} day lead time
                                 </p>
                             @endif
-                            <p class="mt-2 text-[#5A3A3A] font-bold">&#8369;{{ number_format($relatedProduct->effective_price, 2) }}</p>
+                            <p class="mt-2 text-[#4D2E38] font-bold">&#8369;{{ number_format($relatedProduct->effective_price, 2) }}</p>
                         </div>
                     </a>
                 @endforeach
@@ -289,15 +344,14 @@
 
                     if (stockEl) {
                         stockEl.textContent = isPreOrder ? preOrderText : (stock > 0 ? `${stock} available` : 'Out of stock');
-                        stockEl.classList.toggle('text-green-600', isPreOrder || stock > 0);
-                        stockEl.classList.toggle('text-red-600', !isPreOrder && stock <= 0);
+                        stockEl.classList.toggle('text-[#8F6172]', isPreOrder || stock > 0);
+                        stockEl.classList.toggle('text-[#B66880]', !isPreOrder && stock <= 0);
                     }
 
                     if (statusEl) {
                         statusEl.textContent = isPreOrder ? 'Pre order' : (stock > 0 ? 'Available' : 'Out of stock');
-                        statusEl.classList.toggle('text-[#5A3A3A]', isPreOrder);
-                        statusEl.classList.toggle('text-green-600', !isPreOrder && stock > 0);
-                        statusEl.classList.toggle('text-red-600', !isPreOrder && stock <= 0);
+                        statusEl.classList.toggle('text-[#8F6172]', isPreOrder || stock > 0);
+                        statusEl.classList.toggle('text-[#B66880]', !isPreOrder && stock <= 0);
                     }
 
                     if (quantityEl && !isPreOrder && stock > 0) {

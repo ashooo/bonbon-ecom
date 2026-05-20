@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('hideGlobalLoader', true)
 @section('hideChatbot', true)
@@ -31,7 +31,7 @@
             {{-- Vignette --}}
             <div class="cake-vignette" aria-hidden="true"></div>
 
-            {{-- Story Messages â€”  positioned bottom-left for desktop --}}
+            {{-- Story Messages —  positioned bottom-left for desktop --}}
             <div class="story-messages">
                 <div id="story-msg-1" class="story-msg" style="opacity: 0;">
                     <span class="story-label">The Crown</span>
@@ -50,9 +50,8 @@
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
                     <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
-                    <p class="story-sub">Three layers. One unforgettable moment.</p>
                     <a id="story-cta-btn" href="#cake-shelf" class="story-cta" style="opacity: 0;">
-                        Explore Our Cakes
+                        Explore Our Shop
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                     </a>
                 </div>
@@ -74,12 +73,68 @@
                 </a>
             </div> -->
 
+            {{-- Gallery Back Button --}}
+            <button id="gallery-back-btn" class="gallery-back-btn" style="display: none; opacity: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Go Back
+            </button>
+
+            {{-- Gallery Filter Bar --}}
+            <div id="gallery-filter-bar" class="gallery-filter-bar" style="display: none; opacity: 0;">
+                <div class="filter-search-wrap">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="gallery-search" placeholder="Search cakes...">
+                </div>
+                <select id="gallery-category" class="filter-select">
+                    <option value="">All Categories</option>
+                    @foreach($featuredCategories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+                <select id="gallery-sort" class="filter-select">
+                    <option value="name_asc">Name: A-Z</option>
+                    <option value="name_desc">Name: Z-A</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                </select>
+            </div>
+
+            {{-- Mobile Gallery Scroll Area --}}
+            <div id="gallery-scroll-overlay">
+                <div class="gallery-scroll-overlay-content" id="gallery-scroll-overlay-content"></div>
+            </div>
+
             {{-- Scroll indicator --}}
             <div class="scroll-indicator" id="scroll-indicator">
                 <div class="scroll-mouse">
                     <div class="scroll-wheel"></div>
                 </div>
                 <span>Scroll to discover</span>
+            </div>
+
+            {{-- Product Details Modal --}}
+            <div id="gallery-product-modal" class="gallery-product-modal" style="display: none; opacity: 0;">
+                <div class="gallery-modal-backdrop" id="gallery-modal-backdrop"></div>
+                <div class="gallery-modal-content">
+                    <button id="gallery-modal-close" class="gallery-modal-close">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                    <div class="gallery-modal-body">
+                        <h3 id="gallery-modal-title" class="gallery-modal-title"></h3>
+                        <p id="gallery-modal-price" class="gallery-modal-price"></p>
+                        <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
+                        <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
+
+                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
+                            @csrf
+                            <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="gallery-modal-add-btn">
+                                Add to Cart
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -105,9 +160,9 @@
             </div>
             <select id="shelf-sort" class="shelf-sort">
                 <option value="default">Sort by</option>
-                <option value="price-low">Price: Low â†’ High</option>
-                <option value="price-high">Price: High â†’ Low</option>
-                <option value="name-az">Name: A â†’ Z</option>
+                <option value="price-low">Price: Low → High</option>
+                <option value="price-high">Price: High → Low</option>
+                <option value="name-az">Name: A → Z</option>
             </select>
         </div>
 
@@ -129,7 +184,7 @@
                         <input type="hidden" name="product_id" id="menu-card-product-id" />
                         <input type="hidden" name="variant_id" id="menu-card-variant-id" />
                         <div class="menu-card-qty">
-                            <button type="button" id="menu-card-qty-minus" class="qty-btn">âˆ’</button>
+                            <button type="button" id="menu-card-qty-minus" class="qty-btn">−</button>
                             <input type="number" name="quantity" id="menu-card-qty" value="1" min="1" max="99" />
                             <button type="button" id="menu-card-qty-plus" class="qty-btn">+</button>
                         </div>
@@ -137,13 +192,20 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
                             Add to Cart
                         </button>
-                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details â†’</a>
+                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details →</a>
                     </form>
                 </div>
             </aside>
 
             <div class="shelf-display">
                 <div class="shelf-glass-case">
+                    <div class="case-frame case-frame-top"></div>
+                    <div class="case-frame case-frame-bottom"></div>
+                    <div class="case-frame case-frame-left"></div>
+                    <div class="case-frame case-frame-right"></div>
+                    <div class="case-interior-light case-interior-light-left"></div>
+                    <div class="case-interior-light case-interior-light-right"></div>
+                    <div class="case-reflection-sweep"></div>
                     @foreach($shelfProducts->chunk(3) as $rowProducts)
                     <div class="shelf-row">
                         <div class="shelf-light"></div>
@@ -168,7 +230,7 @@
                                 <div class="price-tag">
                                     <span class="tag-flavor">{{ Str::limit($product->name, 18) }}</span>
                                     <span class="tag-layers">{{ $product->category->name ?? '' }}</span>
-                                    <span class="tag-price">â‚±{{ number_format($product->effective_price, 0) }}</span>
+                                    <span class="tag-price">₱{{ number_format($product->effective_price, 0) }}</span>
                                 </div>
                             </div>
                             @endforeach
@@ -208,15 +270,15 @@
 
                     {{-- Order Summary --}}
                     <div class="cart-summary">
-                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">â‚±0</span></div>
-                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">â‚±5.99</span></div>
-                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">â‚±0</span></div>
+                        <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₱0</span></div>
+                        <div class="cart-summary-row"><span>Delivery</span><span id="cart-delivery">₱5.99</span></div>
+                        <div class="cart-summary-row"><span>Tax (10%)</span><span id="cart-tax">₱0</span></div>
                         <div class="cart-summary-divider"></div>
-                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">â‚±0</span></div>
+                        <div class="cart-summary-row cart-total"><span>Total</span><span id="cart-total">₱0</span></div>
                     </div>
 
                     <a href="/checkout" class="cart-checkout-btn">Proceed to Checkout</a>
-                    <a href="/cart" class="cart-view-link">View Full Cart â†’</a>
+                    <a href="/cart" class="cart-view-link">View Full Cart →</a>
                 </div>
             </aside>
         </div>
@@ -238,9 +300,9 @@
             margin: 0 !important;
             padding: 0 !important;
         }
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-           CAKE SCROLLYTELLING â€” PROFESSIONAL DARK THEME
-           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ═══════════════════════════════════════════════════
+           CAKE SCROLLYTELLING — PROFESSIONAL DARK THEME
+           ═══════════════════════════════════════════════════ */
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
@@ -309,7 +371,7 @@
             );
         }
 
-        /* â”€â”€â”€ Story Messages â”€â”€â”€ */
+        /* ─── Story Messages ─── */
         .story-messages {
             position: absolute;
             z-index: 10;
@@ -350,7 +412,7 @@
             margin: 0;
         }
 
-        /* Final message â€” centered */
+        /* Final message — centered */
         .story-msg-final {
             left: 50% !important;
             bottom: auto !important;
@@ -415,7 +477,7 @@
             transform: translateX(3px);
         }
 
-        /* â”€â”€â”€ Side Overlays (Signboard & Cupcake) â”€â”€â”€ */
+        /* ─── Side Overlays (Signboard & Cupcake) ─── */
         .side-overlay {
             position: absolute;
             z-index: 12;
@@ -488,10 +550,10 @@
             transform: rotate(15deg) scale(1.1);
         }
 
-        /* â”€â”€â”€ Scroll Indicator â”€â”€â”€ */
+        /* ─── Scroll Indicator ─── */
         .scroll-indicator {
             position: absolute;
-            bottom: 2rem;
+            top: clamp(7.5rem, 28vh, 13rem);
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -504,17 +566,18 @@
 
         .scroll-indicator span {
             font-family: 'Inter', sans-serif;
-            font-size: 0.6rem;
-            font-weight: 500;
-            letter-spacing: 0.22em;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(245, 235, 224, 0.25);
+            color: rgba(255, 244, 250, 0.9);
+            text-shadow: 0 2px 10px rgba(74, 31, 53, 0.45);
         }
 
         .scroll-mouse {
-            width: 20px;
-            height: 32px;
-            border: 1.5px solid rgba(245, 235, 224, 0.18);
+            width: 28px;
+            height: 42px;
+            border: 1.7px solid rgba(255, 244, 250, 0.75);
             border-radius: 11px;
             display: flex;
             justify-content: center;
@@ -522,9 +585,9 @@
         }
 
         .scroll-wheel {
-            width: 2px;
-            height: 7px;
-            background: rgba(201, 168, 76, 0.45);
+            width: 3px;
+            height: 10px;
+            background: rgba(255, 221, 238, 0.95);
             border-radius: 2px;
             animation: scrollWheel 2s ease-in-out infinite;
         }
@@ -540,7 +603,7 @@
             50% { opacity: 1; }
         }
 
-        /* â”€â”€â”€ Preloader â”€â”€â”€ */
+        /* ─── Preloader ─── */
         .cake-preloader {
             position: fixed;
             inset: 0;
@@ -587,7 +650,7 @@
             50% { opacity: 1; }
         }
 
-        /* â”€â”€â”€ Responsive â”€â”€â”€ */
+        /* ─── Responsive ─── */
         @media (max-width: 768px) {
             .story-msg {
                 left: 50% !important;
@@ -662,7 +725,7 @@
             }
         }
 
-        /* â”€â”€â”€ Sticky Navbar Override â”€â”€â”€ */
+        /* ─── Sticky Navbar Override ─── */
         header {
             position: sticky !important;
             top: 0;
@@ -824,6 +887,10 @@
         @vite('resources/js/cake-entry.js')
 
         <script>
+            window.__cakeProducts = @json($shelfProducts->values());
+        </script>
+
+        <script>
             // Fallback: never let preloader block the page if a script fails.
             (() => {
                 const hidePreloader = () => {
@@ -839,25 +906,10 @@
             })();
         </script>
 
-        <script>
-            // Hide scroll indicator after first scroll
-            (() => {
-                const indicator = document.getElementById('scroll-indicator');
-                if (!indicator) return;
-
-                let hidden = false;
-                window.addEventListener('scroll', () => {
-                    if (!hidden && window.scrollY > 100) {
-                        indicator.style.transition = 'opacity 0.5s ease';
-                        indicator.style.opacity = '0';
-                        hidden = true;
-                    }
-                }, { passive: true });
-            })();
-        </script>
+        
 
         <script>
-            // â•â•â• Shelf: Reveal, Search, Filter, Sort + Menu Card â•â•â•
+            // ═══ Shelf: Reveal, Search, Filter, Sort + Menu Card ═══
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
@@ -871,15 +923,6 @@
 
                 const ctaBtn = document.getElementById('story-cta-btn');
                 if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
-
-                document.querySelectorAll('a').forEach(a => {
-                    if (a.textContent.trim() === 'Shop' && a.closest('header')) {
-                        a.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            revealShelf(e);
-                        });
-                    }
-                });
 
                 // Auto-reveal shelf if URL has #shop
                 if (window.location.hash === '#shop') {
@@ -939,7 +982,7 @@
                     });
                 }
 
-                // â•â•â• Menu Card â•â•â•
+                // ═══ Menu Card ═══
                 const card = document.getElementById('menu-card');
                 const cardClose = document.getElementById('menu-card-close');
                 const cardImg = document.getElementById('menu-card-img');
@@ -978,9 +1021,9 @@
 
                     // Price
                     if (salePrice && parseFloat(salePrice) > 0 && parseFloat(salePrice) < originalPrice) {
-                        cardPrice.innerHTML = `â‚±${Number(salePrice).toLocaleString()} <span class="original-price">â‚±${Number(originalPrice).toLocaleString()}</span>`;
+                        cardPrice.innerHTML = `₱${Number(salePrice).toLocaleString()} <span class="original-price">₱${Number(originalPrice).toLocaleString()}</span>`;
                     } else {
-                        cardPrice.textContent = `â‚±${Number(price).toLocaleString()}`;
+                        cardPrice.textContent = `₱${Number(price).toLocaleString()}`;
                     }
 
                     // Variants
@@ -991,7 +1034,7 @@
                             const chip = document.createElement('button');
                             chip.type = 'button';
                             chip.className = 'variant-chip' + (i === 0 ? ' active' : '') + (v.stock <= 0 ? ' out-of-stock' : '');
-                            chip.textContent = v.name + (v.price ? ` (â‚±${Number(v.price).toLocaleString()})` : '');
+                            chip.textContent = v.name + (v.price ? ` (₱${Number(v.price).toLocaleString()})` : '');
                             chip.dataset.variantId = v.id;
                             chip.addEventListener('click', () => {
                                 cardVariantsList.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('active'));
@@ -1021,7 +1064,7 @@
                     items.forEach(i => i.classList.remove('shelf-item-active'));
                 }
 
-                // Click on cake â†’ open card
+                // Click on cake → open card
                 items.forEach(item => {
                     item.addEventListener('click', () => openMenuCard(item));
                 });
@@ -1039,7 +1082,7 @@
                     if (v < 99) cardQty.value = v + 1;
                 });
 
-                // Add to cart via AJAX â†’ show cart panel
+                // Add to cart via AJAX → show cart panel
                 const cartPanel = document.getElementById('cart-panel');
                 const cartPanelToggle = document.getElementById('cart-panel-toggle');
                 const cartPanelBody = document.getElementById('cart-panel-body');
@@ -1065,7 +1108,7 @@
 
                 if (cartPanelToggle) cartPanelToggle.addEventListener('click', toggleCartPanel);
 
-                function fmt(n) { return 'â‚±' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+                function fmt(n) { return '₱' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
                 function renderCartPanel(data, autoExpand) {
                     // Hide cart completely if 0 items
@@ -1096,12 +1139,12 @@
                                 <div class="cart-list-variant">${i.variant}</div>
                             </div>
                             <div class="cart-list-qty">
-                                <button onclick="cartQtyChange(${i.id},'dec')">âˆ’</button>
+                                <button onclick="cartQtyChange(${i.id},'dec')">−</button>
                                 <span>${i.quantity}</span>
                                 <button onclick="cartQtyChange(${i.id},'inc')">+</button>
                             </div>
                             <div class="cart-list-price">${fmt(i.subtotal)}</div>
-                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">Ã—</button>
+                            <button class="cart-list-remove" onclick="cartRemove(${i.id})" title="Remove">×</button>
                         </div>
                     `).join('');
 
@@ -1178,8 +1221,8 @@
                     } catch(e) { console.error(e); }
                     finally { if (window.BonBonLoader) BonBonLoader.hide('#cart-panel'); }
                 };
+
             })();
         </script>
     @endpush
 @endsection
-

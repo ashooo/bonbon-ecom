@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('hideGlobalLoader', true)
-@section('hideChatbot', true)
+@section('hideChatbot', false)
 @section('hideFooter', true)
 
 @php
@@ -50,7 +50,7 @@
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
                     <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
-                    <a id="story-cta-btn" href="#cake-shelf" class="story-cta" style="opacity: 0;">
+                    <a id="story-cta-btn" href="#home-showcase" class="story-cta" style="opacity: 0;">
                         Explore Our Shop
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                     </a>
@@ -137,6 +137,873 @@
                 </div>
             </div>
         </div>
+    </section>
+
+    {{-- ═══════════════════════════════════════════════════
+         HOME SHOWCASE — Premium Bakery Layout
+         ═══════════════════════════════════════════════════ --}}
+    <section id="home-showcase" class="bb-showcase" style="display:none;">
+
+        {{-- ── Marquee Tag Strip ── --}}
+        <div class="bb-marquee-wrap" aria-hidden="true">
+            <div class="bb-marquee-track">
+                @foreach(['Handcrafted Daily', '✦ Custom Cakes', 'Free Delivery Over ₱1500', '✦ Filipino Flavors', 'Made with Love', '✦ Best Sellers', 'Birthday Cakes', '✦ Wedding Tiers', 'Handcrafted Daily', '✦ Custom Cakes', 'Free Delivery Over ₱1500', '✦ Filipino Flavors', 'Made with Love', '✦ Best Sellers', 'Birthday Cakes', '✦ Wedding Tiers'] as $tag)
+                <span class="bb-marquee-item">{{ $tag }}</span>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- ── Hero Banner ── --}}
+        <div class="bb-hero-banner">
+            <div class="bb-hero-img-wrap">
+                <img src="/images/bonbon_showcase_hero.png" alt="BonBon artisan cakes and pastries" class="bb-hero-img">
+                <div class="bb-hero-overlay"></div>
+            </div>
+            <div class="bb-hero-text">
+                <h2 class="bb-hero-heading">Handcrafted<br>with Devotion.</h2>
+                <p class="bb-hero-sub">Every cake is a celebration — made from scratch, designed with care, delivered with love.</p>
+                <div class="bb-hero-actions">
+                    <a href="{{ url('/test-products') }}" class="bb-btn-primary">Shop Now</a>
+                    <a href="/customize" class="bb-btn-ghost">Custom Order</a>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Featured Products ── --}}
+        <div class="bb-section-wrap">
+            <div class="bb-section-header">
+                <div>
+                    <span class="bb-eyebrow">Our Signature Selection</span>
+                    <h2 class="bb-section-title">Featured Products</h2>
+                </div>
+                <a href="{{ url('/test-products') }}" class="bb-see-all">See all
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+
+            <div class="bb-product-grid">
+                @forelse($featuredProducts->take(8) as $product)
+                <a href="{{ route('products.show', $product->slug) }}" class="bb-product-card">
+                    <div class="bb-card-img-wrap">
+                        <img
+                            src="{{ $product->main_image_url ?: 'https://via.placeholder.com/480x480?text=' . urlencode($product->name) }}"
+                            alt="{{ $product->name }}"
+                            class="bb-card-img"
+                            loading="lazy"
+                        >
+                        <div class="bb-card-hover-overlay">
+                            <span class="bb-card-cta">View Product</span>
+                        </div>
+                        @if($product->hasDiscount())
+                        <span class="bb-sale-badge">Sale</span>
+                        @endif
+                    </div>
+                    <div class="bb-card-body">
+                        <span class="bb-card-cat">{{ $product->category?->name ?? 'Pastry' }}</span>
+                        <p class="bb-card-name">{{ $product->name }}</p>
+                        <div class="bb-card-price-row">
+                            <span class="bb-card-price">&#8369;{{ number_format($product->effective_price, 2) }}</span>
+                            @if($product->hasDiscount())
+                            <span class="bb-card-original">&#8369;{{ number_format($product->price, 2) }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+                @empty
+                <div class="bb-empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <p>No featured products yet — check back soon!</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ── Best Sellers ── --}}
+        @php
+            $bestSellers = $shelfProducts->where('is_best_seller', true)->take(4)->values();
+        @endphp
+        @if($bestSellers->count() > 0)
+        <div class="bb-bestsellers-band">
+            <div class="bb-section-wrap">
+                <div class="bb-section-header">
+                    <div>
+                        <span class="bb-eyebrow" style="color:#fff8fb; opacity:0.75;">Community Favorites</span>
+                        <h2 class="bb-section-title" style="color:#fff;">Best Sellers</h2>
+                    </div>
+                    <a href="{{ url('/test-products') }}" class="bb-see-all" style="color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.3);">See all
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                    </a>
+                </div>
+                <div class="bb-bestseller-grid">
+                    @foreach($bestSellers as $i => $product)
+                    <a href="{{ route('products.show', $product->slug) }}" class="bb-bs-card">
+                        <div class="bb-bs-img-wrap">
+                            <img src="{{ $product->main_image_url ?: 'https://via.placeholder.com/400x400?text=' . urlencode($product->name) }}" alt="{{ $product->name }}" class="bb-bs-img" loading="lazy">
+                            <span class="bb-bs-rank">#{{ $i + 1 }}</span>
+                        </div>
+                        <div class="bb-bs-body">
+                            <p class="bb-bs-name">{{ $product->name }}</p>
+                            <p class="bb-bs-price">&#8369;{{ number_format($product->effective_price, 2) }}</p>
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- ── Why BonBon strip ── --}}
+        <div class="bb-perks-row">
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🎂</div>
+                <p class="bb-perk-title">Made Fresh Daily</p>
+                <p class="bb-perk-sub">Baked from scratch every morning — no preservatives, ever.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🎀</div>
+                <p class="bb-perk-title">Fully Customizable</p>
+                <p class="bb-perk-sub">Design your dream cake — flavors, tiers, decor, messages.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🚚</div>
+                <p class="bb-perk-title">Swift Delivery</p>
+                <p class="bb-perk-sub">Same-day Metro Manila delivery available. Free over ₱1500.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">💌</div>
+                <p class="bb-perk-title">Gift-Ready Packaging</p>
+                <p class="bb-perk-sub">Every order arrives beautifully boxed and ribbon-tied.</p>
+            </div>
+        </div>
+
+        {{-- ── Testimonials ── --}}
+        <div class="bb-section-wrap">
+            <div class="bb-section-header">
+                <div>
+                    <span class="bb-eyebrow">What Customers Say</span>
+                    <h2 class="bb-section-title">Reviews</h2>
+                </div>
+                <a href="https://www.facebook.com/BonbonsPHofficial" target="_blank" rel="noopener" class="bb-see-all">
+                    Facebook Page
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+            <div class="bb-reviews-grid">
+                <div class="bb-review-card bb-review-large">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Super ganda and sobrang sarap. Exactly what we needed for our daughter's debut. Everyone was asking where we got it!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">M</div>
+                        <div>
+                            <p class="bb-review-name">Maria Santos</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Reliable delivery and very responsive team. Will definitely order again for every occasion!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">J</div>
+                        <div>
+                            <p class="bb-review-name">James Reyes</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"The custom design was perfect. Great balance of sweetness — not too sweet, just right."</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">A</div>
+                        <div>
+                            <p class="bb-review-name">Anna Cruz</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Ordered twice already. The packaging alone is worth it — so pretty and gift-ready!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">L</div>
+                        <div>
+                            <p class="bb-review-name">Liza Mendoza</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── CTA Band ── --}}
+        <div class="bb-cta-band">
+            <div class="bb-cta-content">
+                <h2 class="bb-cta-heading">Ready to place your order?</h2>
+                <p class="bb-cta-sub">Browse our full collection or start building your custom cake today.</p>
+                <div class="bb-cta-actions">
+                    <a href="{{ url('/test-products') }}" class="bb-btn-primary">Browse Collection</a>
+                    <a href="/customize" class="bb-btn-ghost-dark">Customize a Cake</a>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <style>
+        /* ═══════════════════════════════════════════════════
+           BONBON HOME SHOWCASE — Premium Redesign
+           ═══════════════════════════════════════════════════ */
+
+        .bb-showcase {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0 0 clamp(2rem, 4vw, 3.5rem);
+            background: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Marquee ── */
+        .bb-marquee-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(90deg, #4D2E38 0%, #533843 100%);
+            padding: 0.7rem 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 0;
+        }
+        .bb-marquee-track {
+            display: flex;
+            gap: 0;
+            width: max-content;
+            animation: bbMarquee 28s linear infinite;
+        }
+        .bb-marquee-item {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #FBEAF1;
+            padding: 0 2.8rem;
+            white-space: nowrap;
+        }
+        @keyframes bbMarquee {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+        }
+
+        /* ── Hero Banner ── */
+        .bb-hero-banner {
+            position: relative;
+            width: 100%;
+            height: clamp(420px, 55vh, 680px);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 0 0 clamp(0.85rem, 2vw, 1.25rem);
+        }
+        .bb-hero-img-wrap {
+            position: absolute;
+            inset: 0 0 clamp(0.85rem, 2vw, 1.25rem);
+            z-index: 0;
+            border-radius: 0 0 1.25rem 1.25rem;
+            overflow: hidden;
+        }
+        .bb-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 40%;
+            transform: scale(1.02);
+            transition: transform 8s ease;
+        }
+        .bb-hero-banner:hover .bb-hero-img {
+            transform: scale(1.05);
+        }
+        .bb-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(102deg, rgba(77, 46, 56, 0.82) 0%, rgba(143, 97, 114, 0.6) 44%, rgba(77, 46, 56, 0.2) 100%);
+        }
+        .bb-hero-text {
+            position: relative;
+            z-index: 2;
+            padding: clamp(3.6rem, 8vw, 7rem) clamp(2rem, 6vw, 6rem);
+            max-width: 580px;
+        }
+
+        @media (max-width: 768px) {
+            .bb-hero-text {
+                padding: clamp(2.25rem, 8vw, 3rem) clamp(1.25rem, 5vw, 2rem);
+            }
+        }
+        .bb-hero-eyebrow {
+            display: inline-block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #FFFFFF;
+            border: 1px solid rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.16);
+            padding: 0.32rem 0.9rem;
+            border-radius: 999px;
+            margin-top: 0;
+            margin-bottom: 1.1rem;
+            text-shadow: 0 2px 10px rgba(61,20,40,0.28);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 20px rgba(61,20,40,0.2);
+        }
+        .bb-hero-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5vw, 4.2rem);
+            font-weight: 600;
+            line-height: 1.1;
+            color: #FFFFFF;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+            margin: 0 0 1rem;
+        }
+        .bb-hero-sub {
+            font-size: clamp(0.85rem, 1.2vw, 1rem);
+            line-height: 1.7;
+            color: rgba(255,255,255,0.86);
+            margin: 0 0 2rem;
+            max-width: 420px;
+        }
+        .bb-hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── Buttons ── */
+        .bb-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #C47A90 0%, #B66880 100%);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            box-shadow: none;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+        }
+        .bb-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: none;
+            background: linear-gradient(135deg, #D4879E 0%, #C47A90 100%);
+        }
+        .bb-btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.22);
+            color: #FFFFFF;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            border: 1.5px solid rgba(255,255,255,0.82);
+            backdrop-filter: blur(8px);
+            text-shadow: 0 1px 10px rgba(61,20,40,0.35);
+            transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .bb-btn-ghost:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.95);
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+        .bb-btn-ghost-dark {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: #4D2E38;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            border: 1.5px solid rgba(77,46,56,0.26);
+            transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+        }
+        .bb-btn-ghost-dark:hover {
+            background: rgba(233,199,212,0.32);
+            border-color: rgba(77,46,56,0.42);
+            transform: translateY(-1px);
+        }
+
+        /* ── Section Wrapper ── */
+        .bb-section-wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.2rem, 4vw, 3rem);
+        }
+        .bb-section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 2.2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .bb-eyebrow {
+            display: block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #8F6172;
+            margin-bottom: 0.4rem;
+        }
+        .bb-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.7rem, 3vw, 2.6rem);
+            font-weight: 600;
+            color: #4D2E38;
+            margin: 0;
+            line-height: 1.15;
+        }
+        .bb-see-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8F6172;
+            text-decoration: none;
+            border-bottom: 1.5px solid rgba(143,97,114,0.32);
+            padding-bottom: 2px;
+            transition: gap 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+        .bb-see-all:hover {
+            gap: 0.7rem;
+            border-color: #c0537c;
+            color: #4D2E38;
+        }
+
+        /* ── Product Grid ── */
+        .bb-product-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(230px, 1fr);
+            gap: 1.2rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.35rem;
+            scrollbar-width: thin;
+            scrollbar-color: #E9C7D4 #FBF2F6;
+        }
+        .bb-product-grid::-webkit-scrollbar { height: 8px; }
+        .bb-product-grid::-webkit-scrollbar-track { background: #FBF2F6; border-radius: 999px; }
+        .bb-product-grid::-webkit-scrollbar-thumb { background: #E9C7D4; border-radius: 999px; }
+        .bb-product-grid > * {
+            min-width: 230px;
+        }
+
+        /* ── Product Card ── */
+        .bb-product-card {
+            background: #fff;
+            border-radius: 1.25rem;
+            border: 1px solid #f0d4e0;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease;
+            box-shadow: 0 4px 18px rgba(77,46,56,0.07);
+        }
+        .bb-product-card:hover {
+            transform: translateY(-6px) scale(1.012);
+            box-shadow: 0 16px 40px rgba(77,46,56,0.16);
+        }
+        .bb-card-img-wrap {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #fdf0f5;
+        }
+        .bb-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .bb-product-card:hover .bb-card-img {
+            transform: scale(1.06);
+        }
+        .bb-card-hover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(61,20,40,0.42);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.28s ease;
+            backdrop-filter: blur(2px);
+        }
+        .bb-product-card:hover .bb-card-hover-overlay {
+            opacity: 1;
+        }
+        .bb-card-cta {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.6);
+            padding: 0.55rem 1.4rem;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+        }
+        .bb-sale-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, #e8609a, #c0437b);
+            padding: 0.28rem 0.72rem;
+            border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(196,67,123,0.4);
+        }
+        .bb-card-body {
+            padding: 1rem 1.15rem 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .bb-card-cat {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #c0537c;
+        }
+        .bb-card-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #3d1428;
+            margin: 0;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .bb-card-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+        }
+        .bb-card-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #c0437b;
+        }
+        .bb-card-original {
+            font-size: 0.78rem;
+            color: #b09aa8;
+            text-decoration: line-through;
+        }
+
+        /* ── Empty State ── */
+        .bb-empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 4rem 2rem;
+            border: 2px dashed #f0d4e0;
+            border-radius: 1.5rem;
+            color: #b09aa8;
+            text-align: center;
+        }
+
+        /* ── Best Sellers Band ── */
+        .bb-bestsellers-band {
+            background: linear-gradient(135deg, #3d1428 0%, #5c2240 50%, #3d1428 100%);
+            width: 100%;
+        }
+        .bb-bestseller-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.4rem;
+        }
+        @media (min-width: 640px) {
+            .bb-bestseller-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .bb-bestseller-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        .bb-bs-card {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1.1rem;
+            overflow: hidden;
+            transition: transform 0.26s ease, background 0.26s ease, box-shadow 0.26s ease;
+            backdrop-filter: blur(4px);
+        }
+        .bb-bs-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+        }
+        .bb-bs-img-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+        }
+        .bb-bs-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            filter: saturate(0.9) brightness(0.95);
+        }
+        .bb-bs-card:hover .bb-bs-img {
+            transform: scale(1.06);
+            filter: saturate(1.05) brightness(1.0);
+        }
+        .bb-bs-rank {
+            position: absolute;
+            top: 0.65rem;
+            left: 0.65rem;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #3d1428;
+            background: linear-gradient(135deg, #ffd6ea, #ffb3d1);
+            padding: 0.26rem 0.65rem;
+            border-radius: 999px;
+        }
+        .bb-bs-body {
+            padding: 0.85rem 1rem 1rem;
+        }
+        .bb-bs-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff8fb;
+            margin: 0 0 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bb-bs-price {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #ffb3d1;
+            margin: 0;
+        }
+
+        /* ── Perks Row ── */
+        .bb-perks-row {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 0;
+            padding: 2.8rem clamp(1.2rem, 4vw, 3rem);
+            background: #fff;
+            border-top: 1px solid #f0d4e0;
+            border-bottom: 1px solid #f0d4e0;
+            flex-wrap: wrap;
+        }
+        .bb-perk {
+            flex: 1;
+            min-width: 180px;
+            text-align: center;
+            padding: 1.2rem 1.5rem;
+        }
+        .bb-perk-icon {
+            font-size: 2rem;
+            margin-bottom: 0.7rem;
+            line-height: 1;
+        }
+        .bb-perk-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #3d1428;
+            margin: 0 0 0.35rem;
+        }
+        .bb-perk-sub {
+            font-size: 0.78rem;
+            color: #9a7585;
+            margin: 0;
+            line-height: 1.55;
+        }
+        .bb-perk-divider {
+            width: 1px;
+            background: #f0d4e0;
+            align-self: stretch;
+            margin: 0.5rem 0;
+            flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+            .bb-perk-divider { display: none; }
+        }
+
+        /* ── Reviews ── */
+        .bb-reviews-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+        @media (min-width: 640px) {
+            .bb-reviews-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .bb-reviews-grid {
+                grid-template-columns: 2fr 1fr 1fr 1fr;
+            }
+        }
+        .bb-review-card {
+            background: #fff;
+            border: 1px solid #f0d4e0;
+            border-radius: 1.2rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            box-shadow: 0 4px 16px rgba(77,46,56,0.06);
+            transition: transform 0.24s ease, box-shadow 0.24s ease;
+        }
+        .bb-review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(77,46,56,0.12);
+        }
+        .bb-review-large {
+            background: linear-gradient(135deg, #fff0f7 0%, #fff8fb 100%);
+        }
+        .bb-review-stars {
+            font-size: 0.9rem;
+            color: #f4a429;
+            letter-spacing: 0.08em;
+        }
+        .bb-review-text {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: #4d2538;
+            margin: 0;
+            flex: 1;
+            font-style: italic;
+        }
+        .bb-review-large .bb-review-text {
+            font-size: 0.96rem;
+        }
+        .bb-review-author {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-top: auto;
+        }
+        .bb-review-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8609a, #c0437b);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .bb-review-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #3d1428;
+            margin: 0;
+        }
+        .bb-review-source {
+            font-size: 0.68rem;
+            color: #b09aa8;
+            margin: 0;
+        }
+
+        /* ── CTA Band ── */
+        .bb-cta-band {
+            background: linear-gradient(118deg, #ffeaf4 0%, #fff2f8 50%, #ffd6ea 100%);
+            border-top: 1px solid #f0d4e0;
+            border-bottom: 1px solid #f0d4e0;
+            text-align: center;
+            padding: clamp(3rem, 6vw, 5rem) clamp(1.2rem, 4vw, 3rem);
+        }
+        .bb-cta-content {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .bb-cta-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 600;
+            color: #3d1428;
+            margin: 0 0 0.8rem;
+        }
+        .bb-cta-sub {
+            font-size: 0.95rem;
+            color: #8a6070;
+            margin: 0 0 2rem;
+            line-height: 1.65;
+        }
+        .bb-cta-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Mobile overrides ── */
+        @media (max-width: 768px) {
+            .bb-hero-banner {
+                height: clamp(360px, 65vw, 500px);
+            }
+            .bb-hero-text {
+                padding: 2rem 1.4rem;
+            }
+            .bb-hero-overlay {
+                background: linear-gradient(
+                    160deg,
+                    rgba(61, 20, 40, 0.9) 0%,
+                    rgba(88, 32, 56, 0.75) 50%,
+                    rgba(61, 20, 40, 0.4) 100%
+                );
+            }
+            .bb-perks-row {
+                padding: 2rem 1.2rem;
+            }
+        }
+    </style>
+
     </section>
 
     <div id="shop"></div>
@@ -860,6 +1727,8 @@
             filter: saturate(1.06) hue-rotate(-8deg) contrast(1.03) brightness(1.02);
         }
 
+
+
         .price-tag {
             background: linear-gradient(145deg, rgba(255, 221, 235, 0.93), rgba(255, 188, 217, 0.9)) !important;
             color: #5a1f3b !important;
@@ -914,20 +1783,20 @@
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
 
-                // --- Reveal shelf ---
+                // --- Reveal showcase ---
                 function revealShelf(e) {
                     if (e) e.preventDefault();
-                    shelf.style.display = '';
-                    shelf.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const showcase = document.getElementById('home-showcase');
+                    if (showcase) {
+                        if (showcase.style.display === 'none') {
+                            showcase.style.display = '';
+                        }
+                        showcase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }
 
                 const ctaBtn = document.getElementById('story-cta-btn');
                 if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
-
-                // Auto-reveal shelf if URL has #shop
-                if (window.location.hash === '#shop') {
-                    setTimeout(() => revealShelf(), 500);
-                }
 
                 // --- Search & Filter ---
                 const searchInput = document.getElementById('shelf-search-input');

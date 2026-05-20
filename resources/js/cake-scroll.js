@@ -766,10 +766,17 @@ export function initCakeScrollytelling() {
     const ctaBtn = document.getElementById('story-cta-btn');
     if (ctaBtn) {
         ctaBtn.addEventListener('click', () => {
-            const shelf = document.getElementById('cake-shelf');
-            if (shelf) {
-                shelf.style.display = 'block';
-                shelf.scrollIntoView({ behavior: 'smooth' });
+            const showcase = document.getElementById('home-showcase');
+            if (showcase) {
+                const isHidden = showcase.style.display === 'none' || getComputedStyle(showcase).display === 'none';
+                if (isHidden) {
+                    showcase.style.display = '';
+                    gsap.fromTo(showcase,
+                        { opacity: 0, y: 50, scale: 0.985 },
+                        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }
+                    );
+                }
+                showcase.scrollIntoView({ behavior: 'smooth' });
             }
         });
     }

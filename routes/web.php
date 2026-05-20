@@ -362,6 +362,11 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             ->take(5)
             ->get();
 
+        $topProductsRevenueTotal = (float) \App\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('orders.status', ['confirmed', 'ready', 'completed'])
+            ->sum('order_items.subtotal');
+
         $dailyRevenueMap = Order::query()
             ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders_count')
             ->where('created_at', '>=', $last7DaysStart)
@@ -392,9 +397,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'today_orders_count' => $todayOrdersCount,
             'active_customers_count' => $activeCustomersCount,
             'pending_orders_count' => (int) ($orderCounts['pending'] ?? 0),
+            'confirmed_orders_count' => (int) ($orderCounts['confirmed'] ?? 0),
             'ready_orders_count' => (int) ($orderCounts['ready'] ?? 0),
             'completed_orders_count' => (int) ($orderCounts['completed'] ?? 0),
+            'cancelled_orders_count' => (int) ($orderCounts['cancelled'] ?? 0),
             'max_revenue_point' => $maxRevenuePoint,
+            'top_products_revenue_total' => $topProductsRevenueTotal,
         ];
 
         $userStatusFilter = $request->string('user_status')->value();

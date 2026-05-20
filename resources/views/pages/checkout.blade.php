@@ -348,20 +348,20 @@
                                 <span class="bg-[#5A3A3A] text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Active</span>
                             </div>
                             <div class="space-y-3">
-                                <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
-                                    <input type="radio" name="payment_method" value="cod" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
-                                    <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-[#5A3A3A] text-sm leading-none">Cash on Delivery</p>
-                                        <p class="text-[11px] text-[#8C6770] mt-1">Pay when receiving your order</p>
-                                    </div>
-                                </label>
-
                                 @auth
+                                    <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
+                                        <input type="radio" name="payment_method" value="cod" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#5A3A3A] text-sm leading-none">Cash on Delivery</p>
+                                            <p class="text-[11px] text-[#8C6770] mt-1">Pay when receiving your order</p>
+                                        </div>
+                                    </label>
+
                                     <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
                                         <input type="radio" name="payment_method" value="paymongo" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method') === 'paymongo' ? 'checked' : '' }}>
                                         <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
@@ -375,8 +375,20 @@
                                         </div>
                                     </label>
                                 @else
+                                    <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
+                                        <input type="radio" name="payment_method" value="paymongo" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method', 'paymongo') === 'paymongo' ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#5A3A3A] text-sm leading-none">QRPH Online Payment</p>
+                                            <p class="text-[11px] text-[#8C6770] mt-1">Secure QRPH checkout via PayMongo</p>
+                                        </div>
+                                    </label>
                                     <div class="rounded-xl border border-dashed border-[#EED9DE] bg-[#FFF9FA] px-4 py-3 text-xs text-[#8C6770]">
-                                        Sign in to use <span class="font-bold text-[#5A3A3A]">QRPH Online Payment</span>. Guests can checkout with COD.
+                                        Guest checkout is available via <span class="font-bold text-[#5A3A3A]">QRPH Online Payment</span> only.
                                     </div>
                                 @endauth
                             </div>

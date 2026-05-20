@@ -150,21 +150,25 @@ class CheckoutController extends Controller
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
 
+        $paymentMethodRule = Auth::check()
+            ? 'required|in:cod,paymongo'
+            : 'required|in:paymongo';
+
         $request->validate([
             'customer_name' => 'required|string|max:100',
             'customer_email' => 'required|email|max:100',
             'customer_phone' => 'required|string|max:20',
             'order_type' => 'required|in:pickup,delivery',
             'delivery_address' => 'nullable|string|required_if:order_type,delivery',
-            'payment_method' => 'required|in:cod,paymongo',
+            'payment_method' => $paymentMethodRule,
             'fulfillment_date' => 'required|date|after_or_equal:' . $minFulfillmentDate,
             'fulfillment_time' => 'required|date_format:H:i',
             'special_instructions' => 'nullable|string',
         ]);
 
-        if (! Auth::check() && $request->string('payment_method')->value() === 'paymongo') {
+        if (! Auth::check() && $request->string('payment_method')->value() === 'cod') {
             return redirect()->route('checkout.index')->withErrors([
-                'payment_method' => 'QRPH payment is only available for logged-in users. Please sign in or use COD.',
+                'payment_method' => 'Cash on Delivery is not available for guest checkout. Please use QRPH Online Payment.',
             ])->withInput();
         }
 

@@ -123,8 +123,15 @@ class Product extends Model
         }
 
         $normalized = ltrim($value, '/');
-        if (str_starts_with($normalized, 'images/products_image/') && ! str_starts_with($normalized, 'images/products_image/Images/')) {
-            $normalized = 'images/products_image/Images/' . basename($normalized);
+        if (str_starts_with($normalized, 'images/products_image/')) {
+            $baseFile = basename($normalized);
+            $directPath = 'images/products_image/' . $baseFile;
+            $legacyPath = 'images/products_image/Images/' . $baseFile;
+            if (file_exists(public_path($directPath))) {
+                $normalized = $directPath;
+            } elseif (file_exists(public_path($legacyPath))) {
+                $normalized = $legacyPath;
+            }
         }
         if (str_starts_with($normalized, 'images/')) {
             return asset($normalized);
@@ -135,7 +142,12 @@ class Product extends Model
 
         // Backward-compatibility for filename-only records like "CMC.jpeg"
         if (! str_contains($normalized, '/')) {
-            return asset('images/products_image/Images/' . $normalized);
+            $directPath = 'images/products_image/' . $normalized;
+            $legacyPath = 'images/products_image/Images/' . $normalized;
+            if (file_exists(public_path($directPath))) {
+                return asset($directPath);
+            }
+            return asset($legacyPath);
         }
 
         return asset('storage/' . $normalized);

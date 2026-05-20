@@ -233,7 +233,8 @@
                 <span class="mt-1 block text-xs text-[#8A6A76]">JPEG, PNG, JPG, GIF up to 2MB</span>
             </label>
             <input type="file" id="main_image" name="main_image" accept="image/*" class="sr-only @error('main_image') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-[#8A6A76]">Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+            <p class="mt-1 text-sm text-[#8A6A76]">Accepted formats: JPEG, PNG, JPG, GIF, WEBP. Max size: 2MB</p>
+            <p id="main-image-selected" class="mt-1 text-xs font-medium text-[#7A5252] hidden"></p>
             @error('main_image')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -278,7 +279,9 @@
                 <span class="mt-1 block text-xs text-[#8A6A76]">Multiple files supported</span>
             </label>
             <input type="file" id="images" name="images[]" accept="image/*" multiple class="sr-only @error('images.*') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-[#8A6A76]">Select multiple images to add. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB each</p>
+            <p class="mt-1 text-sm text-[#8A6A76]">Select multiple images to add. Accepted formats: JPEG, PNG, JPG, GIF, WEBP. Max size: 2MB each</p>
+            <p id="additional-images-selected" class="mt-1 text-xs font-medium text-[#7A5252] hidden"></p>
+            <div id="additional-images-preview" class="mt-3 hidden grid grid-cols-3 gap-2 md:grid-cols-6"></div>
             @error('images.*')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -423,6 +426,27 @@
     </form>
 </div>
 
+<div id="delete-image-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-[#2E1D25]/55 p-4">
+    <div class="w-full max-w-sm rounded-2xl border border-[#EAD5DD] bg-white p-5 shadow-2xl">
+        <h3 class="text-lg font-semibold text-[#4B2E38]">Delete Image?</h3>
+        <p class="mt-2 text-sm text-[#7A5A67]">This will remove the selected image from this product.</p>
+        <div class="mt-5 flex justify-end gap-3">
+            <button
+                type="button"
+                id="delete-image-cancel-btn"
+                class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] hover:bg-[#FAF1F5]">
+                Cancel
+            </button>
+            <button
+                type="button"
+                id="delete-image-confirm-btn"
+                class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
 @php
     $existingVariantsPayload = $product->variants->map(function ($variant) {
         return [
@@ -439,7 +463,79 @@
 @endphp
 
 <script>
+let pendingDeleteImageId = null;
+
+function openDeleteImageModal(imageId) {
+    pendingDeleteImageId = imageId;
+    const modal = document.getElementById('delete-image-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeDeleteImageModal() {
+    pendingDeleteImageId = null;
+    const modal = document.getElementById('delete-image-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
 (() => {
+    const mainImageInput = document.getElementById('main_image');
+    const mainImageSelected = document.getElementById('main-image-selected');
+    const heroPreview = document.querySelector('.aspect-square img');
+    const additionalImagesInput = document.getElementById('images');
+    const additionalImagesSelected = document.getElementById('additional-images-selected');
+    const additionalImagesPreview = document.getElementById('additional-images-preview');
+
+    mainImageInput?.addEventListener('change', () => {
+        const file = mainImageInput.files?.[0];
+        if (!file) {
+            mainImageSelected?.classList.add('hidden');
+            return;
+        }
+
+        if (mainImageSelected) {
+            mainImageSelected.textContent = `Selected: ${file.name}`;
+            mainImageSelected.classList.remove('hidden');
+        }
+
+        if (heroPreview && file.type.startsWith('image/')) {
+            heroPreview.src = URL.createObjectURL(file);
+        }
+    });
+
+    additionalImagesInput?.addEventListener('change', () => {
+        const files = [...(additionalImagesInput.files ?? [])];
+        const count = files.length;
+        if (!additionalImagesSelected) return;
+        if (count <= 0) {
+            additionalImagesSelected.classList.add('hidden');
+            additionalImagesSelected.textContent = '';
+            if (additionalImagesPreview) {
+                additionalImagesPreview.classList.add('hidden');
+                additionalImagesPreview.innerHTML = '';
+            }
+            return;
+        }
+        additionalImagesSelected.textContent = `${count} additional image${count > 1 ? 's' : ''} selected`;
+        additionalImagesSelected.classList.remove('hidden');
+
+        if (additionalImagesPreview) {
+            additionalImagesPreview.innerHTML = '';
+            files.forEach((file) => {
+                if (!file.type.startsWith('image/')) return;
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                img.className = 'h-16 w-16 rounded-lg border border-[#E7D2DA] object-cover';
+                additionalImagesPreview.appendChild(img);
+            });
+            additionalImagesPreview.classList.toggle('hidden', additionalImagesPreview.children.length === 0);
+        }
+    });
+
     const container = document.getElementById('variants-container');
     const addBtn = document.getElementById('add-variant-btn');
     const template = document.getElementById('variant-template');
@@ -567,27 +663,7 @@
 })();
 
 function deleteImage(imageId) {
-    if (confirm('Are you sure you want to delete this image?')) {
-        fetch(`/admin/products/images/${imageId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Failed to delete image');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to delete image');
-        });
-    }
+    openDeleteImageModal(imageId);
 }
 
 (() => {
@@ -713,7 +789,44 @@ function deleteImage(imageId) {
         editForm.submit();
     });
 })();
+
+(() => {
+    const modal = document.getElementById('delete-image-modal');
+    const cancelBtn = document.getElementById('delete-image-cancel-btn');
+    const confirmBtn = document.getElementById('delete-image-confirm-btn');
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    cancelBtn?.addEventListener('click', closeDeleteImageModal);
+    modal?.addEventListener('click', (event) => {
+        if (event.target === modal) closeDeleteImageModal();
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+        if (!pendingDeleteImageId) return;
+
+        try {
+            const response = await fetch(`/admin/products/images/${pendingDeleteImageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                location.reload();
+                return;
+            }
+            alert('Failed to delete image');
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Failed to delete image');
+        } finally {
+            closeDeleteImageModal();
+        }
+    });
+})();
 </script>
 @endsection
-
-

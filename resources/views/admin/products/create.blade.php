@@ -117,7 +117,11 @@
             <label for="main_image" class="mb-2 block text-sm font-medium text-[#6B4A57]">Main Product Image</label>
             <input type="file" id="main_image" name="main_image" accept="image/*"
                    class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('main_image') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-[#8A6A76]">This will be the primary image. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB</p>
+            <p class="mt-1 text-sm text-[#8A6A76]">This will be the primary image. Accepted formats: JPEG, PNG, JPG, GIF, WEBP. Max size: 2MB</p>
+            <p id="main-image-selected" class="mt-1 text-xs font-medium text-[#7A5252] hidden"></p>
+            <div id="main-image-preview-wrap" class="mt-3 hidden">
+                <img id="main-image-preview" src="" alt="Main image preview" class="h-24 w-24 rounded-lg border border-[#E7D2DA] object-cover">
+            </div>
             @error('main_image')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -128,7 +132,9 @@
             <label for="images" class="mb-2 block text-sm font-medium text-[#6B4A57]">Additional Images</label>
             <input type="file" id="images" name="images[]" accept="image/*" multiple
                    class="w-full px-3 py-2 border border-[#E7D2DA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#F5DDE6] focus:border-[#C98A9B] @error('images.*') border-red-500 @enderror">
-            <p class="mt-1 text-sm text-[#8A6A76]">Select multiple images. Accepted formats: JPEG, PNG, JPG, GIF. Max size: 2MB each</p>
+            <p class="mt-1 text-sm text-[#8A6A76]">Select multiple images. Accepted formats: JPEG, PNG, JPG, GIF, WEBP. Max size: 2MB each</p>
+            <p id="additional-images-selected" class="mt-1 text-xs font-medium text-[#7A5252] hidden"></p>
+            <div id="additional-images-preview" class="mt-3 hidden grid grid-cols-3 gap-2 md:grid-cols-6"></div>
             @error('images.*')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
@@ -247,6 +253,64 @@
 
 <script>
     (function () {
+        const mainImageInput = document.getElementById('main_image');
+        const mainImageSelected = document.getElementById('main-image-selected');
+        const mainImagePreviewWrap = document.getElementById('main-image-preview-wrap');
+        const mainImagePreview = document.getElementById('main-image-preview');
+        const additionalImagesInput = document.getElementById('images');
+        const additionalImagesSelected = document.getElementById('additional-images-selected');
+        const additionalImagesPreview = document.getElementById('additional-images-preview');
+
+        mainImageInput?.addEventListener('change', () => {
+            const file = mainImageInput.files?.[0];
+            if (!file) {
+                mainImageSelected?.classList.add('hidden');
+                mainImagePreviewWrap?.classList.add('hidden');
+                if (mainImagePreview) mainImagePreview.src = '';
+                return;
+            }
+
+            if (mainImageSelected) {
+                mainImageSelected.textContent = `Selected: ${file.name}`;
+                mainImageSelected.classList.remove('hidden');
+            }
+
+            if (file.type.startsWith('image/') && mainImagePreview && mainImagePreviewWrap) {
+                mainImagePreview.src = URL.createObjectURL(file);
+                mainImagePreviewWrap.classList.remove('hidden');
+            }
+        });
+
+        additionalImagesInput?.addEventListener('change', () => {
+            const files = [...(additionalImagesInput.files ?? [])];
+            const count = files.length;
+            if (!additionalImagesSelected) return;
+            if (count <= 0) {
+                additionalImagesSelected.classList.add('hidden');
+                additionalImagesSelected.textContent = '';
+                if (additionalImagesPreview) {
+                    additionalImagesPreview.classList.add('hidden');
+                    additionalImagesPreview.innerHTML = '';
+                }
+                return;
+            }
+            additionalImagesSelected.textContent = `${count} additional image${count > 1 ? 's' : ''} selected`;
+            additionalImagesSelected.classList.remove('hidden');
+
+            if (additionalImagesPreview) {
+                additionalImagesPreview.innerHTML = '';
+                files.forEach((file) => {
+                    if (!file.type.startsWith('image/')) return;
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.alt = file.name;
+                    img.className = 'h-16 w-16 rounded-lg border border-[#E7D2DA] object-cover';
+                    additionalImagesPreview.appendChild(img);
+                });
+                additionalImagesPreview.classList.toggle('hidden', additionalImagesPreview.children.length === 0);
+            }
+        });
+
         const container = document.getElementById('variants-container');
         const addBtn = document.getElementById('add-variant-btn');
         const template = document.getElementById('variant-template');
@@ -325,4 +389,3 @@
     })();
 </script>
 @endsection
-

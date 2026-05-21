@@ -1,0 +1,20 @@
+{
+  "round": {
+    "1": "/models/bonbon-cakes/toppings/toppings_round_1_tier.glb",
+    "2": "/models/bonbon-cakes/toppings/toppings_round_2_tier.glb",
+    "3": "/models/bonbon-cakes/toppings/toppings_round_3_tier.glb",
+    "4": "/models/bonbon-cakes/toppings/toppings_round_4_tier.glb"
+  },
+  "square": {
+    "1": "/models/bonbon-cakes/toppings/toppings_square_1_tier.glb",
+    "2": "/models/bonbon-cakes/toppings/toppings_square_2_tier.glb",
+    "3": "/models/bonbon-cakes/toppings/toppings_square_3_tier.glb",
+    "4": "/models/bonbon-cakes/toppings/toppings_square_4_tier.glb"
+  },
+  "heart": {
+    "1": "/models/bonbon-cakes/toppings/toppings_heart_1_tier.glb",
+    "2": "/models/bonbon-cakes/toppings/toppings_heart_2_tier.glb",
+    "3": "/models/bonbon-cakes/toppings/toppings_heart_3_tier.glb",
+    "4": "/models/bonbon-cakes/toppings/toppings_heart_4_tier.glb"
+  }
+}

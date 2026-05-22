@@ -36,18 +36,199 @@
     .no-scrollbar::-webkit-scrollbar {
         display: none;
     }
+    #test-customize-page {
+        isolation: isolate;
+    }
+    #test-customize-page::before,
+    #test-customize-page::after {
+        content: '';
+        position: absolute;
+        border-radius: 999px;
+        pointer-events: none;
+        filter: blur(4px);
+        opacity: 0.55;
+        z-index: 0;
+    }
+    #test-customize-page::before {
+        right: -8rem;
+        top: -6rem;
+        width: 24rem;
+        height: 24rem;
+        background: rgba(255, 255, 255, 0.72);
+    }
+    #test-customize-page::after {
+        left: 24rem;
+        bottom: -10rem;
+        width: 28rem;
+        height: 28rem;
+        background: rgba(244, 114, 182, 0.18);
+    }
+    #cake-3d-wrap,
+    #customize-control-panel,
+    #customize-view-tabs {
+        z-index: 10;
+    }
+    #customize-phone,
+    #customize-view-tabs,
+    #spin-hint,
+    #filling-badge {
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+    }
+    #customize-scroll :is(select, textarea, input[type='number'], input[type='color']) {
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+    #customize-scroll :is(select, textarea, input[type='number'], input[type='color']):focus {
+        border-color: #ec5a61;
+        box-shadow: 0 0 0 4px rgba(236, 90, 97, 0.14);
+        background-color: #fff;
+    }
+    #customize-scroll button,
+    #customize-view-tabs button {
+        touch-action: manipulation;
+    }
+    @media (max-width: 1023px) {
+        #test-customize-page {
+            left: auto;
+            width: 100%;
+            min-height: 100svh;
+            height: auto;
+            transform: none;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            margin-top: -1rem;
+            margin-bottom: -1rem;
+        }
+        #test-customize-page::before {
+            right: -10rem;
+            top: -8rem;
+            width: 18rem;
+            height: 18rem;
+        }
+        #test-customize-page::after {
+            left: -9rem;
+            bottom: 18rem;
+            width: 20rem;
+            height: 20rem;
+        }
+        #cake-3d-wrap {
+            position: relative;
+            inset: auto;
+            height: clamp(320px, 54svh, 560px);
+            min-height: 320px;
+            overflow: hidden;
+            border: 1px solid rgba(243, 215, 221, 0.9);
+            border-radius: 2rem;
+            background: linear-gradient(160deg, rgba(255,255,255,.6), rgba(255,231,239,.72));
+            box-shadow: 0 20px 48px rgba(90, 58, 58, 0.14);
+        }
+        #spin-hint {
+            top: .85rem;
+            right: .85rem;
+            padding: .45rem .75rem;
+            font-size: 10px;
+        }
+        #filling-badge {
+            right: .85rem;
+            bottom: .85rem;
+            max-width: min(12rem, calc(100% - 1.7rem));
+        }
+        #customize-control-panel {
+            position: relative;
+            left: auto;
+            top: auto;
+            bottom: auto;
+            display: block;
+            width: 100%;
+            pointer-events: auto;
+        }
+        #customize-phone {
+            width: 100%;
+            max-width: 46rem;
+            height: auto;
+            max-height: none;
+            margin: 0 auto;
+            padding: 0;
+            overflow: visible;
+            border: 0;
+            border-radius: 2rem;
+            background: rgba(255, 250, 248, 0.9);
+            box-shadow: 0 18px 42px rgba(90, 58, 58, 0.13);
+        }
+        #customize-notch,
+        #customize-home-indicator {
+            display: none;
+        }
+        #customize-scroll {
+            overflow: visible;
+            border-radius: 2rem;
+            padding: 1.25rem;
+        }
+        #customize-view-tabs {
+            position: sticky;
+            bottom: .75rem;
+            left: auto;
+            transform: none;
+            order: 3;
+            width: 100%;
+            max-width: 46rem;
+            margin: 0 auto;
+            justify-content: flex-start;
+            gap: .5rem;
+            overflow-x: auto;
+            border-radius: 1.5rem;
+            padding: .5rem;
+        }
+        #customize-view-tabs button {
+            min-width: max-content;
+            padding: .75rem 1rem;
+            font-size: .8rem;
+        }
+    }
+    @media (max-width: 480px) {
+        #test-customize-page {
+            padding: .75rem;
+            gap: .75rem;
+        }
+        #cake-3d-wrap {
+            height: 42svh;
+            min-height: 280px;
+            border-radius: 1.5rem;
+        }
+        #customize-scroll {
+            padding: 1rem;
+        }
+        #customize-scroll section {
+            border-radius: 1.25rem;
+            padding: 1rem;
+        }
+        #customize-scroll h1 {
+            font-size: 1.45rem;
+        }
+        #builder-frosting-swatches {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        #builder-frosting-swatches button {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    }
 </style>
-<div id="test-customize-page" class="relative w-[100vw] left-1/2 -translate-x-1/2 -mt-8 -mb-8 h-[calc(100vh-150px)] min-h-[600px] overflow-hidden bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef]">
+<div id="test-customize-page" class="relative w-[100vw] left-1/2 -translate-x-1/2 -mt-8 -mb-8 h-[calc(100svh-150px)] min-h-[600px] overflow-hidden bg-gradient-to-br from-[#fff9fb] via-[#fff0f4] to-[#ffe2ec]">
 
     {{-- 3D Canvas Background (Fullscreen Turntable) --}}
     <div id="cake-3d-wrap" class="absolute inset-0">
         <div id="cake-3d-canvas" class="block h-full w-full cursor-grab active:cursor-grabbing"></div>
 
         {{-- Auto-rotating hint --}}
-        <div id="spin-hint" class="absolute top-10 right-10 z-10 rounded-full bg-white/80 px-4 py-2 text-xs font-semibold text-[#7A5252] shadow-md" style="backdrop-filter:blur(4px);transition:opacity .6s">✦ Auto-rotating</div>
+        <div id="spin-hint" class="absolute top-10 right-10 z-10 rounded-full border border-white/70 bg-white/82 px-4 py-2 text-xs font-semibold text-[#7A5252] shadow-md" style="transition:opacity .6s">✦ Auto-rotating</div>
 
         {{-- Filling badge --}}
-        <div id="filling-badge" class="absolute bottom-24 right-10 z-10 max-w-[160px] rounded-2xl bg-white/92 px-4 py-3 shadow-lg hidden" style="backdrop-filter:blur(6px)">
+        <div id="filling-badge" class="absolute bottom-24 right-10 z-10 hidden max-w-[160px] rounded-2xl border border-white/70 bg-white/92 px-4 py-3 shadow-lg">
             <div class="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#5A3A3A]">Inside Filling</div>
             <div id="filling-badge-name" class="truncate text-sm font-bold text-[#7A5252]"></div>
             <div id="filling-badge-swatch" class="mt-2 h-3 w-full rounded-full" style="background:#6a3d2d"></div>
@@ -55,7 +236,7 @@
     </div>
 
     {{-- Bottom View Tabs Overlay --}}
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3 rounded-full bg-white/80 p-2 shadow-2xl backdrop-blur-md border border-[#F3D7DD]">
+    <div id="customize-view-tabs" class="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-3 rounded-full border border-[#F3D7DD] bg-white/82 p-2 shadow-2xl">
         <button id="tab-view-front" data-cake-view="auto" type="button" class="rounded-full border border-[#ec5a61] bg-pink-600 px-8 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-pink-500">360 View</button>
         <button id="tab-view-top" data-cake-view="top" type="button" class="rounded-full border border-transparent px-8 py-3 text-sm font-bold text-[#7A5252] transition-all hover:bg-pink-100 hover:text-pink-700">Top View</button>
         <button id="tab-view-side" data-cake-view="side" type="button" class="rounded-full border border-transparent px-8 py-3 text-sm font-bold text-[#7A5252] transition-all hover:bg-pink-100 hover:text-pink-700">Side View</button>
@@ -63,13 +244,13 @@
     </div>
 
     {{-- Cellphone Mockup Control Panel (Left Side) --}}
-    <div class="absolute left-4 top-4 bottom-8 z-20 flex items-start pointer-events-none sm:left-6 lg:left-10">
-        <div class="relative flex h-full max-h-[830px] w-[385px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[2.75rem] border-[10px] border-[#202024] bg-[#202024] p-2 shadow-[0_26px_70px_rgba(55,28,35,0.28)] pointer-events-auto ring-1 ring-white/35">
+    <div id="customize-control-panel" class="absolute bottom-8 left-4 top-4 z-20 flex items-start pointer-events-none sm:left-6 lg:left-10">
+        <div id="customize-phone" class="relative flex h-full max-h-[830px] w-[385px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[2.75rem] border-[10px] border-[#202024] bg-[#202024] p-2 shadow-[0_26px_70px_rgba(55,28,35,0.28)] pointer-events-auto ring-1 ring-white/35">
             {{-- iPhone Notch --}}
-            <div class="absolute left-1/2 top-2 z-50 h-6 w-[42%] -translate-x-1/2 rounded-b-3xl bg-[#202024]"></div>
+            <div id="customize-notch" class="absolute left-1/2 top-2 z-50 h-6 w-[42%] -translate-x-1/2 rounded-b-3xl bg-[#202024]"></div>
 
             {{-- Scrollable Form Area --}}
-            <div class="flex-1 overflow-y-auto rounded-[2.05rem] bg-[#fffaf8] px-4 pb-7 pt-10 no-scrollbar">
+            <div id="customize-scroll" class="flex-1 overflow-y-auto rounded-[2.05rem] bg-[#fffaf8] px-4 pb-7 pt-10 no-scrollbar">
                 <div class="mb-4">
                     <p class="text-[10px] font-black uppercase tracking-[0.22em] text-pink-600">Cake Studio</p>
                     <h1 class="mt-1 text-2xl font-black leading-tight text-[#4f3338]">Build Your Dream Cake</h1>
@@ -274,7 +455,7 @@
             </div>
 
             {{-- Home Indicator --}}
-            <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-1/3 h-1.5 bg-gray-300 rounded-full z-50"></div>
+            <div id="customize-home-indicator" class="absolute bottom-2 left-1/2 z-50 h-1.5 w-1/3 -translate-x-1/2 rounded-full bg-gray-300"></div>
         </div>
     </div>
 

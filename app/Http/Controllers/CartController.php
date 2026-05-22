@@ -50,6 +50,18 @@ class CartController extends Controller
         return $response;
     }
 
+    private function redirectBackWithCartToken(Request $request, string $message): \Illuminate\Http\RedirectResponse
+    {
+        $response = redirect()->back()->with('success', $message);
+
+        if (! Auth::check()) {
+            $token = $this->guestCartToken ?: $this->resolveGuestCartToken($request);
+            $response->cookie('cart_token', $token, 60 * 24 * 30);
+        }
+
+        return $response;
+    }
+
     private function ensureItemBelongsToCart(Request $request, CartItem $item): void
     {
         $cart = $this->getCart($request);
@@ -199,7 +211,7 @@ class CartController extends Controller
             return $this->cartJsonResponse($cart, $request);
         }
 
-        return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
+        return $this->redirectBackWithCartToken($request, 'Item added to cart!');
     }
 
 

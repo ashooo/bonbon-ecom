@@ -314,7 +314,7 @@
             var end = endInput ? endInput.value : '';
 
             if(!start || !end){
-                alert('Please select both start and end dates.');
+                if (window.BonbonNotify) { window.BonbonNotify('warning', 'Please select both start and end dates.'); } else { alert('Please select both start and end dates.'); }
                 return;
             }
 
@@ -325,3 +325,4 @@
         });
     })();
 </script>
+

@@ -3,7 +3,7 @@
 @section('content')
     <h1 class="text-3xl font-bold text-[#4D2E38] mb-8">Your Cart</h1>
 
-    @if (session('success'))
+    @if (session('success') && session('success') !== 'Item added to cart!')
         <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
             {{ session('success') }}
         </div>
@@ -14,12 +14,26 @@
             <!-- Cart Items -->
             <div class="lg:col-span-2">
                 <div class="space-y-4">
+                    <div class="px-1 pb-1">
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-[#4D2E38]">
+                            <input type="checkbox" id="select-all-cart-items" class="h-4 w-4 rounded border-[#C88A92] text-[#C47A90] accent-[#C47A90] focus:ring-[#C47A90]" checked>
+                            Select all items
+                        </label>
+                    </div>
                     @foreach ($items as $item)
                         @php
                             $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
                             $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design');
                         @endphp
                         <div class="bg-[#FFFFFF] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#ECD8E0] p-6 flex items-center space-x-4">
+                            <input
+                                type="checkbox"
+                                name="selected_item_ids[]"
+                                value="{{ $item->id }}"
+                                data-subtotal="{{ number_format($item->unit_price * $item->quantity, 2, '.', '') }}"
+                                class="cart-item-checkbox h-5 w-5 rounded border-[#C88A92] text-[#C47A90] accent-[#C47A90] focus:ring-[#C47A90]"
+                                checked
+                            >
                             @if (!empty($item->customization_payload['preview_svg']))
                                 <div class="h-20 w-20 overflow-hidden rounded bg-white [&_svg]:h-full [&_svg]:w-full">
                                     {!! $item->customization_payload['preview_svg'] !!}
@@ -70,37 +84,136 @@
             <!-- Order Summary -->
             <div class="bg-[#FFFFFF] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#ECD8E0] p-6 h-fit">
                 <h2 class="text-xl font-bold text-[#4D2E38] mb-4">Order Summary</h2>
+                <p id="cart-selected-count" class="mb-4 text-sm font-medium text-[#8A6A76]">0 items selected</p>
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between">
                         <span>Subtotal</span>
-                        <span>&#8369;{{ number_format($subtotal, 2) }}</span>
+                        <span id="cart-summary-subtotal" data-base-subtotal="{{ number_format($subtotal, 2, '.', '') }}">&#8369;{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Delivery</span>
-                        <span>&#8369;{{ number_format($delivery, 2) }}</span>
+                        <span id="cart-summary-delivery" data-delivery-fee="{{ number_format($delivery, 2, '.', '') }}">&#8369;{{ number_format($delivery, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Tax ({{ number_format((float) ($taxRate ?? 10), 2) }}%)</span>
-                        <span>&#8369;{{ number_format($tax, 2) }}</span>
+                        <span id="cart-summary-tax" data-tax-rate="{{ number_format((float) ($taxRate ?? 10), 4, '.', '') }}">&#8369;{{ number_format($tax, 2) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Service Fee</span>
-                        <span>&#8369;{{ number_format((float) ($serviceFee ?? 0), 2) }}</span>
+                        <span id="cart-summary-service-fee" data-service-fee="{{ number_format((float) ($serviceFee ?? 0), 2, '.', '') }}">&#8369;{{ number_format((float) ($serviceFee ?? 0), 2) }}</span>
                     </div>
                 </div>
                 <hr class="my-4 border-[#ECD8E0]">
                 <div class="flex justify-between text-lg font-bold mb-6">
                     <span>Total</span>
-                    <span>&#8369;{{ number_format($total, 2) }}</span>
+                    <span id="cart-summary-total">&#8369;{{ number_format($total, 2) }}</span>
                 </div>
-                <a href="/checkout" class="w-full bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
-                    Proceed to Checkout
-                </a>
+                <form id="checkout-selection-form" method="GET" action="{{ route('checkout.index') }}">
+                    <input type="hidden" name="selection_mode" value="1">
+                    <div id="checkout-selection-hidden-inputs"></div>
+                    <button id="checkout-submit-btn" type="submit" class="w-full bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
+                        Proceed to Checkout
+                    </button>
+                </form>
                 <a href="/#shop" class="w-full bg-[#FBEAF1] hover:bg-[#E9C7D4] text-[#4D2E38] font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
                     Continue Shopping
                 </a>
             </div>
         </div>
+
+        <script>
+            (() => {
+                const selectAll = document.getElementById('select-all-cart-items');
+                const itemChecks = Array.from(document.querySelectorAll('.cart-item-checkbox'));
+                const checkoutForm = document.getElementById('checkout-selection-form');
+                const hiddenInputsHost = document.getElementById('checkout-selection-hidden-inputs');
+                const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+                const selectedCountEl = document.getElementById('cart-selected-count');
+                const subtotalEl = document.getElementById('cart-summary-subtotal');
+                const deliveryEl = document.getElementById('cart-summary-delivery');
+                const taxEl = document.getElementById('cart-summary-tax');
+                const serviceFeeEl = document.getElementById('cart-summary-service-fee');
+                const totalEl = document.getElementById('cart-summary-total');
+
+                if (!selectAll || itemChecks.length === 0 || !checkoutForm || !hiddenInputsHost || !checkoutSubmitBtn) return;
+
+                const syncSelectAll = () => {
+                    selectAll.checked = itemChecks.every((checkbox) => checkbox.checked);
+                };
+
+                const formatPeso = (value) =>
+                    `₱${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                const syncSummary = () => {
+                    if (!subtotalEl || !deliveryEl || !taxEl || !serviceFeeEl || !totalEl) return;
+                    const selectedChecks = itemChecks.filter((checkbox) => checkbox.checked);
+                    const subtotal = selectedChecks.reduce((sum, checkbox) => {
+                        const rowSubtotal = Number(checkbox.dataset.subtotal || 0);
+                        return sum + rowSubtotal;
+                    }, 0);
+
+                    const deliveryFee = Number(deliveryEl.dataset.deliveryFee || 0);
+                    const taxRate = Number(taxEl.dataset.taxRate || 10);
+                    const serviceFee = Number(serviceFeeEl.dataset.serviceFee || 0);
+                    const hasSelectedItems = selectedChecks.length > 0;
+
+                    const delivery = hasSelectedItems ? deliveryFee : 0;
+                    const tax = subtotal * (taxRate / 100);
+                    const total = subtotal + delivery + tax + (hasSelectedItems ? serviceFee : 0);
+
+                    subtotalEl.textContent = formatPeso(subtotal);
+                    deliveryEl.textContent = formatPeso(delivery);
+                    taxEl.textContent = formatPeso(tax);
+                    serviceFeeEl.textContent = formatPeso(hasSelectedItems ? serviceFee : 0);
+                    totalEl.textContent = formatPeso(total);
+                };
+
+                const syncCheckoutInputs = () => {
+                    const selectedIds = itemChecks
+                        .filter((checkbox) => checkbox.checked)
+                        .map((checkbox) => checkbox.value);
+
+                    hiddenInputsHost.innerHTML = selectedIds
+                        .map((id) => `<input type="hidden" name="selected_item_ids[]" value="${id}">`)
+                        .join('');
+
+                    checkoutSubmitBtn.disabled = selectedIds.length === 0;
+                    checkoutSubmitBtn.classList.toggle('opacity-50', selectedIds.length === 0);
+                    checkoutSubmitBtn.classList.toggle('cursor-not-allowed', selectedIds.length === 0);
+
+                    if (selectedCountEl) {
+                        const label = selectedIds.length === 1 ? 'item' : 'items';
+                        selectedCountEl.textContent = `${selectedIds.length} ${label} selected`;
+                    }
+                };
+
+                selectAll.addEventListener('change', () => {
+                    itemChecks.forEach((checkbox) => {
+                        checkbox.checked = selectAll.checked;
+                    });
+                    syncCheckoutInputs();
+                    syncSummary();
+                });
+
+                itemChecks.forEach((checkbox) => {
+                    checkbox.addEventListener('change', () => {
+                        syncSelectAll();
+                        syncCheckoutInputs();
+                        syncSummary();
+                    });
+                });
+
+                checkoutForm.addEventListener('submit', (event) => {
+                    if (checkoutSubmitBtn.disabled) {
+                        event.preventDefault();
+                    }
+                });
+
+                syncSelectAll();
+                syncCheckoutInputs();
+                syncSummary();
+            })();
+        </script>
     @else
         <!-- Empty Cart -->
         <div class="text-center py-12">

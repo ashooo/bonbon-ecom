@@ -155,6 +155,10 @@
 
             <form method="POST" action="{{ route('checkout.store') }}" class="space-y-8">
                 @csrf
+                <input type="hidden" name="selection_mode" value="1">
+                @foreach(($selectedItemIds ?? []) as $selectedItemId)
+                    <input type="hidden" name="selected_item_ids[]" value="{{ (int) $selectedItemId }}">
+                @endforeach
                 
                 <!-- Main Form Card -->
                 <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#F5E6E8] p-8 md:p-10 space-y-10">

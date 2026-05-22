@@ -56,7 +56,7 @@ Route::get('/', function () {
     return view('pages.home', compact('featuredProducts', 'featuredCategories', 'shelfProducts'));
 });
 
-Route::get('/test-products', function (Request $request) {
+Route::get('/shop', function (Request $request) {
     $products = collect();
     $categories = collect();
 
@@ -82,6 +82,14 @@ Route::get('/test-products', function (Request $request) {
             $productsQuery->where('category_id', $request->integer('category'));
         }
 
+        if ($request->boolean('featured')) {
+            $productsQuery->where('is_featured', true);
+        }
+
+        if ($request->boolean('best_seller')) {
+            $productsQuery->where('is_best_seller', true);
+        }
+
         match ($request->input('sort')) {
             'price_low' => $productsQuery->orderBy('sale_price')->orderBy('price'),
             'price_high' => $productsQuery->orderByDesc('sale_price')->orderByDesc('price'),
@@ -93,6 +101,12 @@ Route::get('/test-products', function (Request $request) {
     }
 
     return view('products.index', compact('products', 'categories'));
+})->name('shop.index');
+
+Route::get('/test-products', function (Request $request) {
+    $query = $request->query();
+
+    return redirect()->route('shop.index', $query);
 });
 
 Route::get('/product/{slug}', function ($slug) {

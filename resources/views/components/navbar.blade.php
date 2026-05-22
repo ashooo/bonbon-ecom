@@ -4,6 +4,23 @@
         $navbarUnreadNotificationsCount = Auth::user()->unreadUserNotifications()->count();
     @endphp
 @endauth
+@php
+    $navbarCartCount = 0;
+
+    if (Auth::check()) {
+        $authCart = Auth::user()->cart()->with('items')->first();
+        $navbarCartCount = (int) ($authCart?->items->sum('quantity') ?? 0);
+    } else {
+        $guestCartToken = trim((string) request()->cookie('cart_token', ''));
+        if ($guestCartToken !== '') {
+            $guestCart = \App\Models\Cart::query()
+                ->where('session_id', $guestCartToken)
+                ->with('items')
+                ->first();
+            $navbarCartCount = (int) ($guestCart?->items->sum('quantity') ?? 0);
+        }
+    }
+@endphp
 
 <header id="main-navbar" class="bg-[#FFFFFF] shadow-md border-b border-[#F5F5F5]">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -13,16 +30,30 @@
 
         <nav class="hidden md:flex space-x-6">
             <a href="/" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a>
-            <a href="{{ url('/test-products') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
+            <a href="{{ route('shop.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
             <a href="{{ route('orders.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
             <a href="/customize" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
         </nav>
 
         <div class="flex items-center space-x-4">
+            @auth
+                @if (Auth::user()->is_admin)
+                    <a
+                        href="{{ route('admin.dashboard') }}"
+                        class="hidden lg:inline-flex h-10 items-center rounded-full border border-[#E6D5D8] bg-[#FFF6FA] px-3 text-xs font-semibold text-[#7A2F56] transition hover:border-[#C94F7C] hover:text-[#C94F7C]"
+                    >
+                        Admin Panel
+                    </a>
+                @endif
+            @endauth
+
             <a href="/cart" id="navbar-cart-btn" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D5D8] bg-transparent text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"></path>
                 </svg>
+                <span data-cart-count-badge class="absolute -right-1 -top-1 {{ $navbarCartCount > 0 ? 'inline-flex' : 'hidden' }} h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-bold leading-none text-white">
+                    {{ $navbarCartCount }}
+                </span>
             </a>
 
             @auth

@@ -22,6 +22,12 @@ export function initCakeScrollytelling() {
             borderColor: '#E6D5D8',
             backgroundColor: '#ffffff',
         });
+        gsap.set('[data-cart-count-badge], [data-notification-badge]', {
+            color: '#feeaf5',
+            backgroundColor: '#C65187',
+            borderColor: '#A83D70',
+            boxShadow: 'none',
+        });
     }
 
     function setNavbarDarkTheme() {
@@ -38,6 +44,12 @@ export function initCakeScrollytelling() {
         gsap.set('#navbar-account-btn', {
             borderColor: 'rgba(255, 255, 255, 0.2)',
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        });
+        gsap.set('[data-cart-count-badge], [data-notification-badge]', {
+            color: '#feeaf5',
+            backgroundColor: '#8F2F5D',
+            borderColor: '#742349',
+            boxShadow: 'none',
         });
     }
 
@@ -217,6 +229,15 @@ export function initCakeScrollytelling() {
         color: '#FBEAF1', 
         duration: navDur,
         ease: 'power2.inOut'
+    }, navStart);
+
+    tl.to('[data-cart-count-badge], [data-notification-badge]', {
+        color: '#feeaf5',
+        backgroundColor: '#feeaf5',
+        borderColor: '#feeaf5',
+        boxShadow: 'none',
+        duration: navDur,
+        ease: 'power2.inOut',
     }, navStart);
 
     // ═══════════════════════════════════════
@@ -765,7 +786,18 @@ export function initCakeScrollytelling() {
     // Attach gallery trigger
     const ctaBtn = document.getElementById('story-cta-btn');
     if (ctaBtn) {
-        ctaBtn.addEventListener('click', () => {
+        ctaBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            const SHOWCASE_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
+            try {
+                localStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+                    unlockedAt: Date.now(),
+                    expiresAt: Date.now() + SHOWCASE_CACHE_TTL_MS,
+                }));
+            } catch (e) {}
+            document.documentElement.classList.add('home-chat-unlocked');
+
             const showcase = document.getElementById('home-showcase');
             if (showcase) {
                 const isHidden = showcase.style.display === 'none' || getComputedStyle(showcase).display === 'none';
@@ -776,7 +808,10 @@ export function initCakeScrollytelling() {
                         { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }
                     );
                 }
-                showcase.scrollIntoView({ behavior: 'smooth' });
+                requestAnimationFrame(() => {
+                    const top = showcase.getBoundingClientRect().top + window.scrollY;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                });
             }
         });
     }

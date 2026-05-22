@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Bonbon Ecom') }} | Admin</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/bonbon-cupcake-icon.svg') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 <style>
@@ -102,6 +104,17 @@
     @endif
 </head>
 <body class="min-h-screen">
+    @php
+        $globalToasts = array_values(array_filter([
+            ['type' => 'success', 'message' => session()->pull('success')],
+            ['type' => 'error', 'message' => session()->pull('error')],
+            ['type' => 'warning', 'message' => session()->pull('warning')],
+            ['type' => 'info', 'message' => session()->pull('info')],
+            ['type' => 'error', 'message' => $errors->any() ? $errors->first() : null],
+        ], fn ($toast) => filled($toast['message'] ?? null)));
+    @endphp
+    <x-toast-notifications :toasts="$globalToasts" />
+
     <div class="min-h-screen grid grid-cols-[280px_minmax(0,1fr)]">
         <!-- Sidebar -->
 <aside class="flex flex-col" style="background-color: var(--sidebar-bg);">
@@ -136,15 +149,6 @@
                 </svg>
             </span>
             Categories
-        </a>
-        
-        <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="inventory" style="color: var(--sidebar-text);">
-            <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="var(--sidebar-text)" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
-                </svg>
-            </span>
-            Inventory
         </a>
         
         <a href="#" class="nav-link group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/20" data-section="orders" style="color: var(--sidebar-text);">
@@ -207,19 +211,28 @@
                     </div>
 
                     <div class="flex items-center gap-3 justify-end">
+                        <a
+                            href="{{ url('/') }}"
+                            class="inline-flex h-11 items-center rounded-2xl border border-[#ECD8E0] bg-white px-4 text-sm font-medium text-[#6F4C58] shadow-sm transition hover:bg-[#FFF5F8]"
+                        >
+                            Back to Shop
+                        </a>
                         @php
-                            $__admin_avatar = $storeSettings?->chat_avatar_url ?? 'https://via.placeholder.com/32';
+                            $adminUser = auth()->user();
+                            $__admin_avatar = $adminUser?->profile_image_url ?? ($storeSettings?->chat_avatar_url ?? 'https://via.placeholder.com/32');
+                            $__admin_name = $adminUser?->name ?? 'Admin';
+                            $__admin_email = $adminUser?->email ?? 'admin@bonbon.com';
                         @endphp
                         <button class="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-50 px-4 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100" id="adminProfileToggle">
                             <img src="{{ $__admin_avatar }}" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
-                            <span>Admin</span>
+                            <span>{{ $__admin_name }}</span>
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
 
                         <div id="adminProfileMenu" class="hidden absolute right-6 top-20 z-30 w-56 rounded-2xl border border-[#ECD8E0] bg-[#FBF2F6] shadow-soft">
                             <div class="p-4 border-b border-[#ECD8E0]">
-                                <p class="font-semibold">Admin Name</p>
-                                <p class="text-sm text-[#8F6172]">admin@bonbon.com</p>
+                                <p class="font-semibold">{{ $__admin_name }}</p>
+                                <p class="text-sm text-[#8F6172]">{{ $__admin_email }}</p>
                             </div>
                             <div class="flex flex-col p-3 gap-2">
                                 <form method="POST" action="{{ route('admin.logout') }}">
@@ -312,6 +325,71 @@
                 applySection(validRequested);
             }
         });
+    </script>
+
+    <div id="bonbon-confirm-modal" class="fixed inset-0 z-[10060] hidden items-center justify-center bg-[#2E2E2E]/45 p-4" aria-hidden="true">
+        <div class="w-full max-w-md rounded-2xl border border-[#EED9DE] bg-white p-5 shadow-2xl">
+            <h3 id="bonbon-confirm-title" class="text-lg font-semibold text-[#5A3A3A]">Please confirm</h3>
+            <p id="bonbon-confirm-message" class="mt-2 text-sm text-[#8C6770]">Are you sure you want to continue?</p>
+            <div class="mt-5 flex justify-end gap-3">
+                <button type="button" id="bonbon-confirm-cancel" class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] transition hover:bg-[#FAF1F5]">Cancel</button>
+                <button type="button" id="bonbon-confirm-ok" class="rounded-xl bg-[#C88A92] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7A5252]">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.getElementById('bonbon-confirm-modal');
+            const titleEl = document.getElementById('bonbon-confirm-title');
+            const messageEl = document.getElementById('bonbon-confirm-message');
+            const cancelBtn = document.getElementById('bonbon-confirm-cancel');
+            const okBtn = document.getElementById('bonbon-confirm-ok');
+            let pendingForm = null;
+
+            const closeModal = () => {
+                pendingForm = null;
+                modal?.classList.add('hidden');
+                modal?.classList.remove('flex');
+                modal?.setAttribute('aria-hidden', 'true');
+            };
+
+            const openModal = (form) => {
+                if (!modal) return;
+                pendingForm = form;
+                titleEl.textContent = form.dataset.confirmTitle || 'Please confirm';
+                messageEl.textContent = form.dataset.confirmMessage || 'Are you sure you want to continue?';
+                okBtn.textContent = form.dataset.confirmOk || 'Confirm';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.setAttribute('aria-hidden', 'false');
+            };
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target.closest('form[data-confirm]');
+                if (!form || form.dataset.confirmBypassed === '1') return;
+                event.preventDefault();
+                openModal(form);
+            }, true);
+
+            okBtn?.addEventListener('click', () => {
+                if (!pendingForm) return closeModal();
+                pendingForm.dataset.confirmBypassed = '1';
+                pendingForm.requestSubmit();
+                pendingForm.dataset.confirmBypassed = '0';
+                closeModal();
+            });
+
+            cancelBtn?.addEventListener('click', closeModal);
+            modal?.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
     </script>
 </body>
 </html>

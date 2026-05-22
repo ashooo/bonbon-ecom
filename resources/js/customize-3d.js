@@ -1293,14 +1293,29 @@ const initCustomizer3D = () => {
 
     const updateCamera = () => {
         const inside = activeView === 'inside';
-        const distance = inside ? (isImmersive ? 9.5 : 5.4) : (isImmersive ? 14.5 : 6.2);
-        const height = (inside ? (isImmersive ? 3.8 : 2.5) : (isImmersive ? 5.2 : 3.7)) + viewPitch;
-        if (viewPitch > 2.5) {
-            camera.position.set(isImmersive ? 1.8 : 0, isImmersive ? 14.5 : 7.8, 0.08);
-        } else {
-            camera.position.set(isImmersive ? 1.8 : 0, height + (isImmersive ? -0.8 : 0), distance);
+        const top = activeView === 'top' || viewPitch > 2.5;
+
+        let distance = isImmersive ? 14.5 : 6.2;
+        let baseHeight = isImmersive ? 5.2 : 3.7;
+        let lookY = isImmersive ? -0.6 : 1.05;
+        let panX = isImmersive ? 1.8 : 0;
+        let heightOffset = isImmersive ? -0.8 : 0;
+
+        if (inside) {
+            distance = isImmersive ? 8.5 : 5.4;
+            baseHeight = isImmersive ? 3.5 : 2.5;
+            lookY = isImmersive ? 0.0 : 0.35;
         }
-        camera.lookAt(isImmersive ? 1.8 : 0, inside ? 0.35 : (isImmersive ? -0.6 : 1.05), 0);
+
+        const height = baseHeight + viewPitch + heightOffset;
+
+        if (top) {
+            camera.position.set(panX, isImmersive ? 10.5 : 7.8, 0.08);
+            camera.lookAt(panX, lookY, 0);
+        } else {
+            camera.position.set(panX, height, distance);
+            camera.lookAt(panX, lookY, 0);
+        }
     };
 
     const syncViewButtons = (activeView = autoRotate ? 'auto' : '') => {

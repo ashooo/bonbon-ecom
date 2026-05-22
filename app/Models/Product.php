@@ -174,7 +174,20 @@ class Product extends Model
     // Get the effective price (with discount if available)
     public function getEffectivePriceAttribute()
     {
-        return $this->sale_price ?? $this->price;
+        if ($this->sale_price !== null) {
+            return $this->sale_price;
+        }
+
+        if ($this->price !== null) {
+            return $this->price;
+        }
+
+        // Fallback for products whose price is defined at variant level.
+        $defaultVariant = $this->relationLoaded('variants')
+            ? $this->variants->sortByDesc('is_default')->first()
+            : $this->variants()->orderByDesc('is_default')->orderBy('display_order')->first();
+
+        return (float) ($defaultVariant?->price_adjustment ?? 0);
     }
 
     // Check if product has discount

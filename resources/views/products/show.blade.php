@@ -10,7 +10,8 @@
         $variants = $product->variants ?? collect();
         $selectableVariants = $variants->filter(fn ($variant) => (bool) $variant->is_active);
         $defaultVariant = $selectableVariants->firstWhere('is_default', true) ?? $selectableVariants->first();
-        $initialPrice = $defaultVariant ? (float) $defaultVariant->price_adjustment : (float) $product->effective_price;
+        $basePrice = (float) $product->effective_price;
+        $initialPrice = $defaultVariant ? $basePrice + (float) $defaultVariant->price_adjustment : $basePrice;
         $initialStock = (int) ($defaultVariant?->stock_quantity ?? $product->stock_quantity);
         $initialStatusText = $product->status === 'pre_order' ? 'Pre order' : ($initialStock > 0 ? 'Available' : 'Out of stock');
         $fallbackImage = $galleryImages->first() ?: 'https://via.placeholder.com/600x400?text=' . urlencode($product->name);
@@ -23,8 +24,8 @@
         .pd-shell {
             border: 1px solid #E9C7D4;
             border-radius: 22px;
-            background: linear-gradient(180deg, #FBEAF1 0%, #FFFFFF 42%, #FBF2F6 100%);
-            box-shadow: 0 18px 48px rgba(77, 46, 56, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+            background: #fff;
+            box-shadow: 0 14px 34px rgba(77, 46, 56, 0.08);
             padding: 1.2rem;
         }
         .pd-title {
@@ -33,10 +34,10 @@
             letter-spacing: -0.01em;
         }
         .pd-panel {
-            border: 1px solid #E9C7D4;
+            border: 1px solid #F0D5E0;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 8px 22px rgba(77, 46, 56, 0.08);
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(77, 46, 56, 0.06);
         }
         .pd-pill {
             border: 1px solid #E9C7D4;
@@ -219,7 +220,7 @@
                                     >
                                     <span>
                                         <span class="block font-semibold text-[#4D2E38]">{{ $variant->name }}</span>
-                                        <span class="block text-sm text-[#8A6A76]">&#8369;{{ number_format($variantPrice, 2) }}</span>
+                                        <span class="block text-sm text-[#8A6A76]">&#8369;{{ number_format($basePrice + $variantPrice, 2) }}</span>
                                         <span class="block text-xs {{ $isAvailable ? 'text-green-600' : 'text-red-600' }}">
                                             {{ ! $isActive ? 'Not available' : ($product->status === 'pre_order' ? 'Pre-order available' : ($variantStock > 0 ? $variantStock . ' available' : 'Out of stock')) }}
                                         </span>
@@ -296,6 +297,7 @@
             const thumbRight = document.getElementById('thumb-scroll-right');
             const isPreOrder = @json($product->status === 'pre_order');
             const preOrderText = @json($product->pre_order_days ? $product->pre_order_days . ' day lead time' : 'Available for pre-order');
+            const basePrice = Number(@json((float) $basePrice));
             const markActiveThumb = (imageUrl) => {
                 document.querySelectorAll('.variant-image-thumb, .product-image-thumb').forEach((button) => {
                     button.classList.toggle('ring-pink-500', button.dataset.image === imageUrl);
@@ -327,7 +329,7 @@
                 input.addEventListener('change', () => {
                     if (!input.checked) return;
 
-                    const price = Number(input.dataset.price || 0);
+                    const price = basePrice + Number(input.dataset.price || 0);
                     const stock = Number(input.dataset.stock || 0);
                     setMainImage(input.dataset.image);
 

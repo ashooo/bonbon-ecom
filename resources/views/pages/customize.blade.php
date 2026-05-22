@@ -37,7 +37,7 @@
         display: none;
     }
 </style>
-<div id="test-customize-page" class="relative w-full h-[calc(100vh-80px)] overflow-hidden bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef]">
+<div id="test-customize-page" class="fixed inset-0 z-50 w-full h-[100dvh] overflow-hidden bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef]">
 
     {{-- 3D Canvas Background (Fullscreen Turntable) --}}
     <div id="cake-3d-wrap" class="absolute inset-0">

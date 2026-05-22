@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('hideGlobalLoader', true)
-@section('hideChatbot', false)
 @section('hideFooter', true)
 
 @php
@@ -11,13 +10,78 @@
 @endphp
 
 @section('content')
-    {{-- Preloader --}}
-    <div id="cake-preloader" class="cake-preloader" aria-live="polite">
-        <div class="preloader-inner">
-            <div class="preloader-ring"></div>
-            <p class="preloader-text">BonBon</p>
+    <script>
+        (() => {
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            try {
+                const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (parsed?.expiresAt && Date.now() <= parsed.expiresAt) {
+                    document.documentElement.classList.add('home-chat-unlocked');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    {{-- Preloader (same as global loader) --}}
+    <div id="page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F5F5F5;transition:opacity 0.5s ease, visibility 0.5s ease;">
+        <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:0;animation:_plOrbit 3s linear infinite;">
+                <span style="position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#C88A92;transform:rotate(0deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#E6B7BE;transform:rotate(60deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#F5E6E8;transform:rotate(120deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#C88A92;opacity:0.5;transform:rotate(180deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#E6B7BE;opacity:0.4;transform:rotate(240deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#F5E6E8;opacity:0.3;transform:rotate(300deg) translateX(44px);"></span>
+            </div>
+            <svg style="animation:_plBounce 1.4s ease-in-out infinite;" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="54">
+                <path d="M28 8 C28 4,32 2,32 0" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5" style="animation:_plSteam 2s ease-in-out infinite;"/>
+                <path d="M36 10 C36 6,40 4,40 2" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.3" style="animation:_plSteam 2s ease-in-out 0.7s infinite;"/>
+                <rect x="29" y="12" width="4" height="14" rx="2" fill="#F8E2E7"/>
+                <ellipse cx="31" cy="11" rx="3" ry="4" fill="#FFD97D"/>
+                <ellipse cx="31" cy="12" rx="2" ry="2.5" fill="#FFB347"/>
+                <path d="M12 30 C12 30,16 24,22 26 C28 28,30 22,32 22 C34 22,36 28,42 26 C48 24,52 30,52 30 L52 38 L12 38 Z" fill="#C88A92"/>
+                <rect x="12" y="34" width="40" height="12" rx="3" fill="#F5E6E8"/>
+                <rect x="12" y="34" width="40" height="4" rx="2" fill="#E6B7BE" opacity="0.5"/>
+                <path d="M8 46 C8 44,12 42,18 44 C24 46,26 40,32 40 C38 40,40 46,46 44 C52 42,56 44,56 46 L56 48 L8 48 Z" fill="#C88A92"/>
+                <rect x="8" y="46" width="48" height="14" rx="4" fill="#F5E6E8"/>
+                <rect x="8" y="46" width="48" height="4" rx="2" fill="#E6B7BE" opacity="0.4"/>
+                <ellipse cx="32" cy="62" rx="28" ry="4" fill="#EED9DE"/>
+                <circle cx="20" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="28" cy="36" r="1" fill="#FFD97D"/>
+                <circle cx="36" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="44" cy="36" r="1" fill="#FFD97D"/>
+                <circle cx="16" cy="52" r="1.2" fill="#FFD97D"/><circle cx="24" cy="53" r="1" fill="#FFB6C1"/>
+                <circle cx="32" cy="51" r="1.3" fill="#B5EAD7"/><circle cx="40" cy="53" r="1" fill="#FFB6C1"/>
+                <circle cx="48" cy="52" r="1.2" fill="#FFD97D"/>
+                <circle cx="31" cy="22" r="4" fill="#E74C6F"/>
+                <circle cx="29.5" cy="20.5" r="1.2" fill="#FF7E9D" opacity="0.7"/>
+                <path d="M31 18 C33 14,35 16,34 18" stroke="#5A3A3A" stroke-width="1" fill="none" stroke-linecap="round"/>
+            </svg>
         </div>
+        <p style="font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:700;color:#C88A92;letter-spacing:0.15em;text-transform:uppercase;animation:pulse 2s ease-in-out infinite;">Loading your treats...</p>
     </div>
+    <style>
+        @keyframes _plOrbit { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes _plBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes _plSteam { 0%{opacity:0;transform:translateY(4px)} 30%{opacity:0.6} 100%{opacity:0;transform:translateY(-8px)} }
+    </style>
+    <script>
+        (() => {
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            const preloader = document.getElementById('page-loader');
+            if (!preloader) return;
+
+            try {
+                const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (!parsed?.expiresAt || Date.now() > parsed.expiresAt) return;
+
+                // Skip preloader for returning users with unlocked showcase state.
+                preloader.style.display = 'none';
+            } catch (e) {}
+        })();
+    </script>
 
     {{-- Scrollytelling Section --}}
     <section id="cake-scroll-section" class="cake-scroll-section">
@@ -163,7 +227,7 @@
                 <h2 class="bb-hero-heading">Handcrafted<br>with Devotion.</h2>
                 <p class="bb-hero-sub">Every cake is a celebration — made from scratch, designed with care, delivered with love.</p>
                 <div class="bb-hero-actions">
-                    <a href="{{ url('/test-products') }}" class="bb-btn-primary">Shop Now</a>
+                    <a href="{{ route('shop.index') }}" class="bb-btn-primary">Shop Now</a>
                     <a href="/customize" class="bb-btn-ghost">Custom Order</a>
                 </div>
             </div>
@@ -176,7 +240,7 @@
                     <span class="bb-eyebrow">Our Signature Selection</span>
                     <h2 class="bb-section-title">Featured Products</h2>
                 </div>
-                <a href="{{ url('/test-products') }}" class="bb-see-all">See all
+                <a href="{{ route('shop.index', ['featured' => 1]) }}" class="bb-see-all">See all
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                 </a>
             </div>
@@ -230,7 +294,7 @@
                         <span class="bb-eyebrow" style="color:#fff8fb; opacity:0.75;">Community Favorites</span>
                         <h2 class="bb-section-title" style="color:#fff;">Best Sellers</h2>
                     </div>
-                    <a href="{{ url('/test-products') }}" class="bb-see-all" style="color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.3);">See all
+                    <a href="{{ route('shop.index', ['best_seller' => 1]) }}" class="bb-see-all" style="color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.3);">See all
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                     </a>
                 </div>
@@ -345,7 +409,7 @@
                 <h2 class="bb-cta-heading">Ready to place your order?</h2>
                 <p class="bb-cta-sub">Browse our full collection or start building your custom cake today.</p>
                 <div class="bb-cta-actions">
-                    <a href="{{ url('/test-products') }}" class="bb-btn-primary">Browse Collection</a>
+                    <a href="{{ route('shop.index') }}" class="bb-btn-primary">Browse Collection</a>
                     <a href="/customize" class="bb-btn-ghost-dark">Customize a Cake</a>
                 </div>
             </div>
@@ -1747,6 +1811,24 @@
         header {
             background: rgba(255, 242, 249, 0.86) !important;
         }
+
+        /* Keep floating chat launcher visible above homepage fixed overlays */
+        #bonbon-chat-open {
+            z-index: 10050 !important;
+            bottom: 1.25rem !important;
+            right: 1.25rem !important;
+        }
+
+        @media (max-width: 768px) {
+            #bonbon-chat-open {
+                bottom: 1rem !important;
+                right: 1rem !important;
+            }
+        }
+
+        html:not(.home-chat-unlocked) #bonbon-chat-open {
+            display: none !important;
+        }
     </style>
     @if (file_exists(public_path('css/shelf.css')))
         <link rel="stylesheet" href="/css/shelf.css">
@@ -1763,7 +1845,7 @@
             // Fallback: never let preloader block the page if a script fails.
             (() => {
                 const hidePreloader = () => {
-                    const preloader = document.getElementById('cake-preloader');
+                    const preloader = document.getElementById('page-loader');
                     if (!preloader) return;
                     preloader.style.opacity = '0';
                     preloader.style.visibility = 'hidden';
@@ -1782,21 +1864,72 @@
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
+                const showcase = document.getElementById('home-showcase');
+                const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+                const SHOWCASE_CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
 
                 // --- Reveal showcase ---
+                function setShowcaseCache() {
+                    try {
+                        localStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+                            unlockedAt: Date.now(),
+                            expiresAt: Date.now() + SHOWCASE_CACHE_TTL_MS,
+                        }));
+                    } catch (e) {}
+                    document.documentElement.classList.add('home-chat-unlocked');
+                }
+
+                function isShowcaseCached() {
+                    try {
+                        const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                        if (!raw) return false;
+                        const parsed = JSON.parse(raw);
+                        if (!parsed?.expiresAt || Date.now() > parsed.expiresAt) {
+                            localStorage.removeItem(SHOWCASE_CACHE_KEY);
+                            return false;
+                        }
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
                 function revealShelf(e) {
                     if (e) e.preventDefault();
-                    const showcase = document.getElementById('home-showcase');
                     if (showcase) {
                         if (showcase.style.display === 'none') {
                             showcase.style.display = '';
                         }
+                        setShowcaseCache();
                         showcase.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                 }
 
                 const ctaBtn = document.getElementById('story-cta-btn');
                 if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
+
+                // If user previously unlocked the lower homepage details, keep them visible.
+                if (showcase && isShowcaseCached() && showcase.style.display === 'none') {
+                    document.documentElement.classList.add('home-chat-unlocked');
+                    showcase.style.display = '';
+                    // Start at the end of the scrollytelling section on return visits.
+                    if (!window.location.hash) {
+                        requestAnimationFrame(() => {
+                            const scrolly = document.getElementById('cake-scroll-section');
+                            if (scrolly) {
+                                const targetY = Math.max(0, scrolly.offsetTop + scrolly.offsetHeight - window.innerHeight);
+                                window.scrollTo(0, targetY);
+                            }
+                            // Force navbar/scroll-driven UI to sync immediately after programmatic jump.
+                            setTimeout(() => {
+                                window.dispatchEvent(new Event('scroll'));
+                                if (window.ScrollTrigger?.refresh) {
+                                    window.ScrollTrigger.refresh();
+                                }
+                            }, 0);
+                        });
+                    }
+                }
 
                 // --- Search & Filter ---
                 const searchInput = document.getElementById('shelf-search-input');

@@ -156,12 +156,46 @@
         @keyframes _plSteam { 0%{opacity:0;transform:translateY(4px)} 30%{opacity:0.6} 100%{opacity:0;transform:translateY(-8px)} }
     </style>
     <script>
+        (function () {
+            var loader = document.getElementById('page-loader');
+            if (!loader) return;
+
+            var navEntry = performance.getEntriesByType('navigation')[0];
+            var isBackForward = navEntry && navEntry.type === 'back_forward';
+            var isHome = window.location.pathname === '/';
+            var hasSeenHome = false;
+
+            try {
+                hasSeenHome = sessionStorage.getItem('bonbon-home-loaded') === '1';
+            } catch (e) {}
+
+            // Skip loader on history navigation and on repeat homepage visits in same tab.
+            if (isBackForward || (isHome && hasSeenHome)) {
+                loader.style.display = 'none';
+            }
+        })();
+
         window.addEventListener('load', function() {
             var loader = document.getElementById('page-loader');
             if (loader) {
                 loader.style.opacity = '0';
                 loader.style.visibility = 'hidden';
                 setTimeout(function() { loader.remove(); }, 600);
+            }
+
+            if (window.location.pathname === '/') {
+                try {
+                    sessionStorage.setItem('bonbon-home-loaded', '1');
+                } catch (e) {}
+            }
+        });
+
+        // When page is restored from bfcache, make sure loader never reappears.
+        window.addEventListener('pageshow', function(event) {
+            if (!event.persisted) return;
+            var loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.remove();
             }
         });
     </script>

@@ -1724,7 +1724,9 @@ const initCustomizer3D = () => {
     const getCameraLayout = () => {
         const width = Math.max(260, host.clientWidth || 320);
         const height = Math.max(300, host.clientHeight || 330);
+        const aspect = width / height;
         const compact = width < 1024;
+        const veryNarrow = aspect < 0.72;
         const panel = document.getElementById("customize-control-panel");
         const panelOverlaysPreview = Boolean(
             isImmersive &&
@@ -1734,10 +1736,9 @@ const initCustomizer3D = () => {
         );
 
         return {
-            aspect: width / height,
+            aspect,
             compact,
-            // Negative X moves the cake visually to the right, keeping it centered
-            // in the open preview area when the desktop control panel overlays left.
+            veryNarrow,
             centerPanX: panelOverlaysPreview ? -0.9 : 0,
         };
     };
@@ -1747,28 +1748,56 @@ const initCustomizer3D = () => {
         const top = activeView === "top" || viewPitch > 2.5;
         const layout = getCameraLayout();
 
-        let distance = isImmersive ? 14.5 : 6.2;
-        let baseHeight = isImmersive ? 5.2 : 3.7;
-        let lookY = isImmersive ? -0.6 : 1.05;
-        let panX = isImmersive ? 1.8 : 0;
-        let heightOffset = isImmersive ? -0.8 : 0;
+        let distance = isImmersive ? (layout.compact ? 8.2 : 12.2) : 6.2;
+        let baseHeight = isImmersive ? (layout.compact ? 3.7 : 4.7) : 3.7;
+        let lookY = isImmersive ? 0.15 : 1.05;
+        const panX = layout.centerPanX;
+        let heightOffset = isImmersive ? -0.35 : 0;
+        let fov = isImmersive
+            ? layout.veryNarrow
+                ? 45
+                : layout.compact
+                  ? 40
+                  : 35
+            : 36;
 
         if (top) {
-            panX = layout.centerPanX;
             lookY = 0;
+            fov = isImmersive
+                ? layout.veryNarrow
+                    ? 48
+                    : layout.compact
+                      ? 43
+                      : 38
+                : 36;
         }
 
         if (inside) {
-            distance = isImmersive ? (layout.compact ? 6.6 : 7.7) : 5.4;
+            distance = isImmersive ? (layout.compact ? 7.0 : 7.9) : 5.4;
             baseHeight = isImmersive ? (layout.compact ? 3.0 : 3.2) : 2.5;
             lookY = isImmersive ? 0.0 : 0.35;
-            panX = layout.centerPanX;
+            heightOffset = 0;
+            fov = isImmersive
+                ? layout.veryNarrow
+                    ? 45
+                    : layout.compact
+                      ? 40
+                      : 37
+                : 36;
         }
 
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
         const height = baseHeight + viewPitch + heightOffset;
 
         if (top) {
-            const topHeight = isImmersive ? (layout.compact ? 8.6 : 9.8) : 7.8;
+            const topHeight = isImmersive
+                ? layout.veryNarrow
+                    ? 10.2
+                    : layout.compact
+                      ? 9.2
+                      : 10.2
+                : 7.8;
             camera.position.set(panX, topHeight, 0.08);
             camera.lookAt(panX, lookY, 0);
         } else {

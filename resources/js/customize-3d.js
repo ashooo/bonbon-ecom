@@ -1721,9 +1721,31 @@ const initCustomizer3D = () => {
     let insideSequence = 0;
     let activeView = "auto";
 
+    const getCameraLayout = () => {
+        const width = Math.max(260, host.clientWidth || 320);
+        const height = Math.max(300, host.clientHeight || 330);
+        const compact = width < 1024;
+        const panel = document.getElementById("customize-control-panel");
+        const panelOverlaysPreview = Boolean(
+            isImmersive &&
+            !compact &&
+            panel &&
+            window.getComputedStyle(panel).position === "absolute",
+        );
+
+        return {
+            aspect: width / height,
+            compact,
+            // Negative X moves the cake visually to the right, keeping it centered
+            // in the open preview area when the desktop control panel overlays left.
+            centerPanX: panelOverlaysPreview ? -0.9 : 0,
+        };
+    };
+
     const updateCamera = () => {
         const inside = activeView === "inside";
         const top = activeView === "top" || viewPitch > 2.5;
+        const layout = getCameraLayout();
 
         let distance = isImmersive ? 14.5 : 6.2;
         let baseHeight = isImmersive ? 5.2 : 3.7;
@@ -1731,16 +1753,23 @@ const initCustomizer3D = () => {
         let panX = isImmersive ? 1.8 : 0;
         let heightOffset = isImmersive ? -0.8 : 0;
 
+        if (top) {
+            panX = layout.centerPanX;
+            lookY = 0;
+        }
+
         if (inside) {
-            distance = isImmersive ? 8.5 : 5.4;
-            baseHeight = isImmersive ? 3.5 : 2.5;
+            distance = isImmersive ? (layout.compact ? 6.6 : 7.7) : 5.4;
+            baseHeight = isImmersive ? (layout.compact ? 3.0 : 3.2) : 2.5;
             lookY = isImmersive ? 0.0 : 0.35;
+            panX = layout.centerPanX;
         }
 
         const height = baseHeight + viewPitch + heightOffset;
 
         if (top) {
-            camera.position.set(panX, isImmersive ? 10.5 : 7.8, 0.08);
+            const topHeight = isImmersive ? (layout.compact ? 8.6 : 9.8) : 7.8;
+            camera.position.set(panX, topHeight, 0.08);
             camera.lookAt(panX, lookY, 0);
         } else {
             camera.position.set(panX, height, distance);
@@ -2013,6 +2042,7 @@ const initCustomizer3D = () => {
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         renderer.setSize(width, height, false);
+        updateCamera();
     };
 
     host.addEventListener("pointerdown", (event) => {

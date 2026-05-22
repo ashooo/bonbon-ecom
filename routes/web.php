@@ -142,6 +142,7 @@ Route::get('/orders/{order}/receipt/html', [OrderHistoryController::class, 'rece
 Route::get('/orders/{order}/receipt/pdf', [OrderHistoryController::class, 'receiptPdf'])->name('orders.receipt.pdf');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
 
+Route::get('/customize/android', [CustomizeController::class, 'android'])->name('customize.android');
 Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');
 
 Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');

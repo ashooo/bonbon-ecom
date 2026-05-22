@@ -5,10 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\StoreSetting;
 use App\Support\CustomizationPricing;
+use Illuminate\Http\Request;
 
 class CustomizeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
+    {
+        if (! $request->boolean('desktop') && $this->isAndroidRequest($request)) {
+            return redirect()->route('customize.android');
+        }
+
+        return $this->renderCustomizeView('pages.customize');
+    }
+
+    public function android()
+    {
+        return $this->renderCustomizeView('pages.customize-android');
+    }
+
+    private function renderCustomizeView(string $view)
     {
         $products = Product::query()
             ->with(['variants' => fn ($query) => $query->where('is_active', true)->orderBy('display_order')])
@@ -29,6 +44,13 @@ class CustomizeController extends Controller
         $settings = StoreSetting::query()->first();
         $customizationPricing = CustomizationPricing::mergeWithDefaults($settings?->customization_pricing);
 
-        return view('pages.customize', compact('products', 'customizationPricing'));
+        return view($view, compact('products', 'customizationPricing'));
+    }
+
+    private function isAndroidRequest(Request $request): bool
+    {
+        $userAgent = strtolower((string) $request->userAgent());
+
+        return str_contains($userAgent, 'android');
     }
 }

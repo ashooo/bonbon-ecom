@@ -1721,12 +1721,57 @@ const initCustomizer3D = () => {
         const width = Math.max(260, host.clientWidth || 320);
         const height = Math.max(300, host.clientHeight || 330);
         const aspect = width / height;
-        const compact = width < 1024;
-        const veryNarrow = aspect < 0.72;
+
+        let device = "desktop";
+        if (width < 640 && aspect < 1) {
+            device = "phonePortrait";
+        } else if (width < 900 && aspect >= 1) {
+            device = "phoneLandscape";
+        } else if (width < 1024) {
+            device = "tablet";
+        } else if (width >= 1440) {
+            device = "wideDesktop";
+        }
+
+        const presets = {
+            phonePortrait: {
+                front: { distance: 8.8, height: 3.55, lookY: 0.18, fov: 46 },
+                side: { distance: 8.8, height: 3.55, lookY: 0.18, fov: 46 },
+                top: { height: 10.6, lookY: 0, fov: 50 },
+                inside: { distance: 7.4, height: 3.05, lookY: 0, fov: 46 },
+            },
+            phoneLandscape: {
+                front: { distance: 7.4, height: 3.15, lookY: 0.12, fov: 42 },
+                side: { distance: 7.4, height: 3.15, lookY: 0.12, fov: 42 },
+                top: { height: 8.8, lookY: 0, fov: 44 },
+                inside: { distance: 6.7, height: 2.8, lookY: 0, fov: 42 },
+            },
+            tablet: {
+                front: { distance: 8.2, height: 3.65, lookY: 0.16, fov: 40 },
+                side: { distance: 8.2, height: 3.65, lookY: 0.16, fov: 40 },
+                top: { height: 9.4, lookY: 0, fov: 43 },
+                inside: { distance: 7.0, height: 3.0, lookY: 0, fov: 40 },
+            },
+            desktop: {
+                front: { distance: 12.2, height: 4.35, lookY: 0.15, fov: 35 },
+                side: { distance: 12.2, height: 4.35, lookY: 0.15, fov: 35 },
+                top: { height: 10.2, lookY: 0, fov: 38 },
+                inside: { distance: 7.9, height: 3.2, lookY: 0, fov: 37 },
+            },
+            wideDesktop: {
+                front: { distance: 13.2, height: 4.55, lookY: 0.12, fov: 33 },
+                side: { distance: 13.2, height: 4.55, lookY: 0.12, fov: 33 },
+                top: { height: 10.8, lookY: 0, fov: 36 },
+                inside: { distance: 8.4, height: 3.25, lookY: 0, fov: 35 },
+            },
+        };
+
         return {
+            width,
+            height,
             aspect,
-            compact,
-            veryNarrow,
+            device,
+            preset: presets[device],
             centerPanX: 0,
         };
     };
@@ -1735,62 +1780,33 @@ const initCustomizer3D = () => {
         const inside = activeView === "inside";
         const top = activeView === "top" || viewPitch > 2.5;
         const layout = getCameraLayout();
-
-        let distance = isImmersive ? (layout.compact ? 8.2 : 12.2) : 6.2;
-        let baseHeight = isImmersive ? (layout.compact ? 3.7 : 4.7) : 3.7;
-        let lookY = isImmersive ? 0.15 : 1.05;
+        const viewKey = inside
+            ? "inside"
+            : top
+              ? "top"
+              : activeView === "side"
+                ? "side"
+                : "front";
+        const preset = isImmersive
+            ? layout.preset[viewKey]
+            : {
+                  front: { distance: 6.2, height: 3.7, lookY: 1.05, fov: 36 },
+                  side: { distance: 6.2, height: 3.7, lookY: 1.05, fov: 36 },
+                  top: { height: 7.8, lookY: 0, fov: 36 },
+                  inside: { distance: 5.4, height: 2.5, lookY: 0.35, fov: 36 },
+              }[viewKey];
         const panX = layout.centerPanX;
-        let heightOffset = isImmersive ? -0.35 : 0;
-        let fov = isImmersive
-            ? layout.veryNarrow
-                ? 45
-                : layout.compact
-                  ? 40
-                  : 35
-            : 36;
 
-        if (top) {
-            lookY = 0;
-            fov = isImmersive
-                ? layout.veryNarrow
-                    ? 48
-                    : layout.compact
-                      ? 43
-                      : 38
-                : 36;
-        }
-
-        if (inside) {
-            distance = isImmersive ? (layout.compact ? 7.0 : 7.9) : 5.4;
-            baseHeight = isImmersive ? (layout.compact ? 3.0 : 3.2) : 2.5;
-            lookY = isImmersive ? 0.0 : 0.35;
-            heightOffset = 0;
-            fov = isImmersive
-                ? layout.veryNarrow
-                    ? 45
-                    : layout.compact
-                      ? 40
-                      : 37
-                : 36;
-        }
-
-        camera.fov = fov;
+        camera.fov = preset.fov;
         camera.updateProjectionMatrix();
-        const height = baseHeight + viewPitch + heightOffset;
 
         if (top) {
-            const topHeight = isImmersive
-                ? layout.veryNarrow
-                    ? 10.2
-                    : layout.compact
-                      ? 9.2
-                      : 10.2
-                : 7.8;
-            camera.position.set(panX, topHeight, 0.08);
-            camera.lookAt(panX, lookY, 0);
+            camera.position.set(panX, preset.height, 0.08);
+            camera.lookAt(panX, preset.lookY, 0);
         } else {
-            camera.position.set(panX, height, distance);
-            camera.lookAt(panX, lookY, 0);
+            const height = preset.height + viewPitch;
+            camera.position.set(panX, height, preset.distance);
+            camera.lookAt(panX, preset.lookY, 0);
         }
     };
 

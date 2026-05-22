@@ -88,7 +88,7 @@
     #customize-view-tabs button {
         touch-action: manipulation;
     }
-    @media (max-width: 1023px) {
+    @media (max-width: 1023px), (hover: none) and (pointer: coarse) {
         #test-customize-page {
             left: auto;
             width: 100%;
@@ -118,8 +118,9 @@
         #cake-3d-wrap {
             position: relative;
             inset: auto;
-            height: clamp(320px, 54svh, 560px);
-            min-height: 320px;
+            order: 1;
+            height: min(720px, calc(100svh - 6.5rem));
+            min-height: 520px;
             overflow: hidden;
             border: 1px solid rgba(243, 215, 221, 0.9);
             border-radius: 2rem;
@@ -142,6 +143,7 @@
             left: auto;
             top: auto;
             bottom: auto;
+            order: 2;
             display: block;
             width: 100%;
             pointer-events: auto;
@@ -195,8 +197,8 @@
             gap: .75rem;
         }
         #cake-3d-wrap {
-            height: 42svh;
-            min-height: 280px;
+            height: calc(100svh - 6rem);
+            min-height: 460px;
             border-radius: 1.5rem;
         }
         #customize-scroll {

@@ -1608,12 +1608,8 @@ const initCustomizer3D = () => {
         0.1,
         100,
     );
-    camera.position.set(
-        isImmersive ? 1.8 : 0,
-        isImmersive ? 4.4 : 3.7,
-        isImmersive ? 14.5 : 6.2,
-    );
-    camera.lookAt(isImmersive ? 1.8 : 0, isImmersive ? -0.6 : 1.05, 0);
+    camera.position.set(0, isImmersive ? 4.4 : 3.7, isImmersive ? 14.5 : 6.2);
+    camera.lookAt(0, isImmersive ? 0.15 : 1.05, 0);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1727,19 +1723,11 @@ const initCustomizer3D = () => {
         const aspect = width / height;
         const compact = width < 1024;
         const veryNarrow = aspect < 0.72;
-        const panel = document.getElementById("customize-control-panel");
-        const panelOverlaysPreview = Boolean(
-            isImmersive &&
-            !compact &&
-            panel &&
-            window.getComputedStyle(panel).position === "absolute",
-        );
-
         return {
             aspect,
             compact,
             veryNarrow,
-            centerPanX: panelOverlaysPreview ? -0.9 : 0,
+            centerPanX: 0,
         };
     };
 

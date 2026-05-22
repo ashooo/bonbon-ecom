@@ -1753,17 +1753,25 @@ const initCustomizer3D = () => {
                 inside: { distance: 7.0, height: 3.0, lookY: 0, fov: 40 },
             },
             desktop: {
-                front: { distance: 12.2, height: 4.35, lookY: 0.15, fov: 35 },
-                side: { distance: 12.2, height: 4.35, lookY: 0.15, fov: 35 },
-                top: { height: 10.2, lookY: 0, fov: 38 },
-                inside: { distance: 7.9, height: 3.2, lookY: 0, fov: 37 },
+                front: { distance: 12.2, height: 4.2, lookY: -0.38, fov: 35 },
+                side: { distance: 12.2, height: 4.2, lookY: -0.38, fov: 35 },
+                top: { height: 10.2, lookY: -0.2, fov: 38 },
+                inside: { distance: 7.9, height: 3.05, lookY: -0.18, fov: 37 },
             },
             wideDesktop: {
-                front: { distance: 13.2, height: 4.55, lookY: 0.12, fov: 33 },
-                side: { distance: 13.2, height: 4.55, lookY: 0.12, fov: 33 },
-                top: { height: 10.8, lookY: 0, fov: 36 },
-                inside: { distance: 8.4, height: 3.25, lookY: 0, fov: 35 },
+                front: { distance: 13.2, height: 4.35, lookY: -0.42, fov: 33 },
+                side: { distance: 13.2, height: 4.35, lookY: -0.42, fov: 33 },
+                top: { height: 10.8, lookY: -0.22, fov: 36 },
+                inside: { distance: 8.4, height: 3.1, lookY: -0.2, fov: 35 },
             },
+        };
+
+        const centerPanXByDevice = {
+            phonePortrait: 0,
+            phoneLandscape: 0,
+            tablet: 0,
+            desktop: 0.95,
+            wideDesktop: 1.25,
         };
 
         return {
@@ -1772,7 +1780,7 @@ const initCustomizer3D = () => {
             aspect,
             device,
             preset: presets[device],
-            centerPanX: 0,
+            centerPanX: centerPanXByDevice[device] ?? 0,
         };
     };
 

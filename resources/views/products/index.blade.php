@@ -221,7 +221,13 @@
         <aside class="shop-panel w-full lg:w-1/4 lg:pr-8">
             <h2 class="shop-title text-2xl font-bold mb-6">Filters</h2>
 
-            <form method="GET" action="{{ url('/test-products') }}" class="space-y-6">
+            <form method="GET" action="{{ route('shop.index') }}" class="space-y-6">
+                @if(request()->boolean('featured'))
+                    <input type="hidden" name="featured" value="1">
+                @endif
+                @if(request()->boolean('best_seller'))
+                    <input type="hidden" name="best_seller" value="1">
+                @endif
                 <div class="mb-6">
                     <h3 class="shop-title text-lg font-semibold mb-3">Category</h3>
                     <div class="space-y-2">
@@ -250,7 +256,7 @@
 
                 <div class="flex gap-3">
                     <button type="submit" class="shop-btn-primary px-4 py-2">Apply</button>
-                    <a href="{{ url('/test-products') }}" class="shop-btn-secondary px-4 py-2">Reset</a>
+                    <a href="{{ route('shop.index') }}" class="shop-btn-secondary px-4 py-2">Reset</a>
                 </div>
             </form>
         </aside>
@@ -261,12 +267,18 @@
                 <h1 class="shop-shell-title text-3xl font-semibold">Cake Showcase</h1>
             </div>
 
-            <form method="GET" action="{{ url('/test-products') }}" class="shop-panel flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
+            <form method="GET" action="{{ route('shop.index') }}" class="shop-panel flex flex-col gap-4 mb-6 md:flex-row md:justify-between md:items-center">
                 <div class="flex-1 max-w-md">
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="shop-input w-full px-4 py-2">
                 </div>
                 @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
+                @endif
+                @if(request()->boolean('featured'))
+                    <input type="hidden" name="featured" value="1">
+                @endif
+                @if(request()->boolean('best_seller'))
+                    <input type="hidden" name="best_seller" value="1">
                 @endif
                 <div class="ml-0 md:ml-4 flex gap-3 items-center">
                     <select name="sort" class="shop-select px-4 py-2">

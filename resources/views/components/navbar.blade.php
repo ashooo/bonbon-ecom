@@ -13,7 +13,7 @@
 
         <nav class="hidden md:flex space-x-6">
             <a href="/" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a>
-            <a href="{{ url('/test-products') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
+            <a href="{{ route('shop.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
             <a href="{{ route('orders.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
             <a href="/customize" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
         </nav>
@@ -23,7 +23,7 @@
                 @if (Auth::user()->is_admin)
                     <a
                         href="{{ route('admin.dashboard') }}"
-                        class="hidden sm:inline-flex items-center rounded-full border border-[#E6D5D8] bg-[#FFF6FA] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#7A2F56] transition hover:border-[#C94F7C] hover:text-[#C94F7C]"
+                        class="hidden lg:inline-flex h-10 items-center rounded-full border border-[#E6D5D8] bg-[#FFF6FA] px-3 text-xs font-semibold text-[#7A2F56] transition hover:border-[#C94F7C] hover:text-[#C94F7C]"
                     >
                         Admin Panel
                     </a>

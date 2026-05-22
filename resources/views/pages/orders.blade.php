@@ -141,7 +141,7 @@
 
 
                             @if (in_array($status, ['pending', 'confirmed'], true))
-                                <form method="POST" action="{{ route('orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?');" class="space-y-2">
+                                <form method="POST" action="{{ route('orders.cancel', $order) }}" data-confirm data-confirm-title="Cancel order?" data-confirm-message="Cancel this order?" data-confirm-ok="Cancel order" class="space-y-2">
                                     @csrf
                                     @if ($isGuestView)
                                         <input type="email" name="customer_email" placeholder="Confirm checkout email" class="orders-input w-full rounded-md px-2 py-1 text-xs md:w-56" required>

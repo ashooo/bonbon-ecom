@@ -2038,7 +2038,7 @@
                     cartForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
                         if (!cardVariantId.value) {
-                            alert('Please select a variant first.');
+                            if (window.BonbonNotify) { window.BonbonNotify('warning', 'Please select a variant first.'); } else { alert('Please select a variant first.'); }
                             return;
                         }
 
@@ -2095,3 +2095,4 @@
         </script>
     @endpush
 @endsection
+

@@ -93,6 +93,22 @@
     @endif
 </head>
 <body class="bg-[#F5F5F5] text-[#2E2E2E]">
+    @php
+        $toastStatus = session()->pull('status');
+        $toastStatusMessage = match ($toastStatus) {
+            'verification-link-sent' => 'A new verification link has been sent to your email address.',
+            default => is_string($toastStatus) ? $toastStatus : null,
+        };
+        $globalToasts = array_values(array_filter([
+            ['type' => 'success', 'message' => session()->pull('success')],
+            ['type' => 'error', 'message' => session()->pull('error')],
+            ['type' => 'warning', 'message' => session()->pull('warning')],
+            ['type' => 'info', 'message' => session()->pull('info')],
+            ['type' => 'info', 'message' => $toastStatusMessage],
+            ['type' => 'error', 'message' => $errors->any() ? $errors->first() : null],
+        ], fn ($toast) => filled($toast['message'] ?? null)));
+    @endphp
+    <x-toast-notifications :toasts="$globalToasts" />
     @unless (View::hasSection('hideGlobalLoader'))
     <!-- Page Loading Overlay -->
     <div id="page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F5F5F5;transition:opacity 0.5s ease, visibility 0.5s ease;">
@@ -264,18 +280,6 @@
         @include('components.navbar')
 
         <main class="container mx-auto px-4 py-8">
-            @if (session('success'))
-                <div class="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="mb-6 rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             @yield('content')
         </main>
 
@@ -1035,5 +1039,70 @@
         })();
     </script>
     @endunless
+
+    <div id="bonbon-confirm-modal" class="fixed inset-0 z-[10060] hidden items-center justify-center bg-[#2E2E2E]/45 p-4" aria-hidden="true">
+        <div class="w-full max-w-md rounded-2xl border border-[#EED9DE] bg-white p-5 shadow-2xl">
+            <h3 id="bonbon-confirm-title" class="text-lg font-semibold text-[#5A3A3A]">Please confirm</h3>
+            <p id="bonbon-confirm-message" class="mt-2 text-sm text-[#8C6770]">Are you sure you want to continue?</p>
+            <div class="mt-5 flex justify-end gap-3">
+                <button type="button" id="bonbon-confirm-cancel" class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] transition hover:bg-[#FAF1F5]">Cancel</button>
+                <button type="button" id="bonbon-confirm-ok" class="rounded-xl bg-[#C88A92] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7A5252]">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const modal = document.getElementById('bonbon-confirm-modal');
+            const titleEl = document.getElementById('bonbon-confirm-title');
+            const messageEl = document.getElementById('bonbon-confirm-message');
+            const cancelBtn = document.getElementById('bonbon-confirm-cancel');
+            const okBtn = document.getElementById('bonbon-confirm-ok');
+            let pendingForm = null;
+
+            const closeModal = () => {
+                pendingForm = null;
+                modal?.classList.add('hidden');
+                modal?.classList.remove('flex');
+                modal?.setAttribute('aria-hidden', 'true');
+            };
+
+            const openModal = (form) => {
+                if (!modal) return;
+                pendingForm = form;
+                titleEl.textContent = form.dataset.confirmTitle || 'Please confirm';
+                messageEl.textContent = form.dataset.confirmMessage || 'Are you sure you want to continue?';
+                okBtn.textContent = form.dataset.confirmOk || 'Confirm';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.setAttribute('aria-hidden', 'false');
+            };
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target.closest('form[data-confirm]');
+                if (!form || form.dataset.confirmBypassed === '1') return;
+                event.preventDefault();
+                openModal(form);
+            }, true);
+
+            okBtn?.addEventListener('click', () => {
+                if (!pendingForm) return closeModal();
+                pendingForm.dataset.confirmBypassed = '1';
+                pendingForm.requestSubmit();
+                pendingForm.dataset.confirmBypassed = '0';
+                closeModal();
+            });
+
+            cancelBtn?.addEventListener('click', closeModal);
+            modal?.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

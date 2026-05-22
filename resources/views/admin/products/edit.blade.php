@@ -819,10 +819,10 @@ function deleteImage(imageId) {
                 location.reload();
                 return;
             }
-            alert('Failed to delete image');
+            if (window.BonbonNotify) { window.BonbonNotify('error', 'Failed to delete image.'); } else { alert('Failed to delete image'); }
         } catch (error) {
             console.error('Error:', error);
-            alert('Failed to delete image');
+            if (window.BonbonNotify) { window.BonbonNotify('error', 'Failed to delete image.'); } else { alert('Failed to delete image'); }
         } finally {
             closeDeleteImageModal();
         }
@@ -830,3 +830,4 @@ function deleteImage(imageId) {
 })();
 </script>
 @endsection
+

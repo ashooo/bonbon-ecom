@@ -15,27 +15,27 @@
         #login-form input[type="email"],
         #login-form input[type="password"],
         #login-form label {
-            color: #111827;
+            color: #5A3A3A;
         }
 
         #login-form input[type="email"]::placeholder,
         #login-form input[type="password"]::placeholder {
-            color: #9ca3af;
+            color: #8C6770;
         }
 
         #login-form input:-webkit-autofill,
         #login-form input:-webkit-autofill:hover,
         #login-form input:-webkit-autofill:focus {
-            -webkit-text-fill-color: #111827;
+            -webkit-text-fill-color: #5A3A3A;
             -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
             transition: background-color 9999s ease-in-out 0s;
         }
     </style>
-    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 {{ $showRegister ? 'hidden' : '' }}" id="login-card">
+    <div class="max-w-md mx-auto bg-white rounded-3xl border border-[#EED9DE] shadow-soft p-8 {{ $showRegister ? 'hidden' : '' }}" id="login-card">
         <h1 class="text-3xl font-bold text-center mb-8">Welcome Back</h1>
 
         @if (session('success'))
-            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
+            <div class="mb-6 rounded-2xl border border-[#E6B7BE] bg-[#F5E6E8] p-4 text-[#5A3A3A]">
                 {{ session('success') }}
             </div>
         @endif
@@ -46,7 +46,7 @@
             <!-- Email -->
             <div>
                 <label for="email" class="mb-2 block text-sm font-medium text-[#5A3A3A]">Email Address</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
+                <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors">
                 @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -55,7 +55,7 @@
             <!-- Password -->
             <div>
                 <label for="password" class="mb-2 block text-sm font-medium text-[#5A3A3A]">Password</label>
-                <input type="password" id="password" name="password" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
+                <input type="password" id="password" name="password" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors">
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -64,11 +64,11 @@
             <!-- Remember Me -->
             <div class="flex items-center">
                 <input type="checkbox" id="remember" name="remember" value="1" class="mr-2">
-                <label for="remember" class="text-sm text-black">Remember me</label>
+                <label for="remember" class="text-sm text-[#5A3A3A]">Remember me</label>
             </div>
 
             <!-- Login Button -->
-            <button type="submit" class="w-full bg-[#E6B7BE] dark:bg-[#8B5A63] hover:bg-[#D9A0A8] dark:hover:bg-[#A67680] text-[#5A3A3A] dark:text-[#F5F5F5] font-bold py-3 px-6 rounded-lg transition duration-300">
+            <button type="submit" class="w-full bg-[#E6B7BE] hover:bg-[#C88A92] text-[#5A3A3A] font-bold py-3 px-6 rounded-lg transition duration-300">
                 Sign In
             </button>
         </form>
@@ -77,16 +77,16 @@
         <div class="mt-6 mb-6">
             <div class="relative">
                 <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
+                    <div class="w-full border-t border-[#EED9DE]"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                    <span class="px-2 bg-white text-[#8C6770]">Or continue with</span>
                 </div>
             </div>
         </div>
 
         <!-- Google Login -->
-        <a href="{{ route('google.login') }}" class="w-full bg-white dark:bg-[#1A1A1A] hover:bg-gray-50 dark:hover:bg-[#2E2E2E] text-gray-700 dark:text-[#E8E8E8] font-semibold py-3 px-6 border border-gray-300 dark:border-[#444444] rounded-lg transition duration-300 flex items-center justify-center">
+        <a href="{{ route('google.login') }}" class="w-full bg-white hover:bg-[#F9EFF1] text-[#5A3A3A] font-semibold py-3 px-6 border border-[#EED9DE] rounded-lg transition duration-300 flex items-center justify-center">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -98,17 +98,17 @@
 
         <!-- Register Link -->
         <div class="mt-6 text-center">
-            <p class="text-gray-600">Don't have an account? <a href="/register" class="text-pink-600 hover:text-[#5A3A3A] font-semibold">Sign up</a></p>
+            <p class="text-[#8C6770]">Don't have an account? <a href="/register" class="text-[#C88A92] hover:text-[#7A5252] font-semibold">Sign up</a></p>
         </div>
 
         <!-- Forgot Password -->
         <div class="mt-4 text-center">
-            <a href="{{ route('password.request') }}" class="text-sm text-gray-500 hover:text-gray-700">Forgot your password?</a>
+            <a href="{{ route('password.request') }}" class="text-sm text-[#8C6770] hover:text-[#5A3A3A]">Forgot your password?</a>
         </div>
     </div>
 
     <!-- Register Form (hidden by default, can be toggled) -->
-    <div id="register-form" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 mt-8 {{ $showRegister ? '' : 'hidden' }}">
+    <div id="register-form" class="max-w-md mx-auto bg-white rounded-3xl border border-[#EED9DE] shadow-soft p-8 mt-8 {{ $showRegister ? '' : 'hidden' }}">
         <h2 class="text-2xl font-bold text-center mb-6">Create Account</h2>
 
         <form method="POST" action="{{ route('register') }}" class="space-y-6">
@@ -116,15 +116,15 @@
             <!-- Name -->
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="first-name" class="mb-2 block text-sm font-medium text-pink-600/60">First Name</label>
-                    <input type="text" id="first-name" name="first_name" value="{{ old('first_name') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('first_name') border-red-500 @enderror">
+                    <label for="first-name" class="mb-2 block text-sm font-medium text-[#8C6770]">First Name</label>
+                    <input type="text" id="first-name" name="first_name" value="{{ old('first_name') }}" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors @error('first_name') border-red-500 @enderror">
                     @error('first_name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>
-                    <label for="last-name" class="mb-2 block text-sm font-medium text-pink-600/60">Last Name</label>
-                    <input type="text" id="last-name" name="last_name" value="{{ old('last_name') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('last_name') border-red-500 @enderror">
+                    <label for="last-name" class="mb-2 block text-sm font-medium text-[#8C6770]">Last Name</label>
+                    <input type="text" id="last-name" name="last_name" value="{{ old('last_name') }}" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors @error('last_name') border-red-500 @enderror">
                     @error('last_name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -133,8 +133,8 @@
 
             <!-- Email -->
             <div>
-                <label for="register-email" class="mb-2 block text-sm font-medium text-pink-600/60">Email Address</label>
-                <input type="email" id="register-email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('email') border-red-500 @enderror">
+                <label for="register-email" class="mb-2 block text-sm font-medium text-[#8C6770]">Email Address</label>
+                <input type="email" id="register-email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors @error('email') border-red-500 @enderror">
                 @error('email')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -142,8 +142,8 @@
 
             <!-- Password -->
             <div>
-                <label for="register-password" class="mb-2 block text-sm font-medium text-pink-600/60">Password</label>
-                <input type="password" id="register-password" name="password" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors @error('password') border-red-500 @enderror">
+                <label for="register-password" class="mb-2 block text-sm font-medium text-[#8C6770]">Password</label>
+                <input type="password" id="register-password" name="password" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors @error('password') border-red-500 @enderror">
                 @error('password')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -151,19 +151,19 @@
 
             <!-- Confirm Password -->
             <div>
-                <label for="confirm-password" class="mb-2 block text-sm font-medium text-pink-600/60">Confirm Password</label>
-                <input type="password" id="confirm-password" name="password_confirmation" required class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-black focus:outline-none focus:ring-2 focus:ring-pink-500 transition-colors">
+                <label for="confirm-password" class="mb-2 block text-sm font-medium text-[#8C6770]">Confirm Password</label>
+                <input type="password" id="confirm-password" name="password_confirmation" required class="w-full rounded-md border border-[#EED9DE] bg-white px-3 py-2 text-[#5A3A3A] focus:outline-none focus:ring-2 focus:ring-[#E6B7BE] transition-colors">
             </div>
 
             <!-- Register Button -->
-            <button type="submit" class="w-full bg-[#E6B7BE] dark:bg-[#8B5A63] hover:bg-[#D9A0A8] dark:hover:bg-[#A67680] text-[#5A3A3A] dark:text-[#F5F5F5] font-bold py-3 px-6 rounded-lg transition duration-300">
+            <button type="submit" class="w-full bg-[#E6B7BE] hover:bg-[#C88A92] text-[#5A3A3A] font-bold py-3 px-6 rounded-lg transition duration-300">
                 Create Account
             </button>
         </form>
 
         <!-- Login Link -->
         <div class="mt-6 text-center">
-            <p class="text-gray-600">Already have an account? <a href="/login" class="text-pink-600 hover:text-pink-700 font-semibold">Sign in</a></p>
+            <p class="text-[#8C6770]">Already have an account? <a href="/login" class="text-[#C88A92] hover:text-[#7A5252] font-semibold">Sign in</a></p>
         </div>
     </div>
 
@@ -189,3 +189,4 @@
         });
     </script>
 @endsection
+

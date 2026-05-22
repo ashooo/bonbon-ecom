@@ -19,6 +19,17 @@
         </nav>
 
         <div class="flex items-center space-x-4">
+            @auth
+                @if (Auth::user()->is_admin)
+                    <a
+                        href="{{ route('admin.dashboard') }}"
+                        class="hidden sm:inline-flex items-center rounded-full border border-[#E6D5D8] bg-[#FFF6FA] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#7A2F56] transition hover:border-[#C94F7C] hover:text-[#C94F7C]"
+                    >
+                        Admin Panel
+                    </a>
+                @endif
+            @endauth
+
             <a href="/cart" id="navbar-cart-btn" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D5D8] bg-transparent text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"></path>

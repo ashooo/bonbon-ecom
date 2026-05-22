@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 
 class CheckoutController extends Controller
 {
@@ -46,11 +47,29 @@ class CheckoutController extends Controller
         )->load('items.product', 'items.variant');
     }
 
-    private function getMaxPreOrderDays(Cart $cart): int
+    private function getMaxPreOrderDays(Collection $items): int
     {
-        return (int) $cart->items
+        return (int) $items
             ->filter(fn ($item) => (bool) ($item->product?->is_preorder))
             ->max(fn ($item) => (int) ($item->product?->pre_order_days ?? 0));
+    }
+
+    private function getSelectedItems(Cart $cart, Request $request): Collection
+    {
+        $selectionMode = $request->boolean('selection_mode') || $request->has('selected_item_ids');
+        $selectedIds = collect($request->input('selected_item_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            return $selectionMode ? collect() : $cart->items;
+        }
+
+        return $cart->items
+            ->whereIn('id', $selectedIds->all())
+            ->values();
     }
 
     private function parseGuestOrderNumbers(Request $request): array
@@ -94,16 +113,17 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
-        $items = $cart->items;
+        $items = $this->getSelectedItems($cart, $request);
+        $selectedItemIds = $items->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
         $settings = StoreSetting::query()->first();
         $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
         $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
         $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
-        $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
+        $maxPreOrderDays = $this->getMaxPreOrderDays($items);
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
         $minFulfillmentTime = $minFulfillmentAt->format('H:i');
-        $subtotal = $cart->subtotal;
+        $subtotal = (float) $items->sum(fn ($item) => $item->quantity * $item->unit_price);
         $delivery = 0.0;
         $tax = $subtotal * ($configuredTaxRate / 100);
         $serviceFee = $configuredServiceFee;
@@ -126,7 +146,8 @@ class CheckoutController extends Controller
             'maxPreOrderDays',
             'minFulfillmentDate',
             'minFulfillmentTime',
-            'savedAddresses'
+            'savedAddresses',
+            'selectedItemIds'
         ));
 
         if ($this->guestCartToken) {
@@ -139,14 +160,15 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $cart = $this->getCart($request);
+        $selectedItems = $this->getSelectedItems($cart, $request);
 
-        if ($cart->items->isEmpty()) {
+        if ($selectedItems->isEmpty()) {
             return redirect()->route('checkout.index')->withErrors([
-                'checkout' => 'Your cart is empty.',
+                'checkout' => 'Please select at least one cart item to checkout.',
             ]);
         }
 
-        $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
+        $maxPreOrderDays = $this->getMaxPreOrderDays($selectedItems);
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
 
@@ -183,7 +205,7 @@ class CheckoutController extends Controller
             ])->withInput();
         }
 
-        foreach ($cart->items as $item) {
+        foreach ($selectedItems as $item) {
             $resolvedVariant = $this->resolveVariantForCartItem($item);
 
             if (! $item->product_id && ! $item->variant_id) {
@@ -214,7 +236,7 @@ class CheckoutController extends Controller
             $deliveryAddress = $orderType === 'pickup'
                 ? Order::STORE_PICKUP_LOCATION_URL
                 : trim($request->string('delivery_address')->value());
-            $subtotal = (float) $cart->items->sum(fn ($item) => $item->quantity * $item->unit_price);
+            $subtotal = (float) $selectedItems->sum(fn ($item) => $item->quantity * $item->unit_price);
             $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0.0;
             $tax = $subtotal * ($configuredTaxRate / 100);
             $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
@@ -241,7 +263,7 @@ class CheckoutController extends Controller
                 'stock_deducted_at' => null,
             ]);
 
-            foreach ($cart->items as $item) {
+            foreach ($selectedItems as $item) {
                 $variant = $this->resolveVariantForCartItem($item);
                 $isCustomOnlyItem = ! $item->product_id && ! $item->variant_id;
                 if (! $variant && ! $isCustomOnlyItem) {
@@ -263,8 +285,11 @@ class CheckoutController extends Controller
                 $this->deductOrderStock($order, Auth::id());
             }
 
-            $cart->items()->delete();
-            $cart->delete();
+            $selectedIds = $selectedItems->pluck('id')->all();
+            $cart->items()->whereIn('id', $selectedIds)->delete();
+            if (! $cart->items()->exists()) {
+                $cart->delete();
+            }
 
             DB::commit();
 

@@ -10,16 +10,30 @@
     @endif
 
     @if ($items->count() > 0)
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form method="GET" action="{{ route('checkout.index') }}" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <input type="hidden" name="selection_mode" value="1">
             <!-- Cart Items -->
             <div class="lg:col-span-2">
                 <div class="space-y-4">
+                    <div class="bg-[#FFFFFF] rounded-2xl border border-[#ECD8E0] p-4 flex items-center justify-between">
+                        <label class="inline-flex items-center gap-2 text-sm font-semibold text-[#4D2E38]">
+                            <input type="checkbox" id="select-all-cart-items" class="h-4 w-4 rounded border-[#C88A92] text-[#C47A90] focus:ring-[#C47A90]" checked>
+                            Select all items
+                        </label>
+                    </div>
                     @foreach ($items as $item)
                         @php
                             $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
                             $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design');
                         @endphp
                         <div class="bg-[#FFFFFF] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#ECD8E0] p-6 flex items-center space-x-4">
+                            <input
+                                type="checkbox"
+                                name="selected_item_ids[]"
+                                value="{{ $item->id }}"
+                                class="cart-item-checkbox h-5 w-5 rounded border-[#C88A92] text-[#C47A90] focus:ring-[#C47A90]"
+                                checked
+                            >
                             @if (!empty($item->customization_payload['preview_svg']))
                                 <div class="h-20 w-20 overflow-hidden rounded bg-white [&_svg]:h-full [&_svg]:w-full">
                                     {!! $item->customization_payload['preview_svg'] !!}
@@ -93,14 +107,36 @@
                     <span>Total</span>
                     <span>&#8369;{{ number_format($total, 2) }}</span>
                 </div>
-                <a href="/checkout" class="w-full bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
+                <button type="submit" class="w-full bg-[#C47A90] hover:bg-[#B66880] text-white font-bold py-3 px-6 rounded-lg text-center block transition duration-300">
                     Proceed to Checkout
-                </a>
+                </button>
                 <a href="/#shop" class="w-full bg-[#FBEAF1] hover:bg-[#E9C7D4] text-[#4D2E38] font-bold py-3 px-6 rounded-lg text-center block mt-4 transition duration-300">
                     Continue Shopping
                 </a>
             </div>
-        </div>
+        </form>
+
+        <script>
+            (() => {
+                const selectAll = document.getElementById('select-all-cart-items');
+                const itemChecks = Array.from(document.querySelectorAll('.cart-item-checkbox'));
+                if (!selectAll || itemChecks.length === 0) return;
+
+                const syncSelectAll = () => {
+                    selectAll.checked = itemChecks.every((checkbox) => checkbox.checked);
+                };
+
+                selectAll.addEventListener('change', () => {
+                    itemChecks.forEach((checkbox) => {
+                        checkbox.checked = selectAll.checked;
+                    });
+                });
+
+                itemChecks.forEach((checkbox) => {
+                    checkbox.addEventListener('change', syncSelectAll);
+                });
+            })();
+        </script>
     @else
         <!-- Empty Cart -->
         <div class="text-center py-12">

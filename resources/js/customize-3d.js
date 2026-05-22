@@ -1200,7 +1200,7 @@ const initCustomizer3D = () => {
 
     const camera = new THREE.PerspectiveCamera(isImmersive ? 33 : 36, 1, 0.1, 100);
     camera.position.set(0, isImmersive ? 5.2 : 3.7, isImmersive ? 14.5 : 6.2);
-    camera.lookAt(0, isImmersive ? 0.84 : 1.05, 0);
+    camera.lookAt(0, isImmersive ? 0.2 : 1.05, 0);
 
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -1300,7 +1300,7 @@ const initCustomizer3D = () => {
         } else {
             camera.position.set(0, height, distance);
         }
-        camera.lookAt(0, inside ? 0.35 : (isImmersive ? 0.84 : 1.05), 0);
+        camera.lookAt(0, inside ? 0.35 : (isImmersive ? 0.2 : 1.05), 0);
     };
 
     const syncViewButtons = (activeView = autoRotate ? 'auto' : '') => {

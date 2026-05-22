@@ -63,7 +63,7 @@
     </div>
 
     {{-- Cellphone Mockup Control Panel (Left Side) --}}
-    <div class="absolute left-4 top-4 bottom-24 z-20 flex items-start pointer-events-none sm:left-6 lg:left-10">
+    <div class="absolute left-4 top-4 bottom-8 z-20 flex items-start pointer-events-none sm:left-6 lg:left-10">
         <div class="relative flex h-full max-h-[830px] w-[385px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[2.75rem] border-[10px] border-[#202024] bg-[#202024] p-2 shadow-[0_26px_70px_rgba(55,28,35,0.28)] pointer-events-auto ring-1 ring-white/35">
             {{-- iPhone Notch --}}
             <div class="absolute left-1/2 top-2 z-50 h-6 w-[42%] -translate-x-1/2 rounded-b-3xl bg-[#202024]"></div>

@@ -4,6 +4,23 @@
         $navbarUnreadNotificationsCount = Auth::user()->unreadUserNotifications()->count();
     @endphp
 @endauth
+@php
+    $navbarCartCount = 0;
+
+    if (Auth::check()) {
+        $authCart = Auth::user()->cart()->with('items')->first();
+        $navbarCartCount = (int) ($authCart?->items->sum('quantity') ?? 0);
+    } else {
+        $guestCartToken = trim((string) request()->cookie('cart_token', ''));
+        if ($guestCartToken !== '') {
+            $guestCart = \App\Models\Cart::query()
+                ->where('session_id', $guestCartToken)
+                ->with('items')
+                ->first();
+            $navbarCartCount = (int) ($guestCart?->items->sum('quantity') ?? 0);
+        }
+    }
+@endphp
 
 <header id="main-navbar" class="bg-[#FFFFFF] shadow-md border-b border-[#F5F5F5]">
     <div class="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -34,6 +51,9 @@
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"></path>
                 </svg>
+                <span data-cart-count-badge class="absolute -right-1 -top-1 {{ $navbarCartCount > 0 ? 'inline-flex' : 'hidden' }} h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-bold leading-none text-white">
+                    {{ $navbarCartCount }}
+                </span>
             </a>
 
             @auth

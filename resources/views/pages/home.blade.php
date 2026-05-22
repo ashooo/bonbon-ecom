@@ -16,8 +16,17 @@
             try {
                 const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
                 if (!raw) return;
-                const parsed = JSON.parse(raw);
-                if (parsed?.expiresAt && Date.now() <= parsed.expiresAt) {
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(raw);
+                } catch (_) {
+                    parsed = raw;
+                }
+                const valid = parsed === true
+                    || parsed === 'true'
+                    || parsed === '1'
+                    || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                if (valid) {
                     document.documentElement.classList.add('home-chat-unlocked');
                 }
             } catch (e) {}
@@ -74,8 +83,17 @@
             try {
                 const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
                 if (!raw) return;
-                const parsed = JSON.parse(raw);
-                if (!parsed?.expiresAt || Date.now() > parsed.expiresAt) return;
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(raw);
+                } catch (_) {
+                    parsed = raw;
+                }
+                const valid = parsed === true
+                    || parsed === 'true'
+                    || parsed === '1'
+                    || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                if (!valid) return;
 
                 // Skip preloader for returning users with unlocked showcase state.
                 preloader.style.display = 'none';
@@ -114,10 +132,10 @@
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
                     <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
-                    <a id="story-cta-btn" href="#home-showcase" class="story-cta" style="opacity: 0;">
+                    <button id="story-cta-btn" type="button" class="story-cta" style="opacity: 0;">
                         Explore Our Shop
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -233,9 +251,11 @@
             </div>
         </div>
 
+        
+        
         {{-- ── Featured Products ── --}}
-        <div class="bb-section-wrap">
-            <div class="bb-section-header">
+        <div class="bb-section-wrap bb-category-wrap">
+            <div class="bb-section-header bb-category-header">
                 <div>
                     <span class="bb-eyebrow">Our Signature Selection</span>
                     <h2 class="bb-section-title">Featured Products</h2>
@@ -312,6 +332,47 @@
                     </a>
                     @endforeach
                 </div>
+            </div>
+        </div>
+        @endif
+
+        @if($featuredCategories->count() > 0)
+        <div class="bb-section-wrap">
+            <div class="bb-section-header">
+                <div>
+                    <span class="bb-eyebrow">Browse by Type</span>
+                    <h2 class="bb-section-title">Categories</h2>
+                </div>
+                <a href="{{ route('shop.index') }}" class="bb-see-all">See all
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+
+            <div class="bb-category-grid">
+                @foreach($featuredCategories->take(8) as $category)
+                    @php
+                        $categoryName = strtolower($category->name);
+                    @endphp
+                    <a href="{{ route('shop.index', ['category' => $category->id]) }}" class="bb-category-card">
+                        <span class="bb-category-icon" aria-hidden="true">
+                            @if(str_contains($categoryName, 'cake'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 10h16v3H4zM5 13h14v6H5zM8 10c0-1.5 1.2-2.5 2.5-2.5S13 8.5 13 10M13 10c0-1.5 1.2-2.5 2.5-2.5S18 8.5 18 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            @elseif(str_contains($categoryName, 'donut') || str_contains($categoryName, 'doughnut'))
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.3" stroke="currentColor" stroke-width="1.7"/><circle cx="8" cy="9" r="0.7" fill="currentColor"/><circle cx="16" cy="10" r="0.7" fill="currentColor"/><circle cx="9" cy="15" r="0.7" fill="currentColor"/></svg>
+                            @elseif(str_contains($categoryName, 'bread') || str_contains($categoryName, 'loaf'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M6 10a4 4 0 0 1 4-4c.8 0 1.5.2 2.1.6A4 4 0 0 1 18 10v5a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 10.5h.01M12 9.8h.01M14.5 10.5h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                            @elseif(str_contains($categoryName, 'cookie') || str_contains($categoryName, 'biscuit'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M12 5a7 7 0 1 0 7 7 3 3 0 0 1-3-3 3 3 0 0 1-3-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="10" cy="11" r="0.8" fill="currentColor"/><circle cx="13.8" cy="13.3" r="0.8" fill="currentColor"/><circle cx="9.5" cy="14.5" r="0.8" fill="currentColor"/></svg>
+                            @elseif(str_contains($categoryName, 'drink') || str_contains($categoryName, 'beverage') || str_contains($categoryName, 'coffee'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M7 8h9v4a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4z" stroke="currentColor" stroke-width="1.7"/><path d="M16 9h1.5a2 2 0 0 1 0 4H16" stroke="currentColor" stroke-width="1.7"/><path d="M9 5c0 1-1 1.3-1 2.3M12 5c0 1-1 1.3-1 2.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            @else
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 12c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3v4c-2.5 0-2.5 3-5 3s-2.5-3-5-3-2.5 3-5 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M6 9.5a6 6 0 0 1 12 0" stroke="currentColor" stroke-width="1.7"/></svg>
+                            @endif
+                        </span>
+                        <span class="bb-category-name">{{ $category->name }}</span>
+                        <span class="bb-category-meta">{{ number_format($category->products_count ?? 0) }} items</span>
+                    </a>
+                @endforeach
             </div>
         </div>
         @endif
@@ -682,6 +743,79 @@
             min-width: 230px;
         }
 
+
+        /* Categories */
+        .bb-category-wrap {
+            padding-top: clamp(1.2rem, 2.5vw, 2rem);
+            padding-bottom: clamp(1.5rem, 2.8vw, 2.2rem);
+        }
+        .bb-category-header {
+            margin-bottom: 1rem;
+        }
+        .bb-category-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(136px, 1fr);
+            gap: 0.65rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.25rem;
+            scrollbar-width: thin;
+            scrollbar-color: #E9C7D4 #FBF2F6;
+        }
+        .bb-category-grid::-webkit-scrollbar { height: 8px; }
+        .bb-category-grid::-webkit-scrollbar-track { background: #FBF2F6; border-radius: 999px; }
+        .bb-category-grid::-webkit-scrollbar-thumb { background: #E9C7D4; border-radius: 999px; }
+        .bb-category-grid > * {
+            min-width: 136px;
+        }
+        .bb-category-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.3rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.85rem;
+            border: 1px solid #F0D8E2;
+            background: #fff;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 4px 14px rgba(77,46,56,0.06);
+        }
+        .bb-category-card:hover {
+            transform: translateY(-3px);
+            border-color: #C47A90;
+            box-shadow: 0 10px 24px rgba(77,46,56,0.11);
+        }
+        .bb-category-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #B86F86;
+            background: #FBEFF4;
+            border: 1px solid #F1D9E4;
+        }
+        .bb-category-icon svg {
+            width: 1.05rem;
+            height: 1.05rem;
+        }
+        .bb-category-name {
+            font-family: 'Playfair Display', serif;
+            color: #4D2E38;
+            font-size: 0.86rem;
+            line-height: 1.2;
+        }
+        .bb-category-meta {
+            color: #8F6172;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
         /* ── Product Card ── */
         .bb-product-card {
             background: #fff;
@@ -1376,6 +1510,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.65rem;
+            appearance: none;
+            border: none;
+            cursor: pointer;
             font-family: 'Inter', sans-serif;
             font-size: 0.78rem;
             font-weight: 600;
@@ -1829,6 +1966,48 @@
         html:not(.home-chat-unlocked) #bonbon-chat-open {
             display: none !important;
         }
+
+        html.home-chat-unlocked #home-showcase,
+        html.home-chat-unlocked #cake-shelf {
+            display: block !important;
+        }
+
+        /* Keep cart controls hidden whenever homepage is still in locked/intro state. */
+        html:not(.home-chat-unlocked) #navbar-cart-btn,
+        html:not(.home-chat-unlocked) #navbar-notification-btn,
+        html:not(.home-chat-unlocked) #navbar-account-btn,
+        html:not(.home-chat-unlocked) #main-navbar .nav-link-item,
+        html:not(.home-chat-unlocked) #navbar-brand {
+            opacity: 0 !important;
+            color: transparent !important;
+            border-color: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+        }
+
+        html:not(.home-chat-unlocked) [data-cart-count-badge],
+        html:not(.home-chat-unlocked) [data-notification-badge],
+        html:not(.home-chat-unlocked) #cart-badge {
+            opacity: 0 !important;
+            color: transparent !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+        }
+
+        /* Explicitly neutralize Tailwind pink badge utilities during intro state. */
+        html:not(.home-chat-unlocked) .bg-pink-500[data-cart-count-badge],
+        html:not(.home-chat-unlocked) .bg-pink-500[data-notification-badge] {
+            background-color: transparent !important;
+        }
+
+        html:not(.home-chat-unlocked) #cart-panel-toggle {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
     </style>
     @if (file_exists(public_path('css/shelf.css')))
         <link rel="stylesheet" href="/css/shelf.css">
@@ -1864,9 +2043,50 @@
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
+                const navbarCartBtn = document.getElementById('navbar-cart-btn');
+                const navbarCartBadge = document.querySelector('[data-cart-count-badge]');
+                const navbarNotificationBadge = document.querySelector('[data-notification-badge]');
+                const shelfCartBadge = document.getElementById('cart-badge');
                 const showcase = document.getElementById('home-showcase');
                 const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
                 const SHOWCASE_CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
+
+                function syncBadgesWithCartIconVisibility() {
+                    if (!navbarCartBtn) return;
+
+                    const styles = window.getComputedStyle(navbarCartBtn);
+                    const isLocked = !document.documentElement.classList.contains('home-chat-unlocked');
+                    const iconOpacity = String(styles.opacity || '1');
+                    const iconColor = styles.color || '';
+
+                    [navbarCartBadge, navbarNotificationBadge, shelfCartBadge].forEach((badge) => {
+                        if (!badge) return;
+
+                        if (isLocked) {
+                            // Match the cart icon fade/recolor behavior instead of hard hiding.
+                            badge.style.opacity = iconOpacity;
+                            badge.style.visibility = '';
+                            badge.style.color = '#FFFFFF';
+                            badge.style.background = 'transparent';
+                            badge.style.borderColor = 'transparent';
+                            badge.style.boxShadow = 'none';
+                            badge.style.pointerEvents = 'none';
+                        } else {
+                            badge.style.opacity = '';
+                            badge.style.visibility = '';
+                            badge.style.color = '';
+                            badge.style.background = '';
+                            badge.style.borderColor = '';
+                            badge.style.boxShadow = '';
+                            badge.style.pointerEvents = '';
+                        }
+                    });
+                }
+
+                syncBadgesWithCartIconVisibility();
+                window.addEventListener('scroll', syncBadgesWithCartIconVisibility, { passive: true });
+                window.addEventListener('resize', syncBadgesWithCartIconVisibility);
+                setInterval(syncBadgesWithCartIconVisibility, 250);
 
                 // --- Reveal showcase ---
                 function setShowcaseCache() {
@@ -1883,8 +2103,17 @@
                     try {
                         const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
                         if (!raw) return false;
-                        const parsed = JSON.parse(raw);
-                        if (!parsed?.expiresAt || Date.now() > parsed.expiresAt) {
+                        let parsed = null;
+                        try {
+                            parsed = JSON.parse(raw);
+                        } catch (_) {
+                            parsed = raw;
+                        }
+                        const valid = parsed === true
+                            || parsed === 'true'
+                            || parsed === '1'
+                            || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                        if (!valid) {
                             localStorage.removeItem(SHOWCASE_CACHE_KEY);
                             return false;
                         }
@@ -1900,6 +2129,7 @@
                         if (showcase.style.display === 'none') {
                             showcase.style.display = '';
                         }
+                        shelf.style.display = '';
                         setShowcaseCache();
                         showcase.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
@@ -1908,10 +2138,14 @@
                 const ctaBtn = document.getElementById('story-cta-btn');
                 if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
 
-                // If user previously unlocked the lower homepage details, keep them visible.
-                if (showcase && isShowcaseCached() && showcase.style.display === 'none') {
+                // If user previously unlocked the lower homepage details, always keep them visible.
+                if (showcase && isShowcaseCached()) {
                     document.documentElement.classList.add('home-chat-unlocked');
                     showcase.style.display = '';
+                    showcase.hidden = false;
+                    shelf.style.display = '';
+                    shelf.hidden = false;
+
                     // Start at the end of the scrollytelling section on return visits.
                     if (!window.location.hash) {
                         requestAnimationFrame(() => {
@@ -2089,6 +2323,7 @@
                 const cartPanelToggle = document.getElementById('cart-panel-toggle');
                 const cartPanelBody = document.getElementById('cart-panel-body');
                 const cartBadge = document.getElementById('cart-badge');
+                const navbarCartBadge = document.querySelector('[data-cart-count-badge]');
                 const cakeBoxItems = document.getElementById('cake-box-items');
                 const cartItemsList = document.getElementById('cart-items-list');
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -2112,7 +2347,16 @@
 
                 function fmt(n) { return '₱' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
+                function syncNavbarCartBadge(count) {
+                    if (!navbarCartBadge) return;
+                    const safeCount = Number(count || 0);
+                    navbarCartBadge.textContent = String(safeCount);
+                    navbarCartBadge.classList.toggle('hidden', safeCount <= 0);
+                    navbarCartBadge.classList.toggle('inline-flex', safeCount > 0);
+                }
+
                 function renderCartPanel(data, autoExpand) {
+                    syncNavbarCartBadge(data.count);
                     // Hide cart completely if 0 items
                     if (data.count === 0) {
                         cartPanel.style.display = 'none';
@@ -2228,4 +2472,5 @@
         </script>
     @endpush
 @endsection
+
 

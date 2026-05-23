@@ -23,19 +23,30 @@
 @endphp
 
 <header id="main-navbar" class="bg-[#FFFFFF] shadow-md border-b border-[#F5F5F5]">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
+    <div class="container relative mx-auto flex items-center justify-between px-4 py-4">
+        <div class="z-10 flex items-center space-x-3">
             <a href="/" id="navbar-brand" class="text-2xl font-bold text-pink-600">BonBons PH</a>
         </div>
 
-        <nav class="hidden md:flex space-x-6">
+        <nav class="absolute left-1/2 hidden -translate-x-1/2 items-center space-x-6 md:flex">
             <a href="/" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a>
             <a href="{{ route('shop.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
             <a href="{{ route('orders.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
             <a href="/customize" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
         </nav>
 
-        <div class="flex items-center space-x-4">
+        <div class="z-10 flex items-center space-x-4">
+            <button
+                id="navbar-music-toggle"
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-full border border-[#E6D5D8] bg-white px-2 sm:px-3 text-xs font-bold text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
+                aria-pressed="false"
+                data-no-click-sound
+            >
+                <span class="grid h-6 w-6 place-items-center rounded-full bg-[#F8E2E7] text-[#C88A92]" data-music-icon>♫</span>
+                <span class="hidden md:inline" data-music-label>Music on</span>
+            </button>
+
             @auth
                 @if (Auth::user()->is_admin)
                     <a

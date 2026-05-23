@@ -101,6 +101,7 @@
         })();
     </script>
 
+
     {{-- Scrollytelling Section --}}
     <section id="cake-scroll-section" class="cake-scroll-section">
         <div id="cake-sticky-panel" class="cake-sticky-panel">
@@ -251,8 +252,8 @@
             </div>
         </div>
 
-        
-        
+
+
         {{-- ── Featured Products ── --}}
         <div class="bb-section-wrap bb-category-wrap">
             <div class="bb-section-header bb-category-header">
@@ -1801,7 +1802,7 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
-    
+
         /* Pink Theme Overrides */
         :root {
             --bb-pink-50: #fff9fc;
@@ -2036,7 +2037,7 @@
             })();
         </script>
 
-        
+
 
         <script>
             // ═══ Shelf: Reveal, Search, Filter, Sort + Menu Card ═══
@@ -2472,5 +2473,3 @@
         </script>
     @endpush
 @endsection
-
-

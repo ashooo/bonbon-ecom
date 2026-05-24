@@ -53,7 +53,8 @@ class StoreChatbotService
             'bonbon', 'cake', 'cakes', 'cookie', 'cookies', 'cupcake', 'pastry', 'dessert', 'product',
             'price', 'cheap', 'budget', 'best seller', 'bestseller', 'delivery', 'shipping', 'checkout',
             'cart', 'buy', 'order', 'custom', 'peg', 'category', 'featured', 'stock', 'available',
-            'location', 'address', 'where', 'contact', 'phone', 'email', 'hours', 'open', 'accept',
+            'location', 'address', 'where', 'contact', 'phone', 'email', 'hours', 'open', 'opening', 'closing', 'operate', 'operating', 'business hours', 'what time', 'time',
+            'accept',
             'customization', 'customize', 'personalize', 'map', 'pinpoint', 'store',
         ];
 
@@ -95,7 +96,7 @@ class StoreChatbotService
             return 'store_customization';
         }
 
-        if (Str::contains($normalized, ['open', 'hours', 'when', 'available', 'schedule', 'timing'])) {
+        if (Str::contains($normalized, ['open', 'opening', 'close', 'closing', 'hours', 'when', 'available', 'schedule', 'timing', 'operate', 'operating', 'business hours', 'what time', 'time'])) {
             return 'store_hours';
         }
 

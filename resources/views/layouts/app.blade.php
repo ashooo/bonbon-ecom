@@ -318,7 +318,7 @@
         <div class="shrink-0 border-t border-[#F1DADF] bg-white px-4 py-4">
             <div id="bonbon-chat-typing-indicator" class="mb-3 hidden text-sm text-[#9E7680]">Bonbon Support is typing...</div>
 
-            <form id="bonbon-chat-send-form" class="space-y-3" enctype="multipart/form-data">
+            <form id="bonbon-chat-send-form" class="space-y-3" enctype="multipart/form-data" data-no-loader>
                 <div id="bonbon-chat-attachment-preview" class="hidden rounded-[1.25rem] border border-[#EED9DE] bg-[#FFF7F8] p-3">
                     <div class="flex items-start justify-between gap-3">
                         <div id="bonbon-chat-attachment-preview-content" class="min-w-0 flex-1"></div>
@@ -442,6 +442,7 @@
                     'X-CSRF-TOKEN': csrf,
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
+                    'X-Bonbon-No-Loader': '1',
                     ...(json ? { 'Content-Type': 'application/json' } : {}),
                     ...(socketId ? { 'X-Socket-ID': socketId } : {}),
                 };

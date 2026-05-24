@@ -155,6 +155,9 @@ Route::get('/orders/{order}/receipt', [OrderHistoryController::class, 'receipt']
 Route::get('/orders/{order}/receipt/html', [OrderHistoryController::class, 'receiptHtml'])->name('orders.receipt.html');
 Route::get('/orders/{order}/receipt/pdf', [OrderHistoryController::class, 'receiptPdf'])->name('orders.receipt.pdf');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
+Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Api\InvoiceController::class, 'download'])
+    ->middleware('auth')
+    ->name('invoices.download');
 
 Route::get('/customize/android', [CustomizeController::class, 'android'])->name('customize.android');
 Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');

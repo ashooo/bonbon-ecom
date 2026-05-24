@@ -17,12 +17,6 @@
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {{ session('success') }}
-            </div>
-        @endif
-
         <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
             @csrf
 

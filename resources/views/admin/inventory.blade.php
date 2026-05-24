@@ -8,20 +8,6 @@
             </div>
         </div>
 
-        @if (session('success'))
-            <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('success') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-2xl border border-[#E9C7D4] bg-gradient-to-br from-[#FFF7FA] to-[#F6DFE9] p-4 shadow-sm">
                 <p class="text-xs uppercase tracking-[0.16em] text-[#8F6172]">Tracked Variants</p>

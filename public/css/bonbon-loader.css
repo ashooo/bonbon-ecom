@@ -102,8 +102,7 @@
     padding: 1.3rem 1.5rem;
     border: 1px solid rgba(255, 255, 255, 0.78);
     border-radius: 2rem;
-    background: rgba(255, 255, 255, 0.52);
-    box-shadow: 0 22px 52px rgba(90, 58, 58, 0.12);
+    background: rgba(245, 245, 245, 0);
 }
 
 .bb-loader-small .bb-loader-inner {

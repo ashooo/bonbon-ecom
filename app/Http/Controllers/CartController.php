@@ -144,8 +144,9 @@ class CartController extends Controller
             'customization.message' => 'nullable|string|max:50',
             'customization.frosting_custom' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'customization.drip' => 'nullable|in:none,chocolate,white_chocolate,pink,caramel',
-            'customization.toppings' => 'nullable|string|max:5000',
+            'customization.toppings' => 'nullable|string|max:50000',
             'customization.preview_svg' => 'nullable|string|max:120000',
+            'customization.preview_image' => 'nullable|string|max:2000000',
             'customization.topper' => 'nullable|in:none,name,acrylic,edible_print',
             'customization.rush' => 'nullable|in:no,yes',
         ]);
@@ -252,7 +253,7 @@ class CartController extends Controller
 
     private function sanitizeCustomizationPayload(array $raw): array
     {
-        $allowedKeys = ['sponge', 'filling', 'frosting', 'frosting_custom', 'layers', 'shape', 'size', 'theme', 'message', 'drip', 'toppings', 'preview_svg', 'topper', 'rush'];
+        $allowedKeys = ['sponge', 'filling', 'frosting', 'frosting_custom', 'layers', 'shape', 'size', 'theme', 'message', 'drip', 'toppings', 'preview_svg', 'preview_image', 'topper', 'rush'];
         $payload = [];
 
         foreach ($allowedKeys as $key) {
@@ -275,6 +276,15 @@ class CartController extends Controller
                 continue;
             }
 
+            if ($key === 'preview_image') {
+                $sanitized = $this->sanitizePreviewImage($trimmed);
+                if ($sanitized === '') {
+                    continue;
+                }
+                $payload[$key] = $sanitized;
+                continue;
+            }
+
             $payload[$key] = $trimmed;
         }
 
@@ -290,6 +300,29 @@ class CartController extends Controller
         $clean = preg_replace('/on[a-zA-Z]+\s*=\s*("|\').*?("|\')/i', '', $clean) ?? '';
         $clean = preg_replace('/javascript:/i', '', $clean) ?? '';
         return trim($clean);
+    }
+
+    private function sanitizePreviewImage(string $value): string
+    {
+        if (! preg_match('/^data:image\/(png|jpe?g|webp);base64,/i', $value)) {
+            return '';
+        }
+
+        $parts = explode(',', $value, 2);
+        if (count($parts) !== 2) {
+            return '';
+        }
+
+        $decoded = base64_decode($parts[1], true);
+        if ($decoded === false || $decoded === '') {
+            return '';
+        }
+
+        if (strlen($decoded) > 1_500_000) {
+            return '';
+        }
+
+        return $parts[0] . ',' . base64_encode($decoded);
     }
 
     private function calculateCustomizationAdjustment(array $payload): float

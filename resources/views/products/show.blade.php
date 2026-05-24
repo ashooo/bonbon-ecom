@@ -190,7 +190,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('cart.add') }}" method="POST" class="pd-panel rounded-3xl p-6">
+            <form action="{{ route('cart.add') }}" method="POST" class="pd-panel rounded-3xl p-6" data-no-loader>
                 @csrf
                 <input type="hidden" name="product_id" value="{{ $product->id }}">
 

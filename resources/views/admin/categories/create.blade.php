@@ -11,12 +11,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 mb-6" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
-    @endif
-
     <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
 
         <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
@@ -107,6 +101,5 @@
     </form>
 </div>
 @endsection
-
 
 

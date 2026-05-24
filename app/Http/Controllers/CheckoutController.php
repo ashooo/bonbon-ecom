@@ -24,6 +24,24 @@ class CheckoutController extends Controller
 {
     private ?string $guestCartToken = null;
 
+    private function resolveCartItemUnitPrice($item): float
+    {
+        $stored = (float) ($item->unit_price ?? 0);
+        if ($stored > 0) {
+            return $stored;
+        }
+
+        $base = (float) ($item->product?->effective_price ?? 0);
+        $variant = (float) ($item->variant?->price_adjustment ?? 0);
+        $derived = $base + $variant;
+
+        if ($base <= 0 && $variant > 0) {
+            $derived = $variant;
+        }
+
+        return max(0, $derived);
+    }
+
     private function resolveGuestCartToken(Request $request): string
     {
         $token = trim((string) ($request->cookie('cart_token') ?? ''));
@@ -113,7 +131,10 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
-        $items = $this->getSelectedItems($cart, $request);
+        $items = $this->getSelectedItems($cart, $request)->map(function ($item) {
+            $item->resolved_unit_price = $this->resolveCartItemUnitPrice($item);
+            return $item;
+        });
         $selectedItemIds = $items->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
         $settings = StoreSetting::query()->first();
         $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
@@ -123,7 +144,7 @@ class CheckoutController extends Controller
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
         $minFulfillmentTime = $minFulfillmentAt->format('H:i');
-        $subtotal = (float) $items->sum(fn ($item) => $item->quantity * $item->unit_price);
+        $subtotal = (float) $items->sum(fn ($item) => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)));
         $delivery = 0.0;
         $tax = $subtotal * ($configuredTaxRate / 100);
         $serviceFee = $configuredServiceFee;
@@ -160,7 +181,10 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $cart = $this->getCart($request);
-        $selectedItems = $this->getSelectedItems($cart, $request);
+        $selectedItems = $this->getSelectedItems($cart, $request)->map(function ($item) {
+            $item->resolved_unit_price = $this->resolveCartItemUnitPrice($item);
+            return $item;
+        });
 
         if ($selectedItems->isEmpty()) {
             return redirect()->route('checkout.index')->withErrors([
@@ -236,7 +260,7 @@ class CheckoutController extends Controller
             $deliveryAddress = $orderType === 'pickup'
                 ? Order::STORE_PICKUP_LOCATION_URL
                 : trim($request->string('delivery_address')->value());
-            $subtotal = (float) $selectedItems->sum(fn ($item) => $item->quantity * $item->unit_price);
+            $subtotal = (float) $selectedItems->sum(fn ($item) => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)));
             $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0.0;
             $tax = $subtotal * ($configuredTaxRate / 100);
             $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
@@ -274,8 +298,8 @@ class CheckoutController extends Controller
                     'order_id' => $order->id,
                     'variant_id' => $variant?->id,
                     'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price,
-                    'subtotal' => $item->quantity * $item->unit_price,
+                    'unit_price' => (float) ($item->resolved_unit_price ?? 0),
+                    'subtotal' => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)),
                     'special_instructions' => $item->special_instructions,
                     'customization_payload' => $item->customization_payload,
                 ]);
@@ -294,6 +318,33 @@ class CheckoutController extends Controller
             DB::commit();
 
             if ($order->payment_method === 'paymongo') {
+                if ((float) $order->total <= 0) {
+                    DB::transaction(function () use ($order): void {
+                        $this->deductOrderStock($order, Auth::id());
+                        $order->update([
+                            'payment_status' => 'paid',
+                            'status' => $order->status === 'pending' ? 'confirmed' : $order->status,
+                        ]);
+                    });
+
+                    $response = redirect()
+                        ->route('orders.index')
+                        ->with('success', 'Order placed successfully! Free order confirmed: ' . $order->order_number);
+
+                    $this->sendOrderReceiptEmail($order->fresh(['items.variant.product', 'invoice']));
+
+                    if (! Auth::check()) {
+                        $guestOrders = $this->parseGuestOrderNumbers($request);
+                        array_unshift($guestOrders, $order->order_number);
+                        $guestOrders = array_slice(array_values(array_unique($guestOrders)), 0, 20);
+
+                        $response->cookie('guest_orders', json_encode($guestOrders), 60 * 24 * 180);
+                        $response->cookie('cart_token', '', -1);
+                    }
+
+                    return $response;
+                }
+
                 $checkoutUrl = $this->createPaymongoCheckoutSession($order);
                 if ($checkoutUrl) {
                     $redirect = redirect()->away($checkoutUrl);

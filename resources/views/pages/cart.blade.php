@@ -38,6 +38,8 @@
                                 <div class="h-20 w-20 overflow-hidden rounded bg-white [&_svg]:h-full [&_svg]:w-full">
                                     {!! $item->customization_payload['preview_svg'] !!}
                                 </div>
+                            @elseif (!empty($item->customization_payload['preview_image']))
+                                <img src="{{ $item->customization_payload['preview_image'] }}" alt="{{ $itemName }}" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#FBEAF1]/50 bg-white">
                             @elseif ($item->product?->main_image_url)
                                 <img src="{{ $item->product->main_image_url }}" alt="{{ $itemName }}" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#FBEAF1]/50">
                             @else
@@ -47,12 +49,37 @@
                                 <h3 class="text-lg font-bold text-[#4D2E38]">{{ $itemName }}</h3>
                                 <p class="text-[#8A6A76]">{{ $itemVariantLabel }}</p>
                                 @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
-                                    <p class="mt-1 text-xs text-[#8F6172]">
-                                        @foreach($item->customization_payload as $key => $value)
-                                            @continue(in_array($key, ['preview_image', 'preview_svg'], true))
-                                            <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
-                                        @endforeach
-                                    </p>
+                                    @php
+                                        $payloadSummary = [];
+                                        foreach ($item->customization_payload as $key => $value) {
+                                            if (in_array($key, ['preview_image', 'preview_svg', 'item_name'], true)) {
+                                                continue;
+                                            }
+                                            if ($key === 'toppings') {
+                                                $decoded = is_string($value) ? json_decode($value, true) : $value;
+                                                $count = is_array($decoded) ? count($decoded) : 0;
+                                                if ($count > 0) {
+                                                    $payloadSummary[] = 'Toppings: ' . $count . ' pcs';
+                                                }
+                                                continue;
+                                            }
+                                            if (is_array($value) || is_object($value)) {
+                                                continue;
+                                            }
+                                            $text = trim((string) $value);
+                                            if ($text === '') {
+                                                continue;
+                                            }
+                                            $payloadSummary[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . $text;
+                                        }
+                                    @endphp
+                                    @if (!empty($payloadSummary))
+                                        <p class="mt-1 text-xs text-[#8F6172]">
+                                            @foreach($payloadSummary as $entry)
+                                                <span class="mr-2">{{ $entry }}</span>
+                                            @endforeach
+                                        </p>
+                                    @endif
                                 @endif
                                 <p class="text-[#C47A90] font-bold">&#8369;{{ number_format($item->unit_price, 2) }}</p>
                             </div>

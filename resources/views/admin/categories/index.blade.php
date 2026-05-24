@@ -16,12 +16,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="bg-[#F5E6E8] border border-[#E6B7BE] text-[#5A3A3A] px-4 py-3 rounded relative mb-6" role="alert">
-        <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
-    @endif
-
     <div class="overflow-x-auto">
         <table class="w-full table-auto">
             <thead class="bg-[#FFF7F8]">

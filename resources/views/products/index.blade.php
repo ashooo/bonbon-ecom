@@ -280,15 +280,6 @@
                 @if(request()->boolean('best_seller'))
                     <input type="hidden" name="best_seller" value="1">
                 @endif
-                <div class="ml-0 md:ml-4 flex gap-3 items-center">
-                    <select name="sort" class="shop-select px-4 py-2">
-                        <option value="">Sort by: Name</option>
-                        <option value="latest" @selected(request('sort') === 'latest')>Sort by: Latest</option>
-                        <option value="price_low" @selected(request('sort') === 'price_low')>Sort by: Price (Low to High)</option>
-                        <option value="price_high" @selected(request('sort') === 'price_high')>Sort by: Price (High to Low)</option>
-                    </select>
-                    <button type="submit" class="shop-btn-primary px-4 py-2">Search</button>
-                </div>
             </form>
 
             <div class="mb-4 text-sm shop-muted">

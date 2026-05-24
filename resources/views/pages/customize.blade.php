@@ -260,10 +260,11 @@
                 </div>
 
                 <div class="mt-4">
-                    <form method="POST" action="{{ route('cart.add') }}" class="space-y-4" id="cake-builder-form">
+                    <form method="POST" action="{{ route('cart.add') }}" class="space-y-4" id="cake-builder-form" data-no-loader>
                 @csrf
                 <input type="hidden" id="builder-toppings-hidden" name="customization[toppings]" value="[]">
                 <input type="hidden" id="builder-preview-svg-hidden" name="customization[preview_svg]" value="">
+                <input type="hidden" id="builder-preview-image-hidden" name="customization[preview_image]" value="">
 
                 <section class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/90 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)]">
                     <div class="mb-3 flex items-center justify-between">
@@ -500,6 +501,8 @@
             const topViewMessageEl = document.getElementById('cake-top-message-preview');
             const toppingsHiddenInput = document.getElementById('builder-toppings-hidden');
             const previewSvgHiddenInput = document.getElementById('builder-preview-svg-hidden');
+            const previewImageHiddenInput = document.getElementById('builder-preview-image-hidden');
+            const builderForm = document.getElementById('cake-builder-form');
             const shapeAdjustBtns = [...document.querySelectorAll('.shape-adjust')];
             const toppingColorInput = document.getElementById('builder-topping-color');
             const clearToppingsBtn = document.getElementById('builder-clear-toppings');
@@ -1037,6 +1040,31 @@
                 sync3DPreview();
             };
 
+            const syncPreviewSnapshot = () => {
+                if (previewSvgHiddenInput && cakeSvgEl) {
+                    previewSvgHiddenInput.value = cakeSvgEl.outerHTML || '';
+                }
+
+                if (!previewImageHiddenInput) {
+                    return;
+                }
+
+                const renderCanvas = document.querySelector('#cake-3d-canvas canvas');
+                if (!renderCanvas) {
+                    return;
+                }
+
+                try {
+                    previewImageHiddenInput.value = renderCanvas.toDataURL('image/webp', 0.86);
+                } catch (_) {
+                    try {
+                        previewImageHiddenInput.value = renderCanvas.toDataURL('image/png');
+                    } catch (_) {
+                        previewImageHiddenInput.value = '';
+                    }
+                }
+            };
+
             const compute = () => {
                 const subtotal =
                     Number(pricing.size[sizeSelect.value] || 0) +
@@ -1099,6 +1127,10 @@
                 syncCustomFrostingSwatch();
                 syncFrostingSwatchUI();
                 compute();
+            });
+
+            builderForm?.addEventListener('submit', () => {
+                syncPreviewSnapshot();
             });
 
             const addSingleShapeTopping = (shapeType) => {

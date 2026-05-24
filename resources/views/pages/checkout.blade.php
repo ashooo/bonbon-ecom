@@ -64,6 +64,12 @@
                                             <div class="w-20 h-20 overflow-hidden rounded-2xl ring-4 ring-[#F8E2E7]/30 bg-white [&_svg]:h-full [&_svg]:w-full">
                                                 {!! $item->customization_payload['preview_svg'] !!}
                                             </div>
+                                        @elseif (!empty($item->customization_payload['preview_image']))
+                                            <img
+                                                src="{{ $item->customization_payload['preview_image'] }}"
+                                                alt="{{ $itemName }}"
+                                                class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30 bg-white"
+                                            >
                                         @elseif ($item->product?->main_image_url)
                                             <img
                                                 src="{{ $item->product->main_image_url }}"
@@ -73,7 +79,7 @@
                                         @else
                                             <x-custom-cake-thumbnail :payload="$item->customization_payload" width="80" height="80" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30" />
                                         @endif
-                                        <span class="absolute -top-2 -right-2 bg-[#5A3A3A] text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
+                                        <span class="absolute -top-0 -right-0 bg-[#5A3A3A] text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
                                             {{ $item->quantity }}
                                         </span>
                                     </div>
@@ -90,8 +96,14 @@
                                         @endif
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-bold text-[#C88A92]">&#8369;{{ number_format($item->unit_price * $item->quantity, 2) }}</p>
-                                        <p class="text-[10px] text-gray-400 font-medium">&#8369;{{ number_format($item->unit_price, 2) }} / pc</p>
+                                        @php($displayUnitPrice = (float) ($item->resolved_unit_price ?? $item->unit_price ?? 0))
+                                        @if ($displayUnitPrice > 0)
+                                            <p class="text-sm font-bold text-[#C88A92]">&#8369;{{ number_format($displayUnitPrice * $item->quantity, 2) }}</p>
+                                            <p class="text-[10px] text-gray-400 font-medium">&#8369;{{ number_format($displayUnitPrice, 2) }} / pc</p>
+                                        @else
+                                            <p class="text-sm font-bold text-[#C88A92]">Free</p>
+                                            <p class="text-[10px] text-gray-400 font-medium">&#8369;0.00 / pc</p>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

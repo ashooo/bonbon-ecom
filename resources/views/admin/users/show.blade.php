@@ -10,20 +10,6 @@
             <a href="{{ route('admin.dashboard', $backQuery) }}" class="inline-flex items-center rounded-2xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] hover:bg-[#FAF1F5]">Back to Users</a>
         </div>
 
-        @if (session('success'))
-            <div class="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">{{ session('success') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
             <div class="space-y-6 xl:col-span-1">
                 <div class="rounded-3xl border border-[#ECD8E0] bg-white p-6 shadow-sm">
@@ -190,4 +176,3 @@
     });
 </script>
 @endpush
-

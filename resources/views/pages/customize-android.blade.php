@@ -247,10 +247,11 @@
     </div>
 
     <section class="android-panel" aria-label="Cake customization form">
-        <form method="POST" action="{{ route('cart.add') }}" id="cake-builder-form" class="space-y-4">
+        <form method="POST" action="{{ route('cart.add') }}" id="cake-builder-form" class="space-y-4" data-no-loader>
             @csrf
             <input type="hidden" id="builder-toppings-hidden" name="customization[toppings]" value="[]">
             <input type="hidden" id="builder-preview-svg-hidden" name="customization[preview_svg]" value="">
+            <input type="hidden" id="builder-preview-image-hidden" name="customization[preview_image]" value="">
             <input type="hidden" id="builder-frosting" name="customization[frosting]" value="ivory">
             <input type="hidden" id="builder-frosting-custom-hidden" name="customization[frosting_custom]" value="">
             <input type="hidden" id="builder-rush-hidden" name="customization[rush]" value="no">
@@ -453,6 +454,9 @@
     const rushCheckbox = $('#builder-rush');
     const rushHidden = $('#builder-rush-hidden');
     const toppingsHidden = $('#builder-toppings-hidden');
+    const previewImageHidden = $('#builder-preview-image-hidden');
+    const previewSvgHidden = $('#builder-preview-svg-hidden');
+    const builderForm = $('#cake-builder-form');
     const fillingBadge = $('#filling-badge');
     const fillingBadgeName = $('#filling-badge-name');
     const fillingBadgeSwatch = $('#filling-badge-swatch');
@@ -590,6 +594,26 @@
         window.BonbonCustomize3D?.update?.(detail);
     };
 
+    const syncPreviewSnapshot = () => {
+        if (previewSvgHidden) {
+            previewSvgHidden.value = '';
+        }
+
+        if (!previewImageHidden) return;
+        const renderCanvas = document.querySelector('#cake-3d-canvas canvas');
+        if (!renderCanvas) return;
+
+        try {
+            previewImageHidden.value = renderCanvas.toDataURL('image/webp', 0.86);
+        } catch (_) {
+            try {
+                previewImageHidden.value = renderCanvas.toDataURL('image/png');
+            } catch (_) {
+                previewImageHidden.value = '';
+            }
+        }
+    };
+
     $$('.frosting-swatch').forEach((button) => {
         button.addEventListener('click', () => {
             frostingInput.value = button.dataset.frosting;
@@ -622,6 +646,10 @@
 
     [shapeSelect, sizeSelect, layersSelect, spongeSelect, fillingSelect, dripSelect, topperSelect, rushCheckbox].forEach((field) => field.addEventListener('change', sync));
     [messageInput, textColorInput, toppingColorInput].forEach((field) => field.addEventListener('input', sync));
+
+    builderForm?.addEventListener('submit', () => {
+        syncPreviewSnapshot();
+    });
 
     syncSwatches();
     sync();

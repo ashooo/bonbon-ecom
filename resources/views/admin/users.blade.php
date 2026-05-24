@@ -26,19 +26,6 @@
         </div>
 
         <div class="rounded-3xl border border-[#ECD8E0] bg-white p-6 shadow-sm">
-            @if (session('success'))
-                <div class="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">{{ session('success') }}</div>
-            @endif
-            @if ($errors->any())
-                <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                    <ul class="list-disc pl-5">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
             <form method="GET" action="{{ route('admin.users.index') }}" class="mb-4 grid grid-cols-1 gap-2 rounded-2xl border border-[#ECD8E0] bg-[#FFF8FB] p-3 sm:grid-cols-[1fr_auto]">
                 <input type="hidden" name="user_status" value="{{ $userFilters['status'] ?? 'all' }}">
                 <input type="text" name="user_search" value="{{ $userFilters['search'] ?? '' }}" placeholder="Search by name, email, or phone..." class="w-full rounded-xl border border-[#E7D2DA] px-3 py-2 text-sm text-[#533843] focus:border-[#C98A9B] focus:ring-2 focus:ring-[#F5DDE6] focus:outline-none">

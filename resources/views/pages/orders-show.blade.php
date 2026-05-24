@@ -133,6 +133,8 @@
                                                 <div class="h-10 w-10 overflow-hidden rounded-md bg-white [&_svg]:h-full [&_svg]:w-full">
                                                     {!! $item->customization_payload['preview_svg'] !!}
                                                 </div>
+                                            @elseif (!empty($item->customization_payload['preview_image']))
+                                                <img src="{{ $item->customization_payload['preview_image'] }}" alt="{{ $itemName }}" class="h-10 w-10 rounded-md object-cover bg-white">
                                             @elseif ($item->variant?->product?->main_image_url)
                                                 <img src="{{ $item->variant->product->main_image_url }}" alt="{{ $itemName }}" class="h-10 w-10 rounded-md object-cover">
                                             @else
@@ -147,11 +149,34 @@
                                     <td class="px-3 py-3 text-sm font-semibold">&#8369;{{ number_format((float) $item->subtotal, 2) }}</td>
                                 </tr>
                                 @if (is_array($item->customization_payload) && count($item->customization_payload) > 0)
+                                    @php
+                                        $payloadSummary = [];
+                                        foreach ($item->customization_payload as $key => $value) {
+                                            if (in_array($key, ['preview_image', 'preview_svg', 'item_name'], true)) {
+                                                continue;
+                                            }
+                                            if ($key === 'toppings') {
+                                                $decoded = is_string($value) ? json_decode($value, true) : $value;
+                                                $count = is_array($decoded) ? count($decoded) : 0;
+                                                if ($count > 0) {
+                                                    $payloadSummary[] = 'Toppings: ' . $count . ' pcs';
+                                                }
+                                                continue;
+                                            }
+                                            if (is_array($value) || is_object($value)) {
+                                                continue;
+                                            }
+                                            $text = trim((string) $value);
+                                            if ($text === '') {
+                                                continue;
+                                            }
+                                            $payloadSummary[] = ucfirst(str_replace('_', ' ', $key)) . ': ' . $text;
+                                        }
+                                    @endphp
                                     <tr>
                                         <td colspan="5" class="px-3 pb-3 text-xs text-gray-500">
-                                            @foreach($item->customization_payload as $key => $value)
-                                                @continue(in_array($key, ['preview_image', 'preview_svg'], true))
-                                                <span class="mr-2">{{ ucfirst(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+                                            @foreach($payloadSummary as $entry)
+                                                <span class="mr-2">{{ $entry }}</span>
                                             @endforeach
                                         </td>
                                     </tr>
@@ -184,7 +209,7 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between gap-4"><span class="text-gray-500">Available</span><span>Ready</span></div>
                             <div class="flex justify-between gap-4"><span class="text-gray-500">Last Downloaded</span><span>{{ $order->invoice->last_printed_at?->format('M d, Y h:i A') ?? 'Not yet' }}</span></div>
-                            <a href="{{ route('api.invoices.download', $order->invoice) }}" class="block rounded-xl bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-pink-700">
+                            <a href="{{ route('invoices.download', $order->invoice) }}" class="block rounded-xl bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-pink-700">
                                 Download Invoice
                             </a>
                         </div>

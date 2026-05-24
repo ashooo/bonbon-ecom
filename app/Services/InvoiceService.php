@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 class InvoiceService
 {
     private const RECEIPT_WIDTH = '105mm';
-    private const RECEIPT_HEIGHT = '260mm';
+    private const RECEIPT_HEIGHT_MM = 5000.0;
 
     public function generateInvoice(Order $order): Invoice
     {
@@ -36,6 +36,7 @@ class InvoiceService
 
     public function renderInvoiceHtml(Order $order): string
     {
+        $order->loadMissing(['items.variant.product', 'user', 'address']);
         $storeName = 'BonBons PH';
         $storePhone = '(+63) 000-000-0000';
         $storeEmail = 'support@bonbon.ph';
@@ -65,7 +66,7 @@ class InvoiceService
             'fullAddress' => $fullAddress,
             'stampSrc' => $stampSrc,
             'receiptWidth' => self::RECEIPT_WIDTH,
-            'receiptHeight' => self::RECEIPT_HEIGHT,
+            'receiptHeight' => number_format(self::RECEIPT_HEIGHT_MM, 2, '.', '') . 'mm',
         ])->render();
     }
 
@@ -92,7 +93,7 @@ class InvoiceService
     private function renderInvoicePdfBytes(string $html): string
     {
         $widthPoints = $this->mmToPoints((float) rtrim(self::RECEIPT_WIDTH, 'mm'));
-        $heightPoints = $this->mmToPoints((float) rtrim(self::RECEIPT_HEIGHT, 'mm'));
+        $heightPoints = $this->mmToPoints(self::RECEIPT_HEIGHT_MM);
 
         return Pdf::loadHTML($html)
             ->setPaper([0, 0, $widthPoints, $heightPoints])

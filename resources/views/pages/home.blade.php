@@ -208,7 +208,7 @@
                         <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
                         <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
 
-                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
+                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6" data-no-loader>
                             @csrf
                             <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
                             <input type="hidden" name="quantity" value="1">
@@ -1206,6 +1206,7 @@
     </section>
 
     <div id="shop"></div>
+    @if(false)
     <section id="cake-shelf" class="shelf-section" style="display:none;">
         <div class="shelf-header">
             <span class="shelf-label">Our Collection</span>
@@ -1245,7 +1246,7 @@
                         <label class="menu-card-variants-label">Select Variant</label>
                         <div id="menu-card-variants-list" class="menu-card-variants-list"></div>
                     </div>
-                    <form id="menu-card-cart-form" method="POST" action="{{ route('cart.add') }}">
+                    <form id="menu-card-cart-form" method="POST" action="{{ route('cart.add') }}" data-no-loader>
                         @csrf
                         <input type="hidden" name="product_id" id="menu-card-product-id" />
                         <input type="hidden" name="variant_id" id="menu-card-variant-id" />
@@ -1353,6 +1354,7 @@
             <p>No products match your search.</p>
         </div>
     </section>
+    @endif
 
     <style>
         html,
@@ -1973,41 +1975,15 @@
             display: block !important;
         }
 
-        /* Keep cart controls hidden whenever homepage is still in locked/intro state. */
+        /* Keep top bar visible even before showcase unlock. */
         html:not(.home-chat-unlocked) #navbar-cart-btn,
         html:not(.home-chat-unlocked) #navbar-notification-btn,
         html:not(.home-chat-unlocked) #navbar-account-btn,
         html:not(.home-chat-unlocked) #main-navbar .nav-link-item,
-        html:not(.home-chat-unlocked) #navbar-brand {
-            opacity: 0 !important;
-            color: transparent !important;
-            border-color: transparent !important;
-            background-color: transparent !important;
-            box-shadow: none !important;
-            pointer-events: none !important;
-        }
-
-        html:not(.home-chat-unlocked) [data-cart-count-badge],
-        html:not(.home-chat-unlocked) [data-notification-badge],
-        html:not(.home-chat-unlocked) #cart-badge {
-            opacity: 0 !important;
-            color: transparent !important;
-            background: transparent !important;
-            background-color: transparent !important;
-            border-color: transparent !important;
-            box-shadow: none !important;
-            pointer-events: none !important;
-        }
-
-        /* Explicitly neutralize Tailwind pink badge utilities during intro state. */
-        html:not(.home-chat-unlocked) .bg-pink-500[data-cart-count-badge],
-        html:not(.home-chat-unlocked) .bg-pink-500[data-notification-badge] {
-            background-color: transparent !important;
-        }
-
+        html:not(.home-chat-unlocked) #navbar-brand,
         html:not(.home-chat-unlocked) #cart-panel-toggle {
-            opacity: 0 !important;
-            pointer-events: none !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
     </style>
     @if (file_exists(public_path('css/shelf.css')))
@@ -2420,9 +2396,6 @@
                             return;
                         }
 
-                        // Show loader on menu card
-                        if (window.BonBonLoader) BonBonLoader.show('#menu-card', 'Adding to cart...');
-
                         try {
                             const fd = new FormData(cartForm);
                             const res = await fetch(cartForm.action, {
@@ -2431,6 +2404,7 @@
                                     'X-CSRF-TOKEN': csrfToken,
                                     'Accept': 'application/json',
                                     'X-Requested-With': 'XMLHttpRequest',
+                                    'X-Bonbon-No-Loader': '1',
                                 },
                                 body: fd,
                             });
@@ -2439,8 +2413,6 @@
                             closeMenuCard();
                         } catch (err) {
                             console.error('Add to cart failed:', err);
-                        } finally {
-                            if (window.BonBonLoader) BonBonLoader.hide('#menu-card');
                         }
                     });
                 }

@@ -28,12 +28,6 @@
     @endphp
 
     <div class="space-y-6" id="customization-pricing-root">
-        @if(session('success'))
-            <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {{ session('success') }}
-            </div>
-        @endif
-
         <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
             <h2 class="text-xl font-semibold text-[#5A3A3A]">Shop Fees & Charges</h2>
             <p class="mt-1 text-sm text-slate-600">Separate store-level fees used during checkout and transaction totals.</p>
@@ -124,7 +118,7 @@
                             $groupMax = count($groupValues) ? max($groupValues) : 0;
                         @endphp
 
-                        <details class="customization-group rounded-2xl border border-slate-200 bg-slate-50/60" data-group="{{ strtolower($groupLabel) }}" open>
+                        <details class="customization-group rounded-2xl border border-slate-200 bg-slate-50/60" data-group="{{ strtolower($groupLabel) }}">
                             <summary class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3">
                                 <div class="flex min-w-0 items-center gap-3">
                                     <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg {{ $style['chip'] }}">
@@ -498,4 +492,3 @@
         </script>
     @endpush
 @endonce
-

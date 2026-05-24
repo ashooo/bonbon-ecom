@@ -174,27 +174,38 @@ class LoginController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
+            $downloadedAvatar = $this->downloadGoogleAvatar($googleUser->getAvatar(), $googleUser->getId());
 
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if (! $user) {
-                $user = User::create([
+                $newUserData = [
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $this->downloadGoogleAvatar($googleUser->getAvatar(), $googleUser->getId()),
                     'password' => Hash::make(uniqid()), // Random password for Google users
                     'is_active' => true,
                     'email_verified_at' => now(),
-                ]);
+                ];
+
+                if ($downloadedAvatar) {
+                    $newUserData['avatar'] = $downloadedAvatar;
+                }
+
+                $user = User::create($newUserData);
             } else {
                 // Update Google data if changed
-                $user->update([
+                $updateData = [
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $this->downloadGoogleAvatar($googleUser->getAvatar(), $googleUser->getId()),
                     'name' => $googleUser->getName(), // Sync name too
                     'email_verified_at' => $user->email_verified_at ?? now(), // Auto-verify if not already verified
-                ]);
+                ];
+
+                if ($downloadedAvatar) {
+                    $updateData['avatar'] = $downloadedAvatar;
+                }
+
+                $user->update($updateData);
             }
 
             if ($user->is_admin) {
@@ -222,13 +233,14 @@ class LoginController extends Controller
         }
     }
 
-    /**
-     * Download Google avatar and return local path
-     */
-    private function downloadGoogleAvatar($url, $googleId)
+    private function downloadGoogleAvatar(?string $url, string $googleId): ?string
     {
+        if (! $url) {
+            return null;
+        }
+
         try {
-            $response = Http::get($url);
+            $response = Http::timeout(10)->get($url);
             if ($response->successful()) {
                 $filename = 'profile_pictures/google_' . $googleId . '.jpg';
                 Storage::disk('public')->put($filename, $response->body());
@@ -238,6 +250,6 @@ class LoginController extends Controller
             Log::warning('Failed to download Google avatar: ' . $e->getMessage());
         }
 
-        return $url; // Fallback to URL if download fails
+        return null;
     }
 }

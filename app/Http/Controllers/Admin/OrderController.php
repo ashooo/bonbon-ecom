@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\UserNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class OrderController extends Controller
 {
@@ -25,7 +26,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order)
     {
-        $order->load(['items.variant.product', 'user']);
+        $order->load(['items.variant.product', 'user', 'invoice']);
 
         $backQuery = array_filter([
             'section' => 'orders',
@@ -35,6 +36,15 @@ class OrderController extends Controller
         ], fn ($value) => $value !== null && $value !== '');
 
         return view('admin.orders.show', compact('order', 'backQuery'));
+    }
+
+    public function printSlip(Order $order): Response
+    {
+        $order->load(['items.variant.product', 'user']);
+
+        return response()
+            ->view('admin.orders.print-slip', compact('order'))
+            ->header('Content-Disposition', 'inline; filename="slip-' . $order->order_number . '.html"');
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
@@ -49,7 +59,7 @@ class OrderController extends Controller
             'status' => $data['status'],
         ]);
 
-        if ($previousStatus !== 'cancelled' && $data['status'] === 'cancelled') {
+        if ($previousStatus !== 'cancelled' && $data['status'] === 'cancelled' && $order->stock_deducted_at) {
             $order->loadMissing('items.variant');
 
             foreach ($order->items as $item) {
@@ -73,6 +83,8 @@ class OrderController extends Controller
                     'reason' => 'Admin cancelled order ' . $order->order_number,
                 ]);
             }
+
+            $order->update(['stock_deducted_at' => null]);
         }
 
         if ($order->user_id && $previousStatus !== $data['status']) {

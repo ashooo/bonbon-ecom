@@ -15,6 +15,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CustomizeController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\UserNotificationController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
@@ -26,6 +27,7 @@ use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 Route::get('/', function () {
     $featuredProducts = collect();
     $featuredCategories = collect();
+    $shelfProducts = collect();
 
     if (Schema::hasTable('products') && Schema::hasTable('categories')) {
         $featuredProducts = \App\Models\Product::with('category')
@@ -44,12 +46,17 @@ Route::get('/', function () {
             ->orderBy('name')
             ->take(8)
             ->get();
+
+        $shelfProducts = \App\Models\Product::with(['category', 'images', 'variants' => fn ($q) => $q->where('is_active', true)->orderByDesc('is_default')->orderBy('display_order')])
+            ->where('is_active', true)
+            ->latest()
+            ->get();
     }
 
-    return view('pages.home', compact('featuredProducts', 'featuredCategories'));
+    return view('pages.home', compact('featuredProducts', 'featuredCategories', 'shelfProducts'));
 });
 
-Route::get('/products', function (Request $request) {
+Route::get('/shop', function (Request $request) {
     $products = collect();
     $categories = collect();
 
@@ -75,6 +82,14 @@ Route::get('/products', function (Request $request) {
             $productsQuery->where('category_id', $request->integer('category'));
         }
 
+        if ($request->boolean('featured')) {
+            $productsQuery->where('is_featured', true);
+        }
+
+        if ($request->boolean('best_seller')) {
+            $productsQuery->where('is_best_seller', true);
+        }
+
         match ($request->input('sort')) {
             'price_low' => $productsQuery->orderBy('sale_price')->orderBy('price'),
             'price_high' => $productsQuery->orderByDesc('sale_price')->orderByDesc('price'),
@@ -82,16 +97,26 @@ Route::get('/products', function (Request $request) {
             default => $productsQuery->orderBy('name'),
         };
 
-        $products = $productsQuery->paginate(9)->withQueryString();
+        $products = $productsQuery->paginate(15)->withQueryString();
     }
 
     return view('products.index', compact('products', 'categories'));
+})->name('shop.index');
+
+Route::get('/test-products', function (Request $request) {
+    $query = $request->query();
+
+    return redirect()->route('shop.index', $query);
 });
 
 Route::get('/product/{slug}', function ($slug) {
     abort_unless(Schema::hasTable('products') && Schema::hasTable('categories'), 404);
 
-    $product = \App\Models\Product::with(['category', 'images'])
+    $product = \App\Models\Product::with([
+            'category',
+            'images',
+            'variants' => fn ($query) => $query->orderByDesc('is_default')->orderBy('display_order')->orderBy('id'),
+        ])
         ->where('slug', $slug)
         ->where('is_active', true)
         ->firstOrFail();
@@ -111,6 +136,7 @@ Route::get('/product/{slug}', function ($slug) {
 
 // Cart Routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart/json', [CartController::class, 'cartJson'])->name('cart.json');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::put('/cart/{item}', [CartController::class, 'updateQuantity'])->name('cart.update');
 Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');
@@ -120,19 +146,27 @@ Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear')
 
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+Route::get('/checkout/paymongo/success/{order}', [CheckoutController::class, 'paymongoSuccess'])->name('checkout.paymongo.success');
+Route::get('/checkout/paymongo/cancel/{order}', [CheckoutController::class, 'paymongoCancel'])->name('checkout.paymongo.cancel');
 Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
 Route::post('/orders/lookup', [OrderHistoryController::class, 'lookup'])->name('orders.lookup');
 Route::get('/orders/{order}', [OrderHistoryController::class, 'show'])->name('orders.show');
+Route::get('/orders/{order}/receipt', [OrderHistoryController::class, 'receipt'])->name('orders.receipt');
+Route::get('/orders/{order}/receipt/html', [OrderHistoryController::class, 'receiptHtml'])->name('orders.receipt.html');
+Route::get('/orders/{order}/receipt/pdf', [OrderHistoryController::class, 'receiptPdf'])->name('orders.receipt.pdf');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
+Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Api\InvoiceController::class, 'download'])
+    ->middleware('auth')
+    ->name('invoices.download');
 
-Route::get('/customize', function () {
-    return view('pages.customize');
-});
+Route::get('/customize/android', [CustomizeController::class, 'android'])->name('customize.android');
+Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');
 
 Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
 Route::get('/chat/session', [ChatController::class, 'session'])->name('chat.session');
 Route::post('/chat/profile', [ChatController::class, 'updateProfile'])->name('chat.profile');
 Route::post('/chat/messages', [ChatController::class, 'storeMessage'])->name('chat.messages.store');
+Route::post('/chat/ai-message', [ChatController::class, 'aiMessage'])->name('chat.ai-message');
 Route::post('/chat/typing', [ChatController::class, 'typing'])->name('chat.typing');
 Route::post('/chat/presence', [ChatController::class, 'presence'])->name('chat.presence');
 Route::get('/chat/attachments/{message}', [ChatController::class, 'attachment'])->name('chat.attachments.show');
@@ -248,6 +282,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $productSearchFilter = $request->string('product_search')->trim()->value();
         $productStatusFilter = $request->string('product_status')->value();
         $productCategoryFilter = $request->integer('product_category') ?: null;
+        $productPerPage = (int) $request->integer('product_per_page', 12);
+        if (! in_array($productPerPage, [12, 25, 50], true)) {
+            $productPerPage = 12;
+        }
 
         $allProductsQuery = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc');
 
@@ -273,7 +311,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $allProducts = $allProductsQuery->paginate(12, ['*'], 'product_page')->withQueryString();
+        $allProducts = $allProductsQuery->paginate($productPerPage, ['*'], 'product_page')->withQueryString();
         $allCategories = \App\Models\Category::with('parent')->orderBy('name')->get();
         $settings = Schema::hasTable('store_settings')
             ? StoreSetting::query()->first()
@@ -282,7 +320,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $searchFilter = $request->string('search')->trim()->value();
 
         $ordersQuery = Order::query()
-            ->with(['items.variant.product', 'user'])
+            ->with(['items.variant.product', 'user', 'invoice'])
             ->latest();
 
         if ($statusFilter !== '' && $statusFilter !== 'all') {
@@ -313,7 +351,29 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
-        $last7DaysStart = Carbon::today()->subDays(6);
+
+        $defaultTrendStart = Carbon::today()->subDays(6);
+        $defaultTrendEnd = Carbon::today();
+
+        try {
+            $trendStart = $request->filled('trend_start')
+                ? Carbon::parse($request->string('trend_start')->value())->startOfDay()
+                : $defaultTrendStart->copy()->startOfDay();
+        } catch (\Throwable $e) {
+            $trendStart = $defaultTrendStart->copy()->startOfDay();
+        }
+
+        try {
+            $trendEnd = $request->filled('trend_end')
+                ? Carbon::parse($request->string('trend_end')->value())->endOfDay()
+                : $defaultTrendEnd->copy()->endOfDay();
+        } catch (\Throwable $e) {
+            $trendEnd = $defaultTrendEnd->copy()->endOfDay();
+        }
+
+        if ($trendStart->gt($trendEnd)) {
+            [$trendStart, $trendEnd] = [$trendEnd->copy()->startOfDay(), $trendStart->copy()->endOfDay()];
+        }
 
         $todayRevenue = (float) Order::query()
             ->whereDate('created_at', $today)
@@ -346,17 +406,23 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             ->take(5)
             ->get();
 
+        $topProductsRevenueTotal = (float) \App\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereIn('orders.status', ['confirmed', 'ready', 'completed'])
+            ->sum('order_items.subtotal');
+
         $dailyRevenueMap = Order::query()
             ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders_count')
-            ->where('created_at', '>=', $last7DaysStart)
+            ->whereBetween('created_at', [$trendStart, $trendEnd])
             ->whereIn('status', ['confirmed', 'ready', 'completed'])
             ->groupBy('day')
             ->orderBy('day')
             ->get()
             ->keyBy('day');
 
-        $revenueTrend = collect(range(0, 6))->map(function ($index) use ($last7DaysStart, $dailyRevenueMap) {
-            $day = $last7DaysStart->copy()->addDays($index);
+        $trendDays = $trendStart->copy()->startOfDay()->diffInDays($trendEnd->copy()->startOfDay()) + 1;
+        $revenueTrend = collect(range(0, max(0, $trendDays - 1)))->map(function ($index) use ($trendStart, $dailyRevenueMap) {
+            $day = $trendStart->copy()->addDays($index);
             $key = $day->toDateString();
             $row = $dailyRevenueMap->get($key);
 
@@ -376,9 +442,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'today_orders_count' => $todayOrdersCount,
             'active_customers_count' => $activeCustomersCount,
             'pending_orders_count' => (int) ($orderCounts['pending'] ?? 0),
+            'confirmed_orders_count' => (int) ($orderCounts['confirmed'] ?? 0),
             'ready_orders_count' => (int) ($orderCounts['ready'] ?? 0),
             'completed_orders_count' => (int) ($orderCounts['completed'] ?? 0),
+            'cancelled_orders_count' => (int) ($orderCounts['cancelled'] ?? 0),
             'max_revenue_point' => $maxRevenuePoint,
+            'top_products_revenue_total' => $topProductsRevenueTotal,
         ];
 
         $userStatusFilter = $request->string('user_status')->value();
@@ -423,6 +492,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $inventorySearchFilter = $request->string('inventory_search')->trim()->value();
         $inventoryStatusFilter = $request->string('inventory_status')->value();
+        $inventoryPerPage = (int) $request->integer('inventory_per_page', 12);
+        if (! in_array($inventoryPerPage, [12, 25, 50], true)) {
+            $inventoryPerPage = 12;
+        }
         $lowStockThreshold = 10;
 
         $inventoryQuery = Variant::query()
@@ -451,7 +524,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $inventoryItems = $inventoryQuery->paginate(12, ['*'], 'inventory_page')->withQueryString();
+        $inventoryItems = $inventoryQuery->paginate($inventoryPerPage, ['*'], 'inventory_page')->withQueryString();
         $inventoryCounts = [
             'all' => Variant::where('is_active', true)->count(),
             'out_of_stock' => Variant::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
@@ -461,6 +534,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $inventoryFilters = [
             'search' => $inventorySearchFilter,
             'status' => $inventoryStatusFilter === '' ? 'all' : $inventoryStatusFilter,
+            'per_page' => $inventoryPerPage,
         ];
 
         $lowStockVariants = Variant::query()
@@ -489,6 +563,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'search' => $productSearchFilter,
             'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
             'category' => $productCategoryFilter,
+            'per_page' => $productPerPage,
         ];
 
         return view('admin.dashboard', compact(
@@ -515,6 +590,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         ));
     })->name('admin.dashboard');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('/settings/customization-pricing', [\App\Http\Controllers\Admin\SettingsController::class, 'updateCustomizationPricing'])->name('admin.customization-pricing.update');
+    Route::post('/settings/shop-fees', [\App\Http\Controllers\Admin\SettingsController::class, 'updateShopFees'])->name('admin.shop-fees.update');
 
     // Category Routes
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class)->names([
@@ -546,12 +623,18 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/products/images/order', [\App\Http\Controllers\Admin\ProductController::class, 'updateImageOrder'])->name('admin.products.images.order');
 
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('admin.orders.index');
+    Route::get('/orders-export', [\App\Http\Controllers\Admin\ExportController::class, 'orders'])->name('admin.orders.export');
+    Route::get('/reports-export', [\App\Http\Controllers\Admin\ExportController::class, 'reports'])->name('admin.reports.export');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::get('/orders/{order}/print-slip', [AdminOrderController::class, 'printSlip'])->name('admin.orders.print-slip');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
+
+    Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\Admin\InvoiceController::class, 'print'])->name('admin.invoices.print');
+    Route::post('/invoices/{invoice}/track-print', [\App\Http\Controllers\Admin\InvoiceController::class, 'trackPrint'])->name('admin.invoices.track-print');
+    Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Admin\InvoiceController::class, 'download'])->name('admin.invoices.download');
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->withTrashed()->name('admin.users.show');
-    Route::patch('/users/{user}', [AdminUserController::class, 'update'])->withTrashed()->name('admin.users.update');
     Route::patch('/users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::patch('/users/{user}/restore', [AdminUserController::class, 'restore'])->withTrashed()->name('admin.users.restore');

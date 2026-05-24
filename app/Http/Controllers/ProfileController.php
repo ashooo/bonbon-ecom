@@ -225,6 +225,7 @@ class ProfileController extends Controller
             'customer_email' => Auth::user()->email,
             'customer_phone' => Auth::user()->phone ?? 'N/A',
             'order_type' => 'pickup',
+            'delivery_address' => Order::STORE_PICKUP_LOCATION_URL,
             'fulfillment_date' => now()->toDateString(),
             'total' => $order->total_amount,
             'subtotal' => $order->total_amount,

@@ -17,6 +17,7 @@ class Variant extends Model
         'sku',
         'price_adjustment',
         'stock_quantity',
+        'image_path',
         'is_default',
         'display_order',
         'is_active',
@@ -48,5 +49,10 @@ class Variant extends Model
     public function inventoryMovements()
     {
         return $this->hasMany(InventoryMovement::class)->latest();
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image_path ? asset('storage/' . $this->image_path) : null;
     }
 }

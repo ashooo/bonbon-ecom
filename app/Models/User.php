@@ -131,7 +131,12 @@ class User extends Authenticatable implements MustVerifyEmail
             return asset('storage/' . $this->avatar);
         }
 
-        return asset('images/default-profile.jpg');
+        $defaultProfilePath = 'images/default-profile.jpg';
+        if (! file_exists(public_path($defaultProfilePath))) {
+            $defaultProfilePath = 'images/default-profile.png';
+        }
+
+        return asset($defaultProfilePath);
     }
 
     /**

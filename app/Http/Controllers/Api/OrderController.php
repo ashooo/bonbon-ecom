@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\StoreSetting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -81,7 +82,8 @@ class OrderController extends Controller
             'fulfillment_date' => 'required|date',
             'fulfillment_time' => 'nullable',
             'address_id' => 'nullable|exists:addresses,id',
-            'delivery_address' => 'required_if:order_type,delivery',
+            'delivery_address' => 'nullable|string|required_if:order_type,delivery',
+            'payment_method' => 'nullable|in:cod,paymongo',
             'special_instructions' => 'nullable|string',
         ]);
 
@@ -97,27 +99,42 @@ class OrderController extends Controller
         DB::beginTransaction();
 
         try {
+            $orderType = $request->string('order_type')->value();
+            $settings = StoreSetting::query()->first();
+            $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+            $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+            $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
+            $deliveryAddress = $orderType === 'pickup'
+                ? Order::STORE_PICKUP_LOCATION_URL
+                : trim($request->string('delivery_address')->value());
             $subtotal = $cart->items->sum(fn ($item) => $item->quantity * $item->unit_price);
-            $deliveryFee = $request->string('order_type')->value() === 'delivery' ? 50.00 : 0;
-            $total = $subtotal + $deliveryFee;
+            $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0;
+            $tax = $subtotal * ($configuredTaxRate / 100);
+            $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
 
+            $paymentMethod = $request->string('payment_method')->value() ?: 'cod';
+            if (! Auth::check()) {
+                $paymentMethod = 'cod';
+            }
             $order = Order::create([
                 'order_number' => 'ORD-' . strtoupper(Str::random(10)),
                 'user_id' => Auth::id(),
                 'customer_name' => $request->string('customer_name')->value(),
                 'customer_email' => $request->string('customer_email')->value(),
                 'customer_phone' => $request->string('customer_phone')->value(),
-                'order_type' => $request->string('order_type')->value(),
+                'order_type' => $orderType,
                 'fulfillment_date' => $request->date('fulfillment_date'),
                 'fulfillment_time' => $request->input('fulfillment_time'),
                 'address_id' => Auth::check() ? ($request->integer('address_id') ?: null) : null,
-                'delivery_address' => $request->string('delivery_address')->value(),
+                'delivery_address' => $deliveryAddress,
                 'delivery_fee' => $deliveryFee,
                 'subtotal' => $subtotal,
                 'total' => $total,
                 'special_instructions' => $request->string('special_instructions')->value(),
                 'status' => 'pending',
                 'payment_status' => 'pending',
+                'payment_method' => $paymentMethod,
+                'stock_deducted_at' => null,
             ]);
 
             foreach ($cart->items as $item) {
@@ -139,7 +156,7 @@ class OrderController extends Controller
                 ]);
 
                 $variant = $item->variant ?: $item->product?->variants()->find($variantId);
-                if ($variant) {
+                if ($variant && $paymentMethod === 'cod') {
                     $previousStock = (int) $variant->stock_quantity;
                     $newStock = max(0, $previousStock - (int) $item->quantity);
                     $variant->update(['stock_quantity' => $newStock]);
@@ -155,6 +172,10 @@ class OrderController extends Controller
                         'reason' => 'Order ' . $order->order_number,
                     ]);
                 }
+            }
+
+            if ($paymentMethod === 'cod') {
+                $order->update(['stock_deducted_at' => now()]);
             }
 
             $cart->items()->delete();
@@ -202,6 +223,13 @@ class OrderController extends Controller
 
         $order->update(['status' => 'cancelled']);
 
+        if (! $order->stock_deducted_at) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Order cancelled successfully',
+            ]);
+        }
+
         foreach ($order->items as $item) {
             if ($item->variant) {
                 $previousStock = (int) $item->variant->stock_quantity;
@@ -220,6 +248,8 @@ class OrderController extends Controller
                 ]);
             }
         }
+
+        $order->update(['stock_deducted_at' => null]);
 
         return response()->json([
             'success' => true,

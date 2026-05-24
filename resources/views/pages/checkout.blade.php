@@ -4,9 +4,12 @@
     @php
         $items = $items ?? collect();
         $subtotal = $subtotal ?? 0;
-        $delivery = $delivery ?? 5.99;
-        $tax = $tax ?? ($subtotal * 0.1);
-        $total = $total ?? ($subtotal + $delivery + $tax);
+        $configuredDeliveryFee = $configuredDeliveryFee ?? 5.99;
+        $configuredTaxRate = $configuredTaxRate ?? 10;
+        $serviceFee = $serviceFee ?? 0;
+        $delivery = $delivery ?? 0;
+        $tax = $tax ?? ($subtotal * ($configuredTaxRate / 100));
+        $total = $total ?? ($subtotal + $delivery + $tax + $serviceFee);
         $maxPreOrderDays = $maxPreOrderDays ?? 0;
         $minFulfillmentDate = $minFulfillmentDate ?? now()->toDateString();
         $minFulfillmentTime = $minFulfillmentTime ?? now()->format('H:i');
@@ -51,21 +54,39 @@
                     <div class="p-8 space-y-6">
                         <div class="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                             @foreach ($items as $item)
+                                @php
+                                    $itemName = $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake');
+                                    $itemVariantLabel = $item->variant?->name ?? (($item->product || $item->variant) ? null : 'Custom Design');
+                                @endphp
                                 <div class="flex items-center space-x-4 pb-6 border-b border-dashed border-[#F5E6E8] last:border-0 last:pb-0 mb-6 last:mb-0">
                                     <div class="relative">
-                                        <img
-                                            src="{{ $item->product?->main_image_url ?? 'https://via.placeholder.com/80x80?text=Product' }}"
-                                            alt="{{ $item->product?->name ?? 'Product' }}"
-                                            class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30"
-                                        >
-                                        <span class="absolute -top-2 -right-2 bg-[#5A3A3A] text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
+                                        @if (!empty($item->customization_payload['preview_svg']))
+                                            <div class="w-20 h-20 overflow-hidden rounded-2xl ring-4 ring-[#F8E2E7]/30 bg-white [&_svg]:h-full [&_svg]:w-full">
+                                                {!! $item->customization_payload['preview_svg'] !!}
+                                            </div>
+                                        @elseif (!empty($item->customization_payload['preview_image']))
+                                            <img
+                                                src="{{ $item->customization_payload['preview_image'] }}"
+                                                alt="{{ $itemName }}"
+                                                class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30 bg-white"
+                                            >
+                                        @elseif ($item->product?->main_image_url)
+                                            <img
+                                                src="{{ $item->product->main_image_url }}"
+                                                alt="{{ $itemName }}"
+                                                class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30"
+                                            >
+                                        @else
+                                            <x-custom-cake-thumbnail :payload="$item->customization_payload" width="80" height="80" class="w-20 h-20 rounded-2xl object-cover ring-4 ring-[#F8E2E7]/30" />
+                                        @endif
+                                        <span class="absolute -top-0 -right-0 bg-[#5A3A3A] text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
                                             {{ $item->quantity }}
                                         </span>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-bold text-[#5A3A3A] leading-tight">{{ $item->product?->name ?? 'Unavailable product' }}</h3>
-                                        @if ($item->variant?->name)
-                                            <p class="text-[#8C6770] text-sm mt-1">{{ $item->variant->name }}</p>
+                                        <h3 class="font-bold text-[#5A3A3A] leading-tight">{{ $itemName }}</h3>
+                                        @if ($item->variant?->name || $itemVariantLabel)
+                                            <p class="text-[#8C6770] text-sm mt-1">{{ $item->variant?->name ?? $itemVariantLabel }}</p>
                                         @endif
                                         @if ($item->product?->status === 'pre_order' && ($item->product?->pre_order_days ?? 0) > 0)
                                             <div class="flex items-center gap-1.5 mt-2">
@@ -75,8 +96,14 @@
                                         @endif
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm font-bold text-[#C88A92]">&#8369;{{ number_format($item->unit_price * $item->quantity, 2) }}</p>
-                                        <p class="text-[10px] text-gray-400 font-medium">&#8369;{{ number_format($item->unit_price, 2) }} / pc</p>
+                                        @php($displayUnitPrice = (float) ($item->resolved_unit_price ?? $item->unit_price ?? 0))
+                                        @if ($displayUnitPrice > 0)
+                                            <p class="text-sm font-bold text-[#C88A92]">&#8369;{{ number_format($displayUnitPrice * $item->quantity, 2) }}</p>
+                                            <p class="text-[10px] text-gray-400 font-medium">&#8369;{{ number_format($displayUnitPrice, 2) }} / pc</p>
+                                        @else
+                                            <p class="text-sm font-bold text-[#C88A92]">Free</p>
+                                            <p class="text-[10px] text-gray-400 font-medium">&#8369;0.00 / pc</p>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -89,11 +116,15 @@
                             </div>
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-[#8C6770]">Delivery Fee</span>
-                                <span id="checkout-delivery" class="font-bold text-[#5A3A3A]" data-delivery-fee="5.99">&#8369;{{ number_format($delivery, 2) }}</span>
+                                <span id="checkout-delivery" class="font-bold text-[#5A3A3A]" data-delivery-fee="{{ number_format($configuredDeliveryFee, 2, '.', '') }}">&#8369;{{ number_format($delivery, 2) }}</span>
                             </div>
                             <div class="flex justify-between items-center text-sm">
-                                <span class="text-[#8C6770]">Tax (10%)</span>
+                                <span class="text-[#8C6770]">Tax ({{ number_format((float) $configuredTaxRate, 2) }}%)</span>
                                 <span id="checkout-tax" class="font-bold text-[#5A3A3A]" data-value="{{ number_format($tax, 2, '.', '') }}">&#8369;{{ number_format($tax, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[#8C6770]">Service Fee</span>
+                                <span id="checkout-service-fee" class="font-bold text-[#5A3A3A]" data-value="{{ number_format($serviceFee, 2, '.', '') }}">&#8369;{{ number_format($serviceFee, 2) }}</span>
                             </div>
                             
                             <div class="pt-4 mt-2 border-t border-[#EED9DE]">
@@ -113,7 +144,7 @@
                         </div>
                         <h3 class="text-xl font-bold text-[#5A3A3A] mb-2">Your cart is empty</h3>
                         <p class="text-[#8C6770] mb-8">Looks like you haven't added any sweet treats yet!</p>
-                        <a href="/products" class="inline-flex items-center gap-2 bg-[#5A3A3A] hover:bg-[#7A5252] text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg shadow-[#5A3A3A]/20">
+                        <a href="/#shop" class="inline-flex items-center gap-2 bg-[#5A3A3A] hover:bg-[#7A5252] text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg shadow-[#5A3A3A]/20">
                             <span>Browse Shop</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -136,6 +167,10 @@
 
             <form method="POST" action="{{ route('checkout.store') }}" class="space-y-8">
                 @csrf
+                <input type="hidden" name="selection_mode" value="1">
+                @foreach(($selectedItemIds ?? []) as $selectedItemId)
+                    <input type="hidden" name="selected_item_ids[]" value="{{ (int) $selectedItemId }}">
+                @endforeach
                 
                 <!-- Main Form Card -->
                 <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[#F5E6E8] p-8 md:p-10 space-y-10">
@@ -328,16 +363,50 @@
                                 <h4 class="text-xs font-black text-[#C88A92] uppercase tracking-[0.2em]">Payment Method</h4>
                                 <span class="bg-[#5A3A3A] text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded">Active</span>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-[#5A3A3A] text-sm leading-none">Cash on Delivery</p>
-                                    <p class="text-[11px] text-[#8C6770] mt-1">Payment upon receipt or pickup</p>
-                                </div>
+                            <div class="space-y-3">
+                                @auth
+                                    <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
+                                        <input type="radio" name="payment_method" value="cod" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#5A3A3A] text-sm leading-none">Cash on Delivery</p>
+                                            <p class="text-[11px] text-[#8C6770] mt-1">Pay when receiving your order</p>
+                                        </div>
+                                    </label>
+
+                                    <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
+                                        <input type="radio" name="payment_method" value="paymongo" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method') === 'paymongo' ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#5A3A3A] text-sm leading-none">QRPH Online Payment</p>
+                                            <p class="text-[11px] text-[#8C6770] mt-1">Secure QRPH checkout via PayMongo</p>
+                                        </div>
+                                    </label>
+                                @else
+                                    <label class="flex cursor-pointer items-center gap-4 rounded-xl border border-[#EED9DE] bg-white px-4 py-3 transition hover:border-[#C88A92]">
+                                        <input type="radio" name="payment_method" value="paymongo" class="h-4 w-4 text-[#C88A92] focus:ring-[#C88A92]" {{ old('payment_method', 'paymongo') === 'paymongo' ? 'checked' : '' }}>
+                                        <div class="w-10 h-10 bg-[#F9EFF1] rounded-xl flex items-center justify-center shadow-sm text-[#C88A92]">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 009.79 9.79z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#5A3A3A] text-sm leading-none">QRPH Online Payment</p>
+                                            <p class="text-[11px] text-[#8C6770] mt-1">Secure QRPH checkout via PayMongo</p>
+                                        </div>
+                                    </label>
+                                    <div class="rounded-xl border border-dashed border-[#EED9DE] bg-[#FFF9FA] px-4 py-3 text-xs text-[#8C6770]">
+                                        Guest checkout is available via <span class="font-bold text-[#5A3A3A]">QRPH Online Payment</span> only.
+                                    </div>
+                                @endauth
                             </div>
                         </div>
 
@@ -498,6 +567,7 @@
             const subtotalEl = document.getElementById('checkout-subtotal');
             const taxEl = document.getElementById('checkout-tax');
             const deliveryEl = document.getElementById('checkout-delivery');
+            const serviceFeeEl = document.getElementById('checkout-service-fee');
             const totalEl = document.getElementById('checkout-total');
             const fulfillmentDateInput = document.querySelector('input[name="fulfillment_date"]');
             const fulfillmentTimeInput = document.getElementById('fulfillment_time');
@@ -528,13 +598,14 @@
             const formatPeso = (v) => `₱${Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
 
             const refreshTotals = () => {
-                if (!subtotalEl || !taxEl || !deliveryEl || !totalEl) return;
+                if (!subtotalEl || !taxEl || !deliveryEl || !serviceFeeEl || !totalEl) return;
                 const subtotal = Number(subtotalEl.dataset.value || '0');
                 const tax = Number(taxEl.dataset.value || '0');
                 const deliveryFee = Number(deliveryEl.dataset.deliveryFee || '0');
+                const serviceFee = Number(serviceFeeEl.dataset.value || '0');
                 const delivery = orderType.value === 'delivery' ? deliveryFee : 0;
                 deliveryEl.textContent = formatPeso(delivery);
-                totalEl.textContent = formatPeso(subtotal + tax + delivery);
+                totalEl.textContent = formatPeso(subtotal + tax + delivery + serviceFee);
             };
 
             /* ── Time enforcement ── */

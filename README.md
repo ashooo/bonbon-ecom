@@ -5,6 +5,8 @@ Laravel 12 e-commerce project with:
 - admin management pages
 - API v1 routes
 - Google OAuth login
+- PayMongo checkout integration
+- PDF invoice generation and download
 
 ## Requirements
 
@@ -43,12 +45,22 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-5. Run migrations + seed demo data
+5. Configure required third-party keys in `.env`
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/auth/google/callback
+
+PAYMONGO_SECRET_KEY=
+PAYMONGO_PUBLIC_KEY=
+```
+
+6. Run migrations + seed demo data
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-6. Run app and Vite
+7. Run app and Vite
 ```bash
 php artisan serve
 npm run dev
@@ -181,3 +193,68 @@ php artisan view:clear
 ```bash
 php artisan migrate:fresh --seed
 ```
+
+
+### Admin Routes
+- `GET /admin/invoices/{invoice}/print` - Display invoice in browser
+- `POST /admin/invoices/{invoice}/track-print` - Record print event
+- `GET /admin/invoices/{invoice}/download` - Download invoice file
+
+### API Routes (Authenticated Users)
+- `GET /api/v1/invoices/{invoice}/download` - Download own invoice
+
+### Web Routes (Authenticated Users)
+- `GET /invoices/{invoice}/download` - Download own invoice from user order history page
+
+### Database
+- `invoices` table tracks PDF paths and print counts
+- Foreign key relationship with `orders` table
+- Automatic cascade delete when order is deleted
+
+## Recent Behavior Notes
+
+- Invoice PDFs are generated as long-form continuous receipts to avoid broken fixed-page layouts.
+- Invoice downloads from user order history force-regenerate the latest PDF before download.
+- Checkout supports `0.00` totals (free items) without failing payment flow.
+- Customized product snapshot rendering prioritizes the legacy SVG preview for cart/checkout/order displays.
+
+## Troubleshooting
+
+### Invoice download redirects or fails
+
+- Verify you are logged in as the order owner.
+- Confirm web download route exists:
+```bash
+php artisan route:list --name=invoices.download
+```
+- Clear cached routes/views/config after pulling changes:
+```bash
+php artisan optimize:clear
+```
+- Confirm invoice files can be written:
+  - Storage disk is `local`
+  - `storage/app/invoices` exists and is writable
+- Regenerate an invoice by downloading again from order history (download flow force-regenerates PDF).
+
+### Invoice layout is not continuous
+
+- Clear compiled views and config:
+```bash
+php artisan optimize:clear
+```
+- Re-download the invoice to regenerate the PDF with current template/service logic.
+- If an old file was shared externally, download a fresh copy from the app to avoid stale PDFs.
+
+### PayMongo checkout fails
+
+- Set both keys in `.env`:
+```env
+PAYMONGO_SECRET_KEY=
+PAYMONGO_PUBLIC_KEY=
+```
+- Run:
+```bash
+php artisan config:clear
+```
+- Ensure `APP_URL` matches the app URL you are using in browser.
+- For orders with total `0.00`, checkout should bypass external payment and still complete normally.

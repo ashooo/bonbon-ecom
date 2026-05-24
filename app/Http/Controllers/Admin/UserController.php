@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\UserStatusAudit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -45,23 +44,9 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $user = User::withTrashed()->findOrFail($user->id);
-
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone' => ['nullable', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($user->id)],
-        ]);
-
-        $user->update([
-            'name' => trim($data['name']),
-            'email' => strtolower(trim($data['email'])),
-            'phone' => isset($data['phone']) && trim((string) $data['phone']) !== '' ? trim((string) $data['phone']) : null,
-        ]);
-
         return redirect()
-            ->route('admin.users.show', ['user' => $user] + $this->buildUserRedirectQuery($request))
-            ->with('success', 'User details updated successfully.');
+            ->route('admin.dashboard', $this->buildUserRedirectQuery($request))
+            ->withErrors(['user' => 'Editing user profile information is not allowed from the admin panel.']);
     }
 
     public function updateStatus(Request $request, User $user): RedirectResponse

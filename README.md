@@ -1,3 +1,42 @@
+## Developers Contributions
+* **Crespo**, Karl John P.
+  * Admin Panel / Pages
+  * Checkout Flow
+  * Cart and Order Management
+  * Product Management
+  * Inventory Management
+  * User Management
+  * Bulk Product Upload
+  * Admin Dashboard
+  * Guest Checkout / Guest Order Tracking
+  * Core Backend and System Setup
+
+* **Sese**, Mary Ynah Brazil A.
+  * UI Foundation
+  * AI Chat Support
+  * Live Chat Support
+  * Login / Register
+  * Google Auth Login / Register
+  * Forgot Password / Reset Password Backend
+  * Print Invoice
+  * Export Reports
+  * User Notifications
+  * Code Reviewer
+
+* **Valente** Gerald Anderson L.
+  * Main UI Designer
+  * PayMongo Payment Gateway
+  * Landing / Home Page
+  * Customization Page
+  * 3D Cake Customization
+  * Cake Model Integration
+  * Pinnable Address / Location Selection
+  * Email Verification
+  * Change Password
+  * Loading Screen
+  * Music Integration
+  * 404 Page
+
 # BonBon Ecom
 
 Laravel 12 e-commerce project with:

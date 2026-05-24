@@ -4,32 +4,75 @@
         $navbarUnreadNotificationsCount = Auth::user()->unreadUserNotifications()->count();
     @endphp
 @endauth
+@php
+    $navbarCartCount = 0;
 
-<header id="main-navbar" class="sticky top-0 z-[100] transition-colors duration-300 bg-[#FBF2F6] shadow-[0_4px_20px_rgba(196,122,144,0.08)] border-b border-[#ECD8E0]">
-    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <a href="/" id="navbar-brand" class="text-2xl font-bold text-[#4D2E38] transition-colors duration-300">BonBons PH</a>
+    if (Auth::check()) {
+        $authCart = Auth::user()->cart()->with('items')->first();
+        $navbarCartCount = (int) ($authCart?->items->sum('quantity') ?? 0);
+    } else {
+        $guestCartToken = trim((string) request()->cookie('cart_token', ''));
+        if ($guestCartToken !== '') {
+            $guestCart = \App\Models\Cart::query()
+                ->where('session_id', $guestCartToken)
+                ->with('items')
+                ->first();
+            $navbarCartCount = (int) ($guestCart?->items->sum('quantity') ?? 0);
+        }
+    }
+@endphp
+
+<header id="main-navbar" class="bg-[#FFFFFF] shadow-md border-b border-[#F5F5F5]">
+    <div class="container relative mx-auto flex items-center justify-between px-4 py-4">
+        <div class="z-10 flex items-center space-x-3">
+            <a href="/" id="navbar-brand" class="text-2xl font-bold text-pink-600">BonBons PH</a>
         </div>
 
-        <nav class="hidden md:flex space-x-6">
-            <a href="/" class="nav-link-item text-[#533843] hover:text-[#C47A90] transition-colors duration-300">Home</a>
-            <a href="{{ url('/#shop') }}" class="nav-link-item text-[#533843] hover:text-[#C47A90] transition-colors duration-300">Shop</a>
-            <a href="{{ route('orders.index') }}" class="nav-link-item text-[#533843] hover:text-[#C47A90] transition-colors duration-300">Orders</a>
-            <a href="/customize" class="nav-link-item text-[#533843] hover:text-[#C47A90] transition-colors duration-300">Customize</a>
+        <nav class="absolute left-1/2 hidden -translate-x-1/2 items-center space-x-6 md:flex">
+            <a href="/" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Home</a>
+            <a href="{{ route('shop.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Shop</a>
+            <a href="{{ route('orders.index') }}" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Orders</a>
+            <a href="/customize" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE]">Customize</a>
         </nav>
 
-        <div class="flex items-center space-x-4">
-            <a href="/cart" id="navbar-notification-btn" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E9C7D4] bg-[#FFFFFF] text-[#4D2E38] transition-colors duration-300 hover:border-[#C47A90] hover:text-[#C47A90] focus:outline-none focus:ring-2 focus:ring-[#F6DFE9]">
+        <div class="z-10 flex items-center space-x-4">
+            <button
+                id="navbar-music-toggle"
+                type="button"
+                class="inline-flex h-10 items-center gap-2 rounded-full border border-[#E6D5D8] bg-white px-2 sm:px-3 text-xs font-bold text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
+                aria-pressed="false"
+                data-no-click-sound
+            >
+                <span class="grid h-6 w-6 place-items-center rounded-full bg-[#F8E2E7] text-[#C88A92]" data-music-icon>♫</span>
+                <span class="hidden md:inline" data-music-label>Music on</span>
+            </button>
+
+            @auth
+                @if (Auth::user()->is_admin)
+                    <a
+                        href="{{ route('admin.dashboard') }}"
+                        class="hidden lg:inline-flex h-10 items-center rounded-full border border-[#E6D5D8] bg-[#FFF6FA] px-3 text-xs font-semibold text-[#7A2F56] transition hover:border-[#C94F7C] hover:text-[#C94F7C]"
+                    >
+                        Admin Panel
+                    </a>
+                @endif
+            @endauth
+
+            <a href="/cart" id="navbar-cart-btn" class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D5D8] bg-transparent text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"></path>
                 </svg>
+                <span data-cart-count-badge class="absolute -right-1 -top-1 {{ $navbarCartCount > 0 ? 'inline-flex' : 'hidden' }} h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-pink-500 px-1 text-[10px] font-bold leading-none text-white">
+                    {{ $navbarCartCount }}
+                </span>
             </a>
 
             @auth
                 <div class="relative" data-notification-menu>
                     <button
+                        id="navbar-notification-btn"
                         type="button"
-                        class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D5D8] bg-[#FFFFFF] text-[#4D2E38] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D5D8] bg-white text-[#5A3A3A] transition hover:border-[#C94F7C] hover:text-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
                         aria-haspopup="true"
                         aria-expanded="false"
                         aria-label="Open notifications"
@@ -40,7 +83,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9"></path>
                         </svg>
                         <span
-                            class="absolute -right-1 -top-1 {{ $navbarUnreadNotificationsCount > 0 ? 'inline-flex' : 'hidden' }} h-[1.15rem] w-[1.15rem] items-center justify-center rounded-full bg-[#C47A90] text-[10px] font-bold leading-none text-[#FFFFFF]"
+                            class="absolute -right-1 -top-1 {{ $navbarUnreadNotificationsCount > 0 ? 'inline-flex' : 'hidden' }} h-[1.15rem] w-[1.15rem] items-center justify-center rounded-full bg-pink-500 text-[10px] font-bold leading-none text-white"
                             data-notification-badge
                         >
                             {{ $navbarUnreadNotificationsCount }}
@@ -48,35 +91,35 @@
                     </button>
 
                     <div
-                        class="absolute right-0 z-20 mt-3 hidden w-[22rem] overflow-hidden rounded-xl border border-[#ECD8E0] bg-[#FFFFFF] shadow-[0_10px_40px_rgba(196,122,144,0.15)]"
+                        class="absolute right-0 z-20 mt-3 hidden w-[22rem] overflow-hidden rounded-xl border border-[#F0E2E5] bg-white shadow-lg"
                         data-notification-dropdown
                     >
-                        <div class="flex items-center justify-between border-b border-[#ECD8E0] px-4 py-3">
-                            <h3 class="text-sm font-semibold text-[#4D2E38]">Notifications</h3>
-                            <a href="{{ route('notifications.index') }}" class="text-xs font-medium text-[#4D2E38] hover:text-pink-700">View all</a>
+                        <div class="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+                            <h3 class="text-sm font-semibold text-[#5A3A3A]">Notifications</h3>
+                            <a href="{{ route('notifications.index') }}" class="text-xs font-medium text-pink-600 hover:text-pink-700">View all</a>
                         </div>
 
                         <div class="max-h-96 overflow-y-auto">
                             @forelse ($navbarNotifications as $notification)
                                 <a
                                     href="{{ route('notifications.open', $notification) }}"
-                                    class="block border-b border-[#ECD8E0] px-4 py-3 transition hover:bg-[#FBEAF1] {{ $notification->read_at ? 'bg-[#FFFFFF]' : 'bg-[#FBEAF1]' }}"
+                                    class="block border-b border-gray-100 px-4 py-3 transition hover:bg-pink-50 {{ $notification->read_at ? 'bg-white' : 'bg-[#FFF8FA]' }}"
                                 >
                                     <div class="flex items-start justify-between gap-3">
                                         <div>
                                             <div class="flex items-center gap-2">
-                                                <p class="text-sm font-semibold text-[#4D2E38]">{{ $notification->title }}</p>
+                                                <p class="text-sm font-semibold text-[#5A3A3A]">{{ $notification->title }}</p>
                                                 @if (! $notification->read_at)
-                                                    <span class="inline-flex h-2 w-2 rounded-full bg-[#C47A90]"></span>
+                                                    <span class="inline-flex h-2 w-2 rounded-full bg-pink-500"></span>
                                                 @endif
                                             </div>
-                                            <p class="mt-1 text-xs text-[#533843]">{{ $notification->body }}</p>
+                                            <p class="mt-1 text-xs text-gray-600">{{ $notification->body }}</p>
                                         </div>
-                                        <span class="shrink-0 text-[11px] text-[#8A6A76]">{{ $notification->created_at->diffForHumans() }}</span>
+                                        <span class="shrink-0 text-[11px] text-gray-500">{{ $notification->created_at->diffForHumans() }}</span>
                                     </div>
                                 </a>
                             @empty
-                                <div class="px-4 py-8 text-center text-sm text-[#533843]">
+                                <div class="px-4 py-8 text-center text-sm text-gray-600">
                                     No notifications yet.
                                 </div>
                             @endforelse
@@ -86,8 +129,9 @@
 
                 <div class="relative" data-account-menu>
                     <button
+                        id="navbar-account-btn"
                         type="button"
-                        class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#E6D5D8] bg-pink-50 text-[#4D2E38] transition hover:border-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
+                        class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#E6D5D8] bg-pink-50 text-[#5A3A3A] transition hover:border-[#C94F7C] focus:outline-none focus:ring-2 focus:ring-pink-300"
                         aria-haspopup="true"
                         aria-expanded="false"
                         aria-label="Open account menu"
@@ -101,18 +145,18 @@
                     </button>
 
                     <div
-                        class="absolute right-0 z-20 mt-3 hidden min-w-[11rem] rounded-xl border border-[#F0E2E5] bg-[#FFFFFF] p-2 shadow-lg"
+                        class="absolute right-0 z-20 mt-3 hidden min-w-[11rem] rounded-xl border border-[#F0E2E5] bg-white p-2 shadow-lg"
                         data-account-dropdown
                     >
-                        <a href="/profile" class="block rounded-lg px-4 py-2 text-sm font-medium text-[#4D2E38] transition hover:bg-[#FBEAF1] hover:text-[#C94F7C]">Profile</a>
+                        <a href="/profile" class="block rounded-lg px-4 py-2 text-sm font-medium text-[#5A3A3A] transition hover:bg-pink-50 hover:text-[#C94F7C]">Profile</a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-[#4D2E38] transition hover:bg-[#FBEAF1] hover:text-[#C94F7C]">Logout</button>
+                            <button type="submit" class="block w-full rounded-lg px-4 py-2 text-left text-sm font-medium text-[#5A3A3A] transition hover:bg-pink-50 hover:text-[#C94F7C]">Logout</button>
                         </form>
                     </div>
                 </div>
             @else
-                <a href="/login" class="nav-link-item text-[#533843] hover:text-[#C47A90] font-medium transition-colors duration-300">Login</a>
+                <a href="/login" class="nav-link-item text-[#5A3A3A] hover:text-[#E6B7BE] font-medium">Login</a>
             @endauth
         </div>
     </div>

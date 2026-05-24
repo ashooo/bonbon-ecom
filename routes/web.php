@@ -56,7 +56,7 @@ Route::get('/', function () {
     return view('pages.home', compact('featuredProducts', 'featuredCategories', 'shelfProducts'));
 });
 
-Route::get('/test-products', function (Request $request) {
+Route::get('/shop', function (Request $request) {
     $products = collect();
     $categories = collect();
 
@@ -82,6 +82,14 @@ Route::get('/test-products', function (Request $request) {
             $productsQuery->where('category_id', $request->integer('category'));
         }
 
+        if ($request->boolean('featured')) {
+            $productsQuery->where('is_featured', true);
+        }
+
+        if ($request->boolean('best_seller')) {
+            $productsQuery->where('is_best_seller', true);
+        }
+
         match ($request->input('sort')) {
             'price_low' => $productsQuery->orderBy('sale_price')->orderBy('price'),
             'price_high' => $productsQuery->orderByDesc('sale_price')->orderByDesc('price'),
@@ -89,10 +97,16 @@ Route::get('/test-products', function (Request $request) {
             default => $productsQuery->orderBy('name'),
         };
 
-        $products = $productsQuery->paginate(9)->withQueryString();
+        $products = $productsQuery->paginate(15)->withQueryString();
     }
 
     return view('products.index', compact('products', 'categories'));
+})->name('shop.index');
+
+Route::get('/test-products', function (Request $request) {
+    $query = $request->query();
+
+    return redirect()->route('shop.index', $query);
 });
 
 Route::get('/product/{slug}', function ($slug) {
@@ -141,7 +155,11 @@ Route::get('/orders/{order}/receipt', [OrderHistoryController::class, 'receipt']
 Route::get('/orders/{order}/receipt/html', [OrderHistoryController::class, 'receiptHtml'])->name('orders.receipt.html');
 Route::get('/orders/{order}/receipt/pdf', [OrderHistoryController::class, 'receiptPdf'])->name('orders.receipt.pdf');
 Route::post('/orders/{order}/cancel', [OrderHistoryController::class, 'cancel'])->name('orders.cancel');
+Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Api\InvoiceController::class, 'download'])
+    ->middleware('auth')
+    ->name('invoices.download');
 
+Route::get('/customize/android', [CustomizeController::class, 'android'])->name('customize.android');
 Route::get('/customize', [CustomizeController::class, 'index'])->name('customize.index');
 
 Route::get('/assistant', [ChatController::class, 'show'])->name('assistant');
@@ -264,6 +282,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $productSearchFilter = $request->string('product_search')->trim()->value();
         $productStatusFilter = $request->string('product_status')->value();
         $productCategoryFilter = $request->integer('product_category') ?: null;
+        $productPerPage = (int) $request->integer('product_per_page', 12);
+        if (! in_array($productPerPage, [12, 25, 50], true)) {
+            $productPerPage = 12;
+        }
 
         $allProductsQuery = \App\Models\Product::with('category', 'images')->orderBy('created_at', 'desc');
 
@@ -289,7 +311,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $allProducts = $allProductsQuery->paginate(12, ['*'], 'product_page')->withQueryString();
+        $allProducts = $allProductsQuery->paginate($productPerPage, ['*'], 'product_page')->withQueryString();
         $allCategories = \App\Models\Category::with('parent')->orderBy('name')->get();
         $settings = Schema::hasTable('store_settings')
             ? StoreSetting::query()->first()
@@ -329,7 +351,29 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $today = Carbon::today();
         $monthStart = Carbon::now()->startOfMonth();
-        $last7DaysStart = Carbon::today()->subDays(6);
+
+        $defaultTrendStart = Carbon::today()->subDays(6);
+        $defaultTrendEnd = Carbon::today();
+
+        try {
+            $trendStart = $request->filled('trend_start')
+                ? Carbon::parse($request->string('trend_start')->value())->startOfDay()
+                : $defaultTrendStart->copy()->startOfDay();
+        } catch (\Throwable $e) {
+            $trendStart = $defaultTrendStart->copy()->startOfDay();
+        }
+
+        try {
+            $trendEnd = $request->filled('trend_end')
+                ? Carbon::parse($request->string('trend_end')->value())->endOfDay()
+                : $defaultTrendEnd->copy()->endOfDay();
+        } catch (\Throwable $e) {
+            $trendEnd = $defaultTrendEnd->copy()->endOfDay();
+        }
+
+        if ($trendStart->gt($trendEnd)) {
+            [$trendStart, $trendEnd] = [$trendEnd->copy()->startOfDay(), $trendStart->copy()->endOfDay()];
+        }
 
         $todayRevenue = (float) Order::query()
             ->whereDate('created_at', $today)
@@ -369,15 +413,16 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $dailyRevenueMap = Order::query()
             ->selectRaw('DATE(created_at) as day, SUM(total) as revenue, COUNT(*) as orders_count')
-            ->where('created_at', '>=', $last7DaysStart)
+            ->whereBetween('created_at', [$trendStart, $trendEnd])
             ->whereIn('status', ['confirmed', 'ready', 'completed'])
             ->groupBy('day')
             ->orderBy('day')
             ->get()
             ->keyBy('day');
 
-        $revenueTrend = collect(range(0, 6))->map(function ($index) use ($last7DaysStart, $dailyRevenueMap) {
-            $day = $last7DaysStart->copy()->addDays($index);
+        $trendDays = $trendStart->copy()->startOfDay()->diffInDays($trendEnd->copy()->startOfDay()) + 1;
+        $revenueTrend = collect(range(0, max(0, $trendDays - 1)))->map(function ($index) use ($trendStart, $dailyRevenueMap) {
+            $day = $trendStart->copy()->addDays($index);
             $key = $day->toDateString();
             $row = $dailyRevenueMap->get($key);
 
@@ -447,6 +492,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
         $inventorySearchFilter = $request->string('inventory_search')->trim()->value();
         $inventoryStatusFilter = $request->string('inventory_status')->value();
+        $inventoryPerPage = (int) $request->integer('inventory_per_page', 12);
+        if (! in_array($inventoryPerPage, [12, 25, 50], true)) {
+            $inventoryPerPage = 12;
+        }
         $lowStockThreshold = 10;
 
         $inventoryQuery = Variant::query()
@@ -475,7 +524,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             }
         }
 
-        $inventoryItems = $inventoryQuery->paginate(12, ['*'], 'inventory_page')->withQueryString();
+        $inventoryItems = $inventoryQuery->paginate($inventoryPerPage, ['*'], 'inventory_page')->withQueryString();
         $inventoryCounts = [
             'all' => Variant::where('is_active', true)->count(),
             'out_of_stock' => Variant::where('is_active', true)->where('stock_quantity', '<=', 0)->count(),
@@ -485,6 +534,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         $inventoryFilters = [
             'search' => $inventorySearchFilter,
             'status' => $inventoryStatusFilter === '' ? 'all' : $inventoryStatusFilter,
+            'per_page' => $inventoryPerPage,
         ];
 
         $lowStockVariants = Variant::query()
@@ -513,6 +563,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
             'search' => $productSearchFilter,
             'status' => $productStatusFilter === '' ? 'all' : $productStatusFilter,
             'category' => $productCategoryFilter,
+            'per_page' => $productPerPage,
         ];
 
         return view('admin.dashboard', compact(
@@ -539,6 +590,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         ));
     })->name('admin.dashboard');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('admin.settings.update');
+    Route::post('/settings/customization-pricing', [\App\Http\Controllers\Admin\SettingsController::class, 'updateCustomizationPricing'])->name('admin.customization-pricing.update');
+    Route::post('/settings/shop-fees', [\App\Http\Controllers\Admin\SettingsController::class, 'updateShopFees'])->name('admin.shop-fees.update');
 
     // Category Routes
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class)->names([
@@ -573,6 +626,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/orders-export', [\App\Http\Controllers\Admin\ExportController::class, 'orders'])->name('admin.orders.export');
     Route::get('/reports-export', [\App\Http\Controllers\Admin\ExportController::class, 'reports'])->name('admin.reports.export');
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('admin.orders.show');
+    Route::get('/orders/{order}/print-slip', [AdminOrderController::class, 'printSlip'])->name('admin.orders.print-slip');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('admin.orders.status.update');
 
     Route::get('/invoices/{invoice}/print', [\App\Http\Controllers\Admin\InvoiceController::class, 'print'])->name('admin.invoices.print');
@@ -581,7 +635,6 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
     Route::get('/users/{user}', [AdminUserController::class, 'show'])->withTrashed()->name('admin.users.show');
-    Route::patch('/users/{user}', [AdminUserController::class, 'update'])->withTrashed()->name('admin.users.update');
     Route::patch('/users/{user}/status', [AdminUserController::class, 'updateStatus'])->name('admin.users.status.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
     Route::patch('/users/{user}/restore', [AdminUserController::class, 'restore'])->withTrashed()->name('admin.users.restore');

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Order;
 use App\Models\StoreSetting;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -24,19 +25,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        View::composer('*', function ($view): void {
-            $storeSettings = null;
-
-            try {
-                if (Schema::hasTable('store_settings')) {
-                    $storeSettings = StoreSetting::query()->first();
-                }
-            } catch (\Throwable) {
-                $storeSettings = null;
+        $storeSettings = null;
+        try {
+            if (Schema::hasTable('store_settings')) {
+                $storeSettings = Cache::remember('store_settings:first', 300, function () {
+                    return StoreSetting::query()->first();
+                });
             }
-
-            $view->with('storeSettings', $storeSettings);
-        });
+        } catch (\Throwable) {
+            $storeSettings = null;
+        }
+        View::share('storeSettings', $storeSettings);
 
         Order::created(function (Order $order): void {
             try {

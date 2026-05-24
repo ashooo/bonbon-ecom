@@ -15,6 +15,46 @@ export function initCakeScrollytelling() {
     const cake = createCakeScene(container);
     const { state, camera, assembledPositions, mainCakeGroup, createGalleryCake, galleryCakes } = cake;
 
+    function setNavbarLightTheme() {
+        gsap.set('#main-navbar', { backgroundColor: 'rgba(255,255,255,1)', borderColor: '#F5F5F5' });
+        gsap.set('#navbar-brand, .nav-link-item, #navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', { color: '#5A3A3A' });
+        gsap.set('#navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', {
+            borderColor: '#E6D5D8',
+            backgroundColor: '#ffffff',
+        });
+        gsap.set('[data-cart-count-badge], [data-notification-badge]', {
+            color: '#feeaf5',
+            backgroundColor: '#C65187',
+            borderColor: '#A83D70',
+            boxShadow: 'none',
+        });
+    }
+
+    function setNavbarDarkTheme() {
+        gsap.set('#main-navbar', {
+            backgroundColor: 'rgba(21, 9, 6, 0.95)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(12px)',
+        });
+        gsap.set('#navbar-brand, .nav-link-item, #navbar-cart-btn, #navbar-notification-btn, #navbar-account-btn', { color: '#FBEAF1' });
+        gsap.set('#navbar-cart-btn, #navbar-notification-btn', {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'transparent',
+        });
+        gsap.set('#navbar-account-btn', {
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        });
+        gsap.set('[data-cart-count-badge], [data-notification-badge]', {
+            color: '#feeaf5',
+            backgroundColor: '#8F2F5D',
+            borderColor: '#742349',
+            boxShadow: 'none',
+        });
+    }
+
+    setNavbarLightTheme();
+
     // --- GSAP ScrollTrigger Timeline ---
     const tl = gsap.timeline({
         scrollTrigger: {
@@ -24,6 +64,27 @@ export function initCakeScrollytelling() {
             scrub: 1.5,
             pin: '#cake-sticky-panel',
             anticipatePin: 1,
+            onLeave: () => setNavbarLightTheme(),
+            onEnterBack: () => setNavbarDarkTheme(),
+            onLeaveBack: () => setNavbarLightTheme(),
+            onUpdate: (self) => {
+                const indicator = document.getElementById('scroll-indicator');
+                if (!indicator) return;
+                const p = self.progress;
+                if (p <= 0.06) {
+                    indicator.style.opacity = '1';
+                    indicator.style.transform = 'translateX(-50%)';
+                    return;
+                }
+                if (p >= 0.5) {
+                    indicator.style.opacity = '0';
+                    indicator.style.transform = 'translateX(-50%) translateY(-64px)';
+                    return;
+                }
+                const t = (p - 0.06) / 0.44;
+                indicator.style.opacity = String(1 - t);
+                indicator.style.transform = `translateX(-50%) translateY(${-64 * t}px)`;
+            },
         },
     });
 
@@ -46,6 +107,8 @@ export function initCakeScrollytelling() {
         opacity: 1, y: 0,
         duration: 10, ease: 'power2.out',
     }, 3);
+
+    
 
     tl.to('#story-msg-1', {
         opacity: 0, y: -30,
@@ -168,6 +231,15 @@ export function initCakeScrollytelling() {
         ease: 'power2.inOut'
     }, navStart);
 
+    tl.to('[data-cart-count-badge], [data-notification-badge]', {
+        color: '#feeaf5',
+        backgroundColor: '#feeaf5',
+        borderColor: '#feeaf5',
+        boxShadow: 'none',
+        duration: navDur,
+        ease: 'power2.inOut',
+    }, navStart);
+
     // ═══════════════════════════════════════
     // Cupcake + Signboard appear (90-100%)
     // ═══════════════════════════════════════
@@ -179,12 +251,14 @@ export function initCakeScrollytelling() {
         duration: 12, ease: 'back.out(1.2)',
     }, 88);
 
-    tl.fromTo('#signboard-overlay', {
-        opacity: 0, x: -40,
-    }, {
-        opacity: 1, x: 0,
-        duration: 10, ease: 'power2.out',
-    }, 92);
+    if (document.querySelector('#signboard-overlay')) {
+        tl.fromTo('#signboard-overlay', {
+            opacity: 0, x: -40,
+        }, {
+            opacity: 1, x: 0,
+            duration: 10, ease: 'power2.out',
+        }, 92);
+    }
 
     tl.to(state, { cupcakeVisible: true, duration: 0.1 }, 89);
     tl.fromTo(state, {
@@ -194,12 +268,14 @@ export function initCakeScrollytelling() {
         duration: 12, ease: 'back.out(1.2)',
     }, 89);
 
-    tl.fromTo('#cupcake-overlay', {
-        opacity: 0, x: 40,
-    }, {
-        opacity: 1, x: 0,
-        duration: 10, ease: 'power2.out',
-    }, 93);
+    if (document.querySelector('#cupcake-overlay')) {
+        tl.fromTo('#cupcake-overlay', {
+            opacity: 0, x: 40,
+        }, {
+            opacity: 1, x: 0,
+            duration: 10, ease: 'power2.out',
+        }, 93);
+    }
 
 
     // ═══════════════════════════════════════════════════════
@@ -283,7 +359,10 @@ export function initCakeScrollytelling() {
         // --- Phase 1: Fade out UI text & hide scene extras ---
         gsap.to('#story-msg-final', { opacity: 0, duration: 0.4 });
         gsap.to('#story-cta-btn', { opacity: 0, duration: 0.3 });
-        gsap.to('#signboard-overlay, #cupcake-overlay', { opacity: 0, duration: 0.25 });
+        const overlayTargets = ['#signboard-overlay', '#cupcake-overlay'].filter((selector) => document.querySelector(selector));
+        if (overlayTargets.length) {
+            gsap.to(overlayTargets, { opacity: 0, duration: 0.25 });
+        }
         gsap.to(state, { cupcakeVisible: false, signboardVisible: false, duration: 0.01 });
 
         const galleryTl = gsap.timeline();
@@ -420,7 +499,10 @@ export function initCakeScrollytelling() {
         // 3. Restore UI elements and decorations
         galleryTl.call(() => {
             gsap.to('#story-msg-final, #story-cta-btn', { opacity: 1, duration: 0.6 });
-            gsap.to('#signboard-overlay, #cupcake-overlay', { opacity: 1, duration: 0.6 });
+            const restoreTargets = ['#signboard-overlay', '#cupcake-overlay'].filter((selector) => document.querySelector(selector));
+            if (restoreTargets.length) {
+                gsap.to(restoreTargets, { opacity: 1, duration: 0.6 });
+            }
             state.cupcakeVisible = true;
             state.signboardVisible = true;
         }, null, null, 1.2);
@@ -704,11 +786,32 @@ export function initCakeScrollytelling() {
     // Attach gallery trigger
     const ctaBtn = document.getElementById('story-cta-btn');
     if (ctaBtn) {
-        ctaBtn.addEventListener('click', () => {
-            const shelf = document.getElementById('cake-shelf');
-            if (shelf) {
-                shelf.style.display = 'block';
-                shelf.scrollIntoView({ behavior: 'smooth' });
+        ctaBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            const SHOWCASE_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
+            try {
+                localStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+                    unlockedAt: Date.now(),
+                    expiresAt: Date.now() + SHOWCASE_CACHE_TTL_MS,
+                }));
+            } catch (e) {}
+            document.documentElement.classList.add('home-chat-unlocked');
+
+            const showcase = document.getElementById('home-showcase');
+            if (showcase) {
+                const isHidden = showcase.style.display === 'none' || getComputedStyle(showcase).display === 'none';
+                if (isHidden) {
+                    showcase.style.display = '';
+                    gsap.fromTo(showcase,
+                        { opacity: 0, y: 50, scale: 0.985 },
+                        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out' }
+                    );
+                }
+                requestAnimationFrame(() => {
+                    const top = showcase.getBoundingClientRect().top + window.scrollY;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                });
             }
         });
     }

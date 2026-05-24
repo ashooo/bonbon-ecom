@@ -1,20 +1,106 @@
 @extends('layouts.app')
 
 @section('hideGlobalLoader', true)
+@section('hideFooter', true)
 
 @php
     $cakesCategory = $featuredCategories->first(fn ($category) => str_contains(strtolower($category->name), 'cake'));
     $cakesUrl = url('/#shop');
+    $shelfProducts = $shelfProducts ?? collect();
 @endphp
 
 @section('content')
-    {{-- Preloader --}}
-    <div id="cake-preloader" class="cake-preloader" aria-live="polite">
-        <div class="preloader-inner">
-            <div class="preloader-ring"></div>
-            <p class="preloader-text">BonBon</p>
+    <script>
+        (() => {
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            try {
+                const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                if (!raw) return;
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(raw);
+                } catch (_) {
+                    parsed = raw;
+                }
+                const valid = parsed === true
+                    || parsed === 'true'
+                    || parsed === '1'
+                    || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                if (valid) {
+                    document.documentElement.classList.add('home-chat-unlocked');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    {{-- Preloader (same as global loader) --}}
+    <div id="page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F5F5F5;transition:opacity 0.5s ease, visibility 0.5s ease;">
+        <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:0;animation:_plOrbit 3s linear infinite;">
+                <span style="position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#C88A92;transform:rotate(0deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#E6B7BE;transform:rotate(60deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#F5E6E8;transform:rotate(120deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#C88A92;opacity:0.5;transform:rotate(180deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#E6B7BE;opacity:0.4;transform:rotate(240deg) translateX(44px);"></span>
+                <span style="position:absolute;top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#F5E6E8;opacity:0.3;transform:rotate(300deg) translateX(44px);"></span>
+            </div>
+            <svg style="animation:_plBounce 1.4s ease-in-out infinite;" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="54">
+                <path d="M28 8 C28 4,32 2,32 0" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5" style="animation:_plSteam 2s ease-in-out infinite;"/>
+                <path d="M36 10 C36 6,40 4,40 2" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.3" style="animation:_plSteam 2s ease-in-out 0.7s infinite;"/>
+                <rect x="29" y="12" width="4" height="14" rx="2" fill="#F8E2E7"/>
+                <ellipse cx="31" cy="11" rx="3" ry="4" fill="#FFD97D"/>
+                <ellipse cx="31" cy="12" rx="2" ry="2.5" fill="#FFB347"/>
+                <path d="M12 30 C12 30,16 24,22 26 C28 28,30 22,32 22 C34 22,36 28,42 26 C48 24,52 30,52 30 L52 38 L12 38 Z" fill="#C88A92"/>
+                <rect x="12" y="34" width="40" height="12" rx="3" fill="#F5E6E8"/>
+                <rect x="12" y="34" width="40" height="4" rx="2" fill="#E6B7BE" opacity="0.5"/>
+                <path d="M8 46 C8 44,12 42,18 44 C24 46,26 40,32 40 C38 40,40 46,46 44 C52 42,56 44,56 46 L56 48 L8 48 Z" fill="#C88A92"/>
+                <rect x="8" y="46" width="48" height="14" rx="4" fill="#F5E6E8"/>
+                <rect x="8" y="46" width="48" height="4" rx="2" fill="#E6B7BE" opacity="0.4"/>
+                <ellipse cx="32" cy="62" rx="28" ry="4" fill="#EED9DE"/>
+                <circle cx="20" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="28" cy="36" r="1" fill="#FFD97D"/>
+                <circle cx="36" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="44" cy="36" r="1" fill="#FFD97D"/>
+                <circle cx="16" cy="52" r="1.2" fill="#FFD97D"/><circle cx="24" cy="53" r="1" fill="#FFB6C1"/>
+                <circle cx="32" cy="51" r="1.3" fill="#B5EAD7"/><circle cx="40" cy="53" r="1" fill="#FFB6C1"/>
+                <circle cx="48" cy="52" r="1.2" fill="#FFD97D"/>
+                <circle cx="31" cy="22" r="4" fill="#E74C6F"/>
+                <circle cx="29.5" cy="20.5" r="1.2" fill="#FF7E9D" opacity="0.7"/>
+                <path d="M31 18 C33 14,35 16,34 18" stroke="#5A3A3A" stroke-width="1" fill="none" stroke-linecap="round"/>
+            </svg>
         </div>
+        <p style="font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:700;color:#C88A92;letter-spacing:0.15em;text-transform:uppercase;animation:pulse 2s ease-in-out infinite;">Loading your treats...</p>
     </div>
+    <style>
+        @keyframes _plOrbit { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes _plBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes _plSteam { 0%{opacity:0;transform:translateY(4px)} 30%{opacity:0.6} 100%{opacity:0;transform:translateY(-8px)} }
+    </style>
+    <script>
+        (() => {
+            const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+            const preloader = document.getElementById('page-loader');
+            if (!preloader) return;
+
+            try {
+                const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                if (!raw) return;
+                let parsed = null;
+                try {
+                    parsed = JSON.parse(raw);
+                } catch (_) {
+                    parsed = raw;
+                }
+                const valid = parsed === true
+                    || parsed === 'true'
+                    || parsed === '1'
+                    || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                if (!valid) return;
+
+                // Skip preloader for returning users with unlocked showcase state.
+                preloader.style.display = 'none';
+            } catch (e) {}
+        })();
+    </script>
+
 
     {{-- Scrollytelling Section --}}
     <section id="cake-scroll-section" class="cake-scroll-section">
@@ -46,10 +132,9 @@
                 </div>
 
                 <div id="story-msg-final" class="story-msg story-msg-final" style="opacity: 0;">
-                    <h2 class="story-heading-final">Handcrafted<br>Cake for Every Occasions</h2>
-                    <p class="story-sub">Three layers. One unforgettable moment.</p>
+                    <h2 class="story-heading-final">Handcrafted<br>Chocolate Perfection</h2>
                     <button id="story-cta-btn" type="button" class="story-cta" style="opacity: 0;">
-                        Explore Our Cakes
+                        Explore Our Shop
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                     </button>
                 </div>
@@ -123,7 +208,7 @@
                         <span id="gallery-modal-stock" class="gallery-modal-stock"></span>
                         <p id="gallery-modal-desc" class="gallery-modal-desc"></p>
 
-                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6">
+                        <form id="gallery-modal-form" action="{{ route('cart.add') }}" method="POST" class="mt-6" data-no-loader>
                             @csrf
                             <input type="hidden" name="product_id" id="gallery-modal-product-id" value="">
                             <input type="hidden" name="quantity" value="1">
@@ -137,7 +222,991 @@
         </div>
     </section>
 
+    {{-- ═══════════════════════════════════════════════════
+         HOME SHOWCASE — Premium Bakery Layout
+         ═══════════════════════════════════════════════════ --}}
+    <section id="home-showcase" class="bb-showcase" style="display:none;">
+
+        {{-- ── Marquee Tag Strip ── --}}
+        <div class="bb-marquee-wrap" aria-hidden="true">
+            <div class="bb-marquee-track">
+                @foreach(['Handcrafted Daily', '✦ Custom Cakes', 'Free Delivery Over ₱1500', '✦ Filipino Flavors', 'Made with Love', '✦ Best Sellers', 'Birthday Cakes', '✦ Wedding Tiers', 'Handcrafted Daily', '✦ Custom Cakes', 'Free Delivery Over ₱1500', '✦ Filipino Flavors', 'Made with Love', '✦ Best Sellers', 'Birthday Cakes', '✦ Wedding Tiers'] as $tag)
+                <span class="bb-marquee-item">{{ $tag }}</span>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- ── Hero Banner ── --}}
+        <div class="bb-hero-banner">
+            <div class="bb-hero-img-wrap">
+                <img src="/images/bonbon_showcase_hero.png" alt="BonBon artisan cakes and pastries" class="bb-hero-img">
+                <div class="bb-hero-overlay"></div>
+            </div>
+            <div class="bb-hero-text">
+                <h2 class="bb-hero-heading">Handcrafted<br>with Devotion.</h2>
+                <p class="bb-hero-sub">Every cake is a celebration — made from scratch, designed with care, delivered with love.</p>
+                <div class="bb-hero-actions">
+                    <a href="{{ route('shop.index') }}" class="bb-btn-primary">Shop Now</a>
+                    <a href="/customize" class="bb-btn-ghost">Custom Order</a>
+                </div>
+            </div>
+        </div>
+
+
+
+        {{-- ── Featured Products ── --}}
+        <div class="bb-section-wrap bb-category-wrap">
+            <div class="bb-section-header bb-category-header">
+                <div>
+                    <span class="bb-eyebrow">Our Signature Selection</span>
+                    <h2 class="bb-section-title">Featured Products</h2>
+                </div>
+                <a href="{{ route('shop.index', ['featured' => 1]) }}" class="bb-see-all">See all
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+
+            <div class="bb-product-grid">
+                @forelse($featuredProducts->take(8) as $product)
+                <a href="{{ route('products.show', $product->slug) }}" class="bb-product-card">
+                    <div class="bb-card-img-wrap">
+                        <img
+                            src="{{ $product->main_image_url ?: 'https://via.placeholder.com/480x480?text=' . urlencode($product->name) }}"
+                            alt="{{ $product->name }}"
+                            class="bb-card-img"
+                            loading="lazy"
+                        >
+                        <div class="bb-card-hover-overlay">
+                            <span class="bb-card-cta">View Product</span>
+                        </div>
+                        @if($product->hasDiscount())
+                        <span class="bb-sale-badge">Sale</span>
+                        @endif
+                    </div>
+                    <div class="bb-card-body">
+                        <span class="bb-card-cat">{{ $product->category?->name ?? 'Pastry' }}</span>
+                        <p class="bb-card-name">{{ $product->name }}</p>
+                        <div class="bb-card-price-row">
+                            <span class="bb-card-price">&#8369;{{ number_format($product->effective_price, 2) }}</span>
+                            @if($product->hasDiscount())
+                            <span class="bb-card-original">&#8369;{{ number_format($product->price, 2) }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+                @empty
+                <div class="bb-empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    <p>No featured products yet — check back soon!</p>
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ── Best Sellers ── --}}
+        @php
+            $bestSellers = $shelfProducts->where('is_best_seller', true)->take(4)->values();
+        @endphp
+        @if($bestSellers->count() > 0)
+        <div class="bb-bestsellers-band">
+            <div class="bb-section-wrap">
+                <div class="bb-section-header">
+                    <div>
+                        <span class="bb-eyebrow" style="color:#fff8fb; opacity:0.75;">Community Favorites</span>
+                        <h2 class="bb-section-title" style="color:#fff;">Best Sellers</h2>
+                    </div>
+                    <a href="{{ route('shop.index', ['best_seller' => 1]) }}" class="bb-see-all" style="color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.3);">See all
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                    </a>
+                </div>
+                <div class="bb-bestseller-grid">
+                    @foreach($bestSellers as $i => $product)
+                    <a href="{{ route('products.show', $product->slug) }}" class="bb-bs-card">
+                        <div class="bb-bs-img-wrap">
+                            <img src="{{ $product->main_image_url ?: 'https://via.placeholder.com/400x400?text=' . urlencode($product->name) }}" alt="{{ $product->name }}" class="bb-bs-img" loading="lazy">
+                            <span class="bb-bs-rank">#{{ $i + 1 }}</span>
+                        </div>
+                        <div class="bb-bs-body">
+                            <p class="bb-bs-name">{{ $product->name }}</p>
+                            <p class="bb-bs-price">&#8369;{{ number_format($product->effective_price, 2) }}</p>
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($featuredCategories->count() > 0)
+        <div class="bb-section-wrap">
+            <div class="bb-section-header">
+                <div>
+                    <span class="bb-eyebrow">Browse by Type</span>
+                    <h2 class="bb-section-title">Categories</h2>
+                </div>
+                <a href="{{ route('shop.index') }}" class="bb-see-all">See all
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+
+            <div class="bb-category-grid">
+                @foreach($featuredCategories->take(8) as $category)
+                    @php
+                        $categoryName = strtolower($category->name);
+                    @endphp
+                    <a href="{{ route('shop.index', ['category' => $category->id]) }}" class="bb-category-card">
+                        <span class="bb-category-icon" aria-hidden="true">
+                            @if(str_contains($categoryName, 'cake'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 10h16v3H4zM5 13h14v6H5zM8 10c0-1.5 1.2-2.5 2.5-2.5S13 8.5 13 10M13 10c0-1.5 1.2-2.5 2.5-2.5S18 8.5 18 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            @elseif(str_contains($categoryName, 'donut') || str_contains($categoryName, 'doughnut'))
+                                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2.3" stroke="currentColor" stroke-width="1.7"/><circle cx="8" cy="9" r="0.7" fill="currentColor"/><circle cx="16" cy="10" r="0.7" fill="currentColor"/><circle cx="9" cy="15" r="0.7" fill="currentColor"/></svg>
+                            @elseif(str_contains($categoryName, 'bread') || str_contains($categoryName, 'loaf'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M6 10a4 4 0 0 1 4-4c.8 0 1.5.2 2.1.6A4 4 0 0 1 18 10v5a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9.5 10.5h.01M12 9.8h.01M14.5 10.5h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                            @elseif(str_contains($categoryName, 'cookie') || str_contains($categoryName, 'biscuit'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M12 5a7 7 0 1 0 7 7 3 3 0 0 1-3-3 3 3 0 0 1-3-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="10" cy="11" r="0.8" fill="currentColor"/><circle cx="13.8" cy="13.3" r="0.8" fill="currentColor"/><circle cx="9.5" cy="14.5" r="0.8" fill="currentColor"/></svg>
+                            @elseif(str_contains($categoryName, 'drink') || str_contains($categoryName, 'beverage') || str_contains($categoryName, 'coffee'))
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M7 8h9v4a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4z" stroke="currentColor" stroke-width="1.7"/><path d="M16 9h1.5a2 2 0 0 1 0 4H16" stroke="currentColor" stroke-width="1.7"/><path d="M9 5c0 1-1 1.3-1 2.3M12 5c0 1-1 1.3-1 2.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            @else
+                                <svg viewBox="0 0 24 24" fill="none"><path d="M4 12c2.5 0 2.5-3 5-3s2.5 3 5 3 2.5-3 5-3v4c-2.5 0-2.5 3-5 3s-2.5-3-5-3-2.5 3-5 3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M6 9.5a6 6 0 0 1 12 0" stroke="currentColor" stroke-width="1.7"/></svg>
+                            @endif
+                        </span>
+                        <span class="bb-category-name">{{ $category->name }}</span>
+                        <span class="bb-category-meta">{{ number_format($category->products_count ?? 0) }} items</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- ── Why BonBon strip ── --}}
+        <div class="bb-perks-row">
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🎂</div>
+                <p class="bb-perk-title">Made Fresh Daily</p>
+                <p class="bb-perk-sub">Baked from scratch every morning — no preservatives, ever.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🎀</div>
+                <p class="bb-perk-title">Fully Customizable</p>
+                <p class="bb-perk-sub">Design your dream cake — flavors, tiers, decor, messages.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">🚚</div>
+                <p class="bb-perk-title">Swift Delivery</p>
+                <p class="bb-perk-sub">Same-day Metro Manila delivery available. Free over ₱1500.</p>
+            </div>
+            <div class="bb-perk-divider"></div>
+            <div class="bb-perk">
+                <div class="bb-perk-icon">💌</div>
+                <p class="bb-perk-title">Gift-Ready Packaging</p>
+                <p class="bb-perk-sub">Every order arrives beautifully boxed and ribbon-tied.</p>
+            </div>
+        </div>
+
+        {{-- ── Testimonials ── --}}
+        <div class="bb-section-wrap">
+            <div class="bb-section-header">
+                <div>
+                    <span class="bb-eyebrow">What Customers Say</span>
+                    <h2 class="bb-section-title">Reviews</h2>
+                </div>
+                <a href="https://www.facebook.com/BonbonsPHofficial" target="_blank" rel="noopener" class="bb-see-all">
+                    Facebook Page
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </div>
+            <div class="bb-reviews-grid">
+                <div class="bb-review-card bb-review-large">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Super ganda and sobrang sarap. Exactly what we needed for our daughter's debut. Everyone was asking where we got it!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">M</div>
+                        <div>
+                            <p class="bb-review-name">Maria Santos</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Reliable delivery and very responsive team. Will definitely order again for every occasion!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">J</div>
+                        <div>
+                            <p class="bb-review-name">James Reyes</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"The custom design was perfect. Great balance of sweetness — not too sweet, just right."</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">A</div>
+                        <div>
+                            <p class="bb-review-name">Anna Cruz</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bb-review-card">
+                    <div class="bb-review-stars">★★★★★</div>
+                    <p class="bb-review-text">"Ordered twice already. The packaging alone is worth it — so pretty and gift-ready!"</p>
+                    <div class="bb-review-author">
+                        <div class="bb-review-avatar">L</div>
+                        <div>
+                            <p class="bb-review-name">Liza Mendoza</p>
+                            <p class="bb-review-source">via Facebook</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── CTA Band ── --}}
+        <div class="bb-cta-band">
+            <div class="bb-cta-content">
+                <h2 class="bb-cta-heading">Ready to place your order?</h2>
+                <p class="bb-cta-sub">Browse our full collection or start building your custom cake today.</p>
+                <div class="bb-cta-actions">
+                    <a href="{{ route('shop.index') }}" class="bb-btn-primary">Browse Collection</a>
+                    <a href="/customize" class="bb-btn-ghost-dark">Customize a Cake</a>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <style>
+        /* ═══════════════════════════════════════════════════
+           BONBON HOME SHOWCASE — Premium Redesign
+           ═══════════════════════════════════════════════════ */
+
+        .bb-showcase {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0 0 clamp(2rem, 4vw, 3.5rem);
+            background: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ── Marquee ── */
+        .bb-marquee-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(90deg, #4D2E38 0%, #533843 100%);
+            padding: 0.7rem 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 0;
+        }
+        .bb-marquee-track {
+            display: flex;
+            gap: 0;
+            width: max-content;
+            animation: bbMarquee 28s linear infinite;
+        }
+        .bb-marquee-item {
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #FBEAF1;
+            padding: 0 2.8rem;
+            white-space: nowrap;
+        }
+        @keyframes bbMarquee {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+        }
+
+        /* ── Hero Banner ── */
+        .bb-hero-banner {
+            position: relative;
+            width: 100%;
+            height: clamp(420px, 55vh, 680px);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 0 0 clamp(0.85rem, 2vw, 1.25rem);
+        }
+        .bb-hero-img-wrap {
+            position: absolute;
+            inset: 0 0 clamp(0.85rem, 2vw, 1.25rem);
+            z-index: 0;
+            border-radius: 0 0 1.25rem 1.25rem;
+            overflow: hidden;
+        }
+        .bb-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 40%;
+            transform: scale(1.02);
+            transition: transform 8s ease;
+        }
+        .bb-hero-banner:hover .bb-hero-img {
+            transform: scale(1.05);
+        }
+        .bb-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(102deg, rgba(77, 46, 56, 0.82) 0%, rgba(143, 97, 114, 0.6) 44%, rgba(77, 46, 56, 0.2) 100%);
+        }
+        .bb-hero-text {
+            position: relative;
+            z-index: 2;
+            padding: clamp(3.6rem, 8vw, 7rem) clamp(2rem, 6vw, 6rem);
+            max-width: 580px;
+        }
+
+        @media (max-width: 768px) {
+            .bb-hero-text {
+                padding: clamp(2.25rem, 8vw, 3rem) clamp(1.25rem, 5vw, 2rem);
+            }
+        }
+        .bb-hero-eyebrow {
+            display: inline-block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #FFFFFF;
+            border: 1px solid rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.16);
+            padding: 0.32rem 0.9rem;
+            border-radius: 999px;
+            margin-top: 0;
+            margin-bottom: 1.1rem;
+            text-shadow: 0 2px 10px rgba(61,20,40,0.28);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 6px 20px rgba(61,20,40,0.2);
+        }
+        .bb-hero-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5vw, 4.2rem);
+            font-weight: 600;
+            line-height: 1.1;
+            color: #FFFFFF;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+            margin: 0 0 1rem;
+        }
+        .bb-hero-sub {
+            font-size: clamp(0.85rem, 1.2vw, 1rem);
+            line-height: 1.7;
+            color: rgba(255,255,255,0.86);
+            margin: 0 0 2rem;
+            max-width: 420px;
+        }
+        .bb-hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* ── Buttons ── */
+        .bb-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #C47A90 0%, #B66880 100%);
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            box-shadow: none;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+        }
+        .bb-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: none;
+            background: linear-gradient(135deg, #D4879E 0%, #C47A90 100%);
+        }
+        .bb-btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.22);
+            color: #FFFFFF;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            border: 1.5px solid rgba(255,255,255,0.82);
+            backdrop-filter: blur(8px);
+            text-shadow: 0 1px 10px rgba(61,20,40,0.35);
+            transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .bb-btn-ghost:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.95);
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+        .bb-btn-ghost-dark {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: #4D2E38;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.85rem 2rem;
+            border-radius: 999px;
+            border: 1.5px solid rgba(77,46,56,0.26);
+            transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+        }
+        .bb-btn-ghost-dark:hover {
+            background: rgba(233,199,212,0.32);
+            border-color: rgba(77,46,56,0.42);
+            transform: translateY(-1px);
+        }
+
+        /* ── Section Wrapper ── */
+        .bb-section-wrap {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.2rem, 4vw, 3rem);
+        }
+        .bb-section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 2.2rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .bb-eyebrow {
+            display: block;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #8F6172;
+            margin-bottom: 0.4rem;
+        }
+        .bb-section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.7rem, 3vw, 2.6rem);
+            font-weight: 600;
+            color: #4D2E38;
+            margin: 0;
+            line-height: 1.15;
+        }
+        .bb-see-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #8F6172;
+            text-decoration: none;
+            border-bottom: 1.5px solid rgba(143,97,114,0.32);
+            padding-bottom: 2px;
+            transition: gap 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+        }
+        .bb-see-all:hover {
+            gap: 0.7rem;
+            border-color: #c0537c;
+            color: #4D2E38;
+        }
+
+        /* ── Product Grid ── */
+        .bb-product-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(230px, 1fr);
+            gap: 1.2rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.35rem;
+            scrollbar-width: thin;
+            scrollbar-color: #E9C7D4 #FBF2F6;
+        }
+        .bb-product-grid::-webkit-scrollbar { height: 8px; }
+        .bb-product-grid::-webkit-scrollbar-track { background: #FBF2F6; border-radius: 999px; }
+        .bb-product-grid::-webkit-scrollbar-thumb { background: #E9C7D4; border-radius: 999px; }
+        .bb-product-grid > * {
+            min-width: 230px;
+        }
+
+
+        /* Categories */
+        .bb-category-wrap {
+            padding-top: clamp(1.2rem, 2.5vw, 2rem);
+            padding-bottom: clamp(1.5rem, 2.8vw, 2.2rem);
+        }
+        .bb-category-header {
+            margin-bottom: 1rem;
+        }
+        .bb-category-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(136px, 1fr);
+            gap: 0.65rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.25rem;
+            scrollbar-width: thin;
+            scrollbar-color: #E9C7D4 #FBF2F6;
+        }
+        .bb-category-grid::-webkit-scrollbar { height: 8px; }
+        .bb-category-grid::-webkit-scrollbar-track { background: #FBF2F6; border-radius: 999px; }
+        .bb-category-grid::-webkit-scrollbar-thumb { background: #E9C7D4; border-radius: 999px; }
+        .bb-category-grid > * {
+            min-width: 136px;
+        }
+        .bb-category-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.3rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: 0.85rem;
+            border: 1px solid #F0D8E2;
+            background: #fff;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 4px 14px rgba(77,46,56,0.06);
+        }
+        .bb-category-card:hover {
+            transform: translateY(-3px);
+            border-color: #C47A90;
+            box-shadow: 0 10px 24px rgba(77,46,56,0.11);
+        }
+        .bb-category-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #B86F86;
+            background: #FBEFF4;
+            border: 1px solid #F1D9E4;
+        }
+        .bb-category-icon svg {
+            width: 1.05rem;
+            height: 1.05rem;
+        }
+        .bb-category-name {
+            font-family: 'Playfair Display', serif;
+            color: #4D2E38;
+            font-size: 0.86rem;
+            line-height: 1.2;
+        }
+        .bb-category-meta {
+            color: #8F6172;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        /* ── Product Card ── */
+        .bb-product-card {
+            background: #fff;
+            border-radius: 1.25rem;
+            border: 1px solid #f0d4e0;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease;
+            box-shadow: 0 4px 18px rgba(77,46,56,0.07);
+        }
+        .bb-product-card:hover {
+            transform: translateY(-6px) scale(1.012);
+            box-shadow: 0 16px 40px rgba(77,46,56,0.16);
+        }
+        .bb-card-img-wrap {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #fdf0f5;
+        }
+        .bb-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .bb-product-card:hover .bb-card-img {
+            transform: scale(1.06);
+        }
+        .bb-card-hover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(61,20,40,0.42);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.28s ease;
+            backdrop-filter: blur(2px);
+        }
+        .bb-product-card:hover .bb-card-hover-overlay {
+            opacity: 1;
+        }
+        .bb-card-cta {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.6);
+            padding: 0.55rem 1.4rem;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+        }
+        .bb-sale-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            font-size: 0.6rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #fff;
+            background: linear-gradient(135deg, #e8609a, #c0437b);
+            padding: 0.28rem 0.72rem;
+            border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(196,67,123,0.4);
+        }
+        .bb-card-body {
+            padding: 1rem 1.15rem 1.2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .bb-card-cat {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #c0537c;
+        }
+        .bb-card-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #3d1428;
+            margin: 0;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .bb-card-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-top: 0.4rem;
+        }
+        .bb-card-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #c0437b;
+        }
+        .bb-card-original {
+            font-size: 0.78rem;
+            color: #b09aa8;
+            text-decoration: line-through;
+        }
+
+        /* ── Empty State ── */
+        .bb-empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 4rem 2rem;
+            border: 2px dashed #f0d4e0;
+            border-radius: 1.5rem;
+            color: #b09aa8;
+            text-align: center;
+        }
+
+        /* ── Best Sellers Band ── */
+        .bb-bestsellers-band {
+            background: linear-gradient(135deg, #3d1428 0%, #5c2240 50%, #3d1428 100%);
+            width: 100%;
+        }
+        .bb-bestseller-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.4rem;
+        }
+        @media (min-width: 640px) {
+            .bb-bestseller-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .bb-bestseller-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        .bb-bs-card {
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1.1rem;
+            overflow: hidden;
+            transition: transform 0.26s ease, background 0.26s ease, box-shadow 0.26s ease;
+            backdrop-filter: blur(4px);
+        }
+        .bb-bs-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+        }
+        .bb-bs-img-wrap {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+        }
+        .bb-bs-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+            filter: saturate(0.9) brightness(0.95);
+        }
+        .bb-bs-card:hover .bb-bs-img {
+            transform: scale(1.06);
+            filter: saturate(1.05) brightness(1.0);
+        }
+        .bb-bs-rank {
+            position: absolute;
+            top: 0.65rem;
+            left: 0.65rem;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #3d1428;
+            background: linear-gradient(135deg, #ffd6ea, #ffb3d1);
+            padding: 0.26rem 0.65rem;
+            border-radius: 999px;
+        }
+        .bb-bs-body {
+            padding: 0.85rem 1rem 1rem;
+        }
+        .bb-bs-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff8fb;
+            margin: 0 0 0.3rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bb-bs-price {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #ffb3d1;
+            margin: 0;
+        }
+
+        /* ── Perks Row ── */
+        .bb-perks-row {
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            gap: 0;
+            padding: 2.8rem clamp(1.2rem, 4vw, 3rem);
+            background: #fff;
+            border-top: 1px solid #f0d4e0;
+            border-bottom: 1px solid #f0d4e0;
+            flex-wrap: wrap;
+        }
+        .bb-perk {
+            flex: 1;
+            min-width: 180px;
+            text-align: center;
+            padding: 1.2rem 1.5rem;
+        }
+        .bb-perk-icon {
+            font-size: 2rem;
+            margin-bottom: 0.7rem;
+            line-height: 1;
+        }
+        .bb-perk-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #3d1428;
+            margin: 0 0 0.35rem;
+        }
+        .bb-perk-sub {
+            font-size: 0.78rem;
+            color: #9a7585;
+            margin: 0;
+            line-height: 1.55;
+        }
+        .bb-perk-divider {
+            width: 1px;
+            background: #f0d4e0;
+            align-self: stretch;
+            margin: 0.5rem 0;
+            flex-shrink: 0;
+        }
+        @media (max-width: 640px) {
+            .bb-perk-divider { display: none; }
+        }
+
+        /* ── Reviews ── */
+        .bb-reviews-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+        @media (min-width: 640px) {
+            .bb-reviews-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1024px) {
+            .bb-reviews-grid {
+                grid-template-columns: 2fr 1fr 1fr 1fr;
+            }
+        }
+        .bb-review-card {
+            background: #fff;
+            border: 1px solid #f0d4e0;
+            border-radius: 1.2rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            box-shadow: 0 4px 16px rgba(77,46,56,0.06);
+            transition: transform 0.24s ease, box-shadow 0.24s ease;
+        }
+        .bb-review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(77,46,56,0.12);
+        }
+        .bb-review-large {
+            background: linear-gradient(135deg, #fff0f7 0%, #fff8fb 100%);
+        }
+        .bb-review-stars {
+            font-size: 0.9rem;
+            color: #f4a429;
+            letter-spacing: 0.08em;
+        }
+        .bb-review-text {
+            font-size: 0.88rem;
+            line-height: 1.65;
+            color: #4d2538;
+            margin: 0;
+            flex: 1;
+            font-style: italic;
+        }
+        .bb-review-large .bb-review-text {
+            font-size: 0.96rem;
+        }
+        .bb-review-author {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-top: auto;
+        }
+        .bb-review-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e8609a, #c0437b);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .bb-review-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #3d1428;
+            margin: 0;
+        }
+        .bb-review-source {
+            font-size: 0.68rem;
+            color: #b09aa8;
+            margin: 0;
+        }
+
+        /* ── CTA Band ── */
+        .bb-cta-band {
+            background: linear-gradient(118deg, #ffeaf4 0%, #fff2f8 50%, #ffd6ea 100%);
+            border-top: 1px solid #f0d4e0;
+            border-bottom: 1px solid #f0d4e0;
+            text-align: center;
+            padding: clamp(3rem, 6vw, 5rem) clamp(1.2rem, 4vw, 3rem);
+        }
+        .bb-cta-content {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .bb-cta-heading {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+            font-weight: 600;
+            color: #3d1428;
+            margin: 0 0 0.8rem;
+        }
+        .bb-cta-sub {
+            font-size: 0.95rem;
+            color: #8a6070;
+            margin: 0 0 2rem;
+            line-height: 1.65;
+        }
+        .bb-cta-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Mobile overrides ── */
+        @media (max-width: 768px) {
+            .bb-hero-banner {
+                height: clamp(360px, 65vw, 500px);
+            }
+            .bb-hero-text {
+                padding: 2rem 1.4rem;
+            }
+            .bb-hero-overlay {
+                background: linear-gradient(
+                    160deg,
+                    rgba(61, 20, 40, 0.9) 0%,
+                    rgba(88, 32, 56, 0.75) 50%,
+                    rgba(61, 20, 40, 0.4) 100%
+                );
+            }
+            .bb-perks-row {
+                padding: 2rem 1.2rem;
+            }
+        }
+    </style>
+
+    </section>
+
     <div id="shop"></div>
+    @if(false)
     <section id="cake-shelf" class="shelf-section" style="display:none;">
         <div class="shelf-header">
             <span class="shelf-label">Our Collection</span>
@@ -165,7 +1234,6 @@
         </div>
 
         <div class="shelf-layout">
-            <div id="menu-card-backdrop" class="menu-card-backdrop"></div>
             <aside id="menu-card" class="menu-card" style="display:none;">
                 <button id="menu-card-close" class="menu-card-close" aria-label="Close">&times;</button>
                 <div id="menu-card-img" class="menu-card-img"></div>
@@ -178,7 +1246,7 @@
                         <label class="menu-card-variants-label">Select Variant</label>
                         <div id="menu-card-variants-list" class="menu-card-variants-list"></div>
                     </div>
-                    <form id="menu-card-cart-form" method="POST" action="{{ route('cart.add') }}">
+                    <form id="menu-card-cart-form" method="POST" action="{{ route('cart.add') }}" data-no-loader>
                         @csrf
                         <input type="hidden" name="product_id" id="menu-card-product-id" />
                         <input type="hidden" name="variant_id" id="menu-card-variant-id" />
@@ -191,13 +1259,20 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13v8a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg>
                             Add to Cart
                         </button>
-                        <a id="menu-card-view-link" href="#" class="menu-card-view-link"></a>
+                        <a id="menu-card-view-link" href="#" class="menu-card-view-link">View Full Details →</a>
                     </form>
                 </div>
             </aside>
 
             <div class="shelf-display">
                 <div class="shelf-glass-case">
+                    <div class="case-frame case-frame-top"></div>
+                    <div class="case-frame case-frame-bottom"></div>
+                    <div class="case-frame case-frame-left"></div>
+                    <div class="case-frame case-frame-right"></div>
+                    <div class="case-interior-light case-interior-light-left"></div>
+                    <div class="case-interior-light case-interior-light-right"></div>
+                    <div class="case-reflection-sweep"></div>
                     @foreach($shelfProducts->chunk(3) as $rowProducts)
                     <div class="shelf-row">
                         <div class="shelf-light"></div>
@@ -279,273 +1354,30 @@
             <p>No products match your search.</p>
         </div>
     </section>
+    @endif
 
     <style>
+        html,
+        body {
+            overflow-x: clip;
+        }
+
+        #app-shell main.container {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         /* ═══════════════════════════════════════════════════
            CAKE SCROLLYTELLING — PROFESSIONAL DARK THEME
            ═══════════════════════════════════════════════════ */
 
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
-        .gallery-back-btn {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding: 12px 24px;
-            border-radius: 30px;
-            cursor: pointer;
-            z-index: 100;
-            transition: all 0.3s ease;
-        }
-        .gallery-back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translateX(-50%) scale(1.05);
-        }
-
-        .gallery-filter-bar {
-            position: absolute;
-            top: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(20, 10, 5, 0.65);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            padding: 8px 16px;
-            border-radius: 30px;
-            z-index: 999;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 600px;
-        }
-
-        .filter-search-wrap {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-grow: 1;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .filter-search-wrap input {
-            background: transparent;
-            border: none;
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            width: 100%;
-            outline: none;
-        }
-
-        .filter-search-wrap input::placeholder {
-            color: rgba(255,255,255,0.4);
-        }
-
-        .filter-select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #f5ebe0;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            padding: 6px 12px;
-            border-radius: 20px;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
-        }
-
-        .filter-select option {
-            background: #1a0e0a;
-            color: #f5ebe0;
-        }
-
-        @media (max-width: 768px) {
-            .gallery-filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 12px;
-                border-radius: 12px;
-            }
-        }
-
-        .gallery-product-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .gallery-modal-backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 5, 2, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            cursor: pointer;
-        }
-
-        .gallery-modal-content {
-            position: relative;
-            background: rgba(255, 255, 255, 0.95);
-            width: 90%;
-            max-width: 450px;
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-align: center;
-            z-index: 2001;
-        }
-
-        .gallery-modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            color: #8C6770;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .gallery-modal-close:hover {
-            background: rgba(200, 138, 146, 0.1);
-            color: #5A3A3A;
-            transform: scale(1.1);
-        }
-
-        .gallery-modal-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            color: #5A3A3A;
-            margin-bottom: 8px;
-        }
-
-        .gallery-modal-price {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #C88A92;
-            margin-bottom: 12px;
-        }
-
-        .gallery-modal-stock {
-            display: inline-block;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 4px 10px;
-            border-radius: 12px;
-            background: #F8E2E7;
-            color: #8C6770;
-            margin-bottom: 20px;
-        }
-
-        .gallery-modal-desc {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #6F4C54;
-            margin-bottom: 24px;
-        }
-
-        .gallery-modal-add-btn {
-            width: 100%;
-            background: #5A3A3A;
-            color: #fff;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 30px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(90, 58, 58, 0.2);
-        }
-
-        .gallery-modal-add-btn:hover {
-            background: #7A5252;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(90, 58, 58, 0.3);
-        }
-
-        #gallery-scroll-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            display: none;
-            z-index: 50; /* below the back button but above canvas */
-        }
-        .gallery-scroll-overlay-content {
-            width: 100%;
-            /* Height will be set dynamically via JS */
-        }
-
-        .gallery-label {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(20, 10, 5, 0.65);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 8px 12px;
-            pointer-events: none;
-            z-index: 40;
-            white-space: nowrap;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .gallery-label-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            color: #f5ebe0;
-            margin-bottom: 4px;
-        }
-        .gallery-label-price {
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #d4a373;
-        }
-
         .cake-scroll-section {
             position: relative;
-            width: 100vw;
-            margin-left: calc(-50vw + 50%);
+            width: 100%;
+            margin-left: 0;
             height: 500vh;
             background: linear-gradient(
                 180deg,
@@ -681,6 +1513,9 @@
             display: inline-flex;
             align-items: center;
             gap: 0.65rem;
+            appearance: none;
+            border: none;
+            cursor: pointer;
             font-family: 'Inter', sans-serif;
             font-size: 0.78rem;
             font-weight: 600;
@@ -789,7 +1624,7 @@
         /* ─── Scroll Indicator ─── */
         .scroll-indicator {
             position: absolute;
-            bottom: 2rem;
+            top: clamp(7.5rem, 28vh, 13rem);
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
@@ -802,17 +1637,18 @@
 
         .scroll-indicator span {
             font-family: 'Inter', sans-serif;
-            font-size: 0.6rem;
-            font-weight: 500;
-            letter-spacing: 0.22em;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(245, 235, 224, 0.25);
+            color: rgba(255, 244, 250, 0.9);
+            text-shadow: 0 2px 10px rgba(74, 31, 53, 0.45);
         }
 
         .scroll-mouse {
-            width: 20px;
-            height: 32px;
-            border: 1.5px solid rgba(245, 235, 224, 0.18);
+            width: 28px;
+            height: 42px;
+            border: 1.7px solid rgba(255, 244, 250, 0.75);
             border-radius: 11px;
             display: flex;
             justify-content: center;
@@ -820,9 +1656,9 @@
         }
 
         .scroll-wheel {
-            width: 2px;
-            height: 7px;
-            background: rgba(201, 168, 76, 0.45);
+            width: 3px;
+            height: 10px;
+            background: rgba(255, 221, 238, 0.95);
             border-radius: 2px;
             animation: scrollWheel 2s ease-in-out infinite;
         }
@@ -971,70 +1807,77 @@
 
         /* Pink Theme Overrides */
         :root {
-            --bb-pink-50: #fff5f8;
-            --bb-pink-100: #ffe7ef;
-            --bb-pink-200: #ffcfe0;
-            --bb-pink-300: #ffb0cd;
-            --bb-pink-400: #ff8db7;
-            --bb-pink-500: #f86aa2;
-            --bb-pink-600: #e04f88;
-            --bb-pink-700: #ba3a6d;
-            --bb-pink-800: #8f2a53;
-            --bb-plum-900: #2b0f1e;
-            --bb-rose-900: #1c0a14;
-            --bb-text: #fff4f8;
-            --bb-soft-text: rgba(255, 244, 248, 0.72);
-            --bb-accent: #ff9cc4;
+            --bb-pink-50: #fff9fc;
+            --bb-pink-100: #ffeef6;
+            --bb-pink-200: #ffd7e9;
+            --bb-pink-300: #ffbedd;
+            --bb-pink-400: #f8a2cb;
+            --bb-pink-500: #ed86b8;
+            --bb-pink-600: #db699f;
+            --bb-pink-700: #c65187;
+            --bb-pink-800: #a83d70;
+            --bb-plum-900: #5a2f46;
+            --bb-rose-900: #6c3751;
+            --bb-text: #4d2b3d;
+            --bb-soft-text: rgba(77, 43, 61, 0.72);
+            --bb-accent: #f49ac4;
         }
 
         .cake-scroll-section {
             background: linear-gradient(
                 180deg,
-                #ffd7e8 0%,
-                #ffb7d4 14%,
-                #f985b7 36%,
-                #9a3a6f 68%,
-                #2b0f1e 100%
+                #fff8fc 0%,
+                #ffe9f4 24%,
+                #ffd3e8 54%,
+                #ffc0de 78%,
+                #f6afd2 100%
             ) !important;
         }
 
         .cake-grain {
-            opacity: 0.06 !important;
-            background-image: radial-gradient(circle, rgba(255, 181, 210, 0.45) 1px, transparent 1px) !important;
+            opacity: 0.04 !important;
+            background-image: radial-gradient(circle, rgba(243, 160, 198, 0.28) 1px, transparent 1px) !important;
         }
 
         .cake-vignette {
             background: radial-gradient(
                 ellipse 72% 62% at 50% 50%,
-                transparent 30%,
-                rgba(28, 10, 20, 0.58) 100%
+                rgba(255, 255, 255, 0.0) 36%,
+                rgba(232, 167, 200, 0.34) 100%
             ) !important;
         }
 
+        .cake-canvas-container canvas {
+            filter: saturate(1.03) brightness(1.08);
+        }
+
         .story-label {
-            color: var(--bb-pink-100) !important;
-            background: rgba(255, 186, 215, 0.14) !important;
-            border-color: rgba(255, 186, 215, 0.35) !important;
+            color: #7b3757 !important;
+            background: rgba(255, 236, 246, 0.88) !important;
+            border-color: rgba(219, 137, 179, 0.36) !important;
         }
 
         .story-heading,
         .story-heading-final {
-            color: var(--bb-text) !important;
-            text-shadow: 0 8px 34px rgba(43, 15, 30, 0.45) !important;
+            color: #fff9fd !important;
+            text-shadow:
+                0 2px 8px rgba(74, 31, 53, 0.65),
+                0 8px 20px rgba(74, 31, 53, 0.45) !important;
         }
 
         .story-sub {
-            color: var(--bb-soft-text) !important;
+            color: rgba(255, 247, 252, 0.94) !important;
+            text-shadow: 0 2px 8px rgba(74, 31, 53, 0.35) !important;
         }
 
         .story-cta {
-            color: #4b1732 !important;
-            background: linear-gradient(135deg, #ffd5e7 0%, #ff9ec6 45%, #f66ca3 100%) !important;
-            box-shadow: 0 10px 34px rgba(248, 106, 162, 0.34), 0 4px 14px rgba(43, 15, 30, 0.32) !important;
+            color: #5b2440 !important;
+            background: linear-gradient(135deg, #fff7fb 0%, #ffd8ea 52%, #f6a7cb 100%) !important;
+            box-shadow: 0 10px 30px rgba(237, 134, 184, 0.34), 0 4px 14px rgba(198, 93, 145, 0.25) !important;
         }
 
         .story-cta:hover {
-            box-shadow: 0 14px 40px rgba(248, 106, 162, 0.44), 0 4px 16px rgba(43, 15, 30, 0.35) !important;
+            box-shadow: 0 14px 40px rgba(237, 134, 184, 0.44), 0 4px 16px rgba(198, 93, 145, 0.35) !important;
         }
 
         .side-overlay-btn-sign {
@@ -1060,11 +1903,11 @@
         }
 
         .scroll-indicator span {
-            color: rgba(255, 231, 239, 0.62) !important;
+            color: rgba(102, 53, 75, 0.72) !important;
         }
 
         .scroll-mouse {
-            border-color: rgba(255, 221, 235, 0.45) !important;
+            border-color: rgba(180, 97, 138, 0.45) !important;
         }
 
         .scroll-wheel {
@@ -1088,6 +1931,8 @@
             filter: saturate(1.06) hue-rotate(-8deg) contrast(1.03) brightness(1.02);
         }
 
+
+
         .price-tag {
             background: linear-gradient(145deg, rgba(255, 221, 235, 0.93), rgba(255, 188, 217, 0.9)) !important;
             color: #5a1f3b !important;
@@ -1104,60 +1949,197 @@
         }
 
         header {
-            background: rgba(43, 15, 30, 0.36) !important;
+            background: rgba(255, 242, 249, 0.86) !important;
+        }
+
+        /* Keep floating chat launcher visible above homepage fixed overlays */
+        #bonbon-chat-open {
+            z-index: 10050 !important;
+            bottom: 1.25rem !important;
+            right: 1.25rem !important;
+        }
+
+        @media (max-width: 768px) {
+            #bonbon-chat-open {
+                bottom: 1rem !important;
+                right: 1rem !important;
+            }
+        }
+
+        html:not(.home-chat-unlocked) #bonbon-chat-open {
+            display: none !important;
+        }
+
+        html.home-chat-unlocked #home-showcase,
+        html.home-chat-unlocked #cake-shelf {
+            display: block !important;
+        }
+
+        /* Keep top bar visible even before showcase unlock. */
+        html:not(.home-chat-unlocked) #navbar-cart-btn,
+        html:not(.home-chat-unlocked) #navbar-notification-btn,
+        html:not(.home-chat-unlocked) #navbar-account-btn,
+        html:not(.home-chat-unlocked) #main-navbar .nav-link-item,
+        html:not(.home-chat-unlocked) #navbar-brand,
+        html:not(.home-chat-unlocked) #cart-panel-toggle {
+            opacity: 1 !important;
+            pointer-events: auto !important;
         }
     </style>
-    <link rel="stylesheet" href="/css/shelf.css">
-@endsection
+    @if (file_exists(public_path('css/shelf.css')))
+        <link rel="stylesheet" href="/css/shelf.css">
+    @endif
 
-@push('scripts')
-    @vite('resources/js/cake-entry.js')
-    <script>
-        window.__cakeProducts = @json($shelfProducts->values());
-    </script>
+    @push('scripts')
+        @vite('resources/js/cake-entry.js')
 
         <script>
-            // Hide scroll indicator after first scroll
-            (() => {
-                const indicator = document.getElementById('scroll-indicator');
-                if (!indicator) return;
+            window.__cakeProducts = @json($shelfProducts->values());
+        </script>
 
-                let hidden = false;
-                window.addEventListener('scroll', () => {
-                    if (!hidden && window.scrollY > 100) {
-                        indicator.style.transition = 'opacity 0.5s ease';
-                        indicator.style.opacity = '0';
-                        hidden = true;
-                    }
-                }, { passive: true });
+        <script>
+            // Fallback: never let preloader block the page if a script fails.
+            (() => {
+                const hidePreloader = () => {
+                    const preloader = document.getElementById('page-loader');
+                    if (!preloader) return;
+                    preloader.style.opacity = '0';
+                    preloader.style.visibility = 'hidden';
+                    setTimeout(() => preloader.remove(), 500);
+                };
+
+                window.addEventListener('load', hidePreloader, { once: true });
+                setTimeout(hidePreloader, 2200);
             })();
         </script>
+
+
 
         <script>
             // ═══ Shelf: Reveal, Search, Filter, Sort + Menu Card ═══
             (() => {
                 const shelf = document.getElementById('cake-shelf');
                 if (!shelf) return;
+                const navbarCartBtn = document.getElementById('navbar-cart-btn');
+                const navbarCartBadge = document.querySelector('[data-cart-count-badge]');
+                const navbarNotificationBadge = document.querySelector('[data-notification-badge]');
+                const shelfCartBadge = document.getElementById('cart-badge');
+                const showcase = document.getElementById('home-showcase');
+                const SHOWCASE_CACHE_KEY = 'bonbon-home-showcase-unlocked-v1';
+                const SHOWCASE_CACHE_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
 
-                // --- Reveal shelf ---
-                function revealShelf(e) {
-                    if (e) e.preventDefault();
-                    shelf.style.display = '';
-                    shelf.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                function syncBadgesWithCartIconVisibility() {
+                    if (!navbarCartBtn) return;
+
+                    const styles = window.getComputedStyle(navbarCartBtn);
+                    const isLocked = !document.documentElement.classList.contains('home-chat-unlocked');
+                    const iconOpacity = String(styles.opacity || '1');
+                    const iconColor = styles.color || '';
+
+                    [navbarCartBadge, navbarNotificationBadge, shelfCartBadge].forEach((badge) => {
+                        if (!badge) return;
+
+                        if (isLocked) {
+                            // Match the cart icon fade/recolor behavior instead of hard hiding.
+                            badge.style.opacity = iconOpacity;
+                            badge.style.visibility = '';
+                            badge.style.color = '#FFFFFF';
+                            badge.style.background = 'transparent';
+                            badge.style.borderColor = 'transparent';
+                            badge.style.boxShadow = 'none';
+                            badge.style.pointerEvents = 'none';
+                        } else {
+                            badge.style.opacity = '';
+                            badge.style.visibility = '';
+                            badge.style.color = '';
+                            badge.style.background = '';
+                            badge.style.borderColor = '';
+                            badge.style.boxShadow = '';
+                            badge.style.pointerEvents = '';
+                        }
+                    });
                 }
 
-                document.querySelectorAll('a').forEach(a => {
-                    if (a.textContent.trim() === 'Shop' && a.closest('header')) {
-                        a.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            revealShelf(e);
+                syncBadgesWithCartIconVisibility();
+                window.addEventListener('scroll', syncBadgesWithCartIconVisibility, { passive: true });
+                window.addEventListener('resize', syncBadgesWithCartIconVisibility);
+                setInterval(syncBadgesWithCartIconVisibility, 250);
+
+                // --- Reveal showcase ---
+                function setShowcaseCache() {
+                    try {
+                        localStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+                            unlockedAt: Date.now(),
+                            expiresAt: Date.now() + SHOWCASE_CACHE_TTL_MS,
+                        }));
+                    } catch (e) {}
+                    document.documentElement.classList.add('home-chat-unlocked');
+                }
+
+                function isShowcaseCached() {
+                    try {
+                        const raw = localStorage.getItem(SHOWCASE_CACHE_KEY);
+                        if (!raw) return false;
+                        let parsed = null;
+                        try {
+                            parsed = JSON.parse(raw);
+                        } catch (_) {
+                            parsed = raw;
+                        }
+                        const valid = parsed === true
+                            || parsed === 'true'
+                            || parsed === '1'
+                            || (parsed?.expiresAt && Date.now() <= parsed.expiresAt);
+                        if (!valid) {
+                            localStorage.removeItem(SHOWCASE_CACHE_KEY);
+                            return false;
+                        }
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                function revealShelf(e) {
+                    if (e) e.preventDefault();
+                    if (showcase) {
+                        if (showcase.style.display === 'none') {
+                            showcase.style.display = '';
+                        }
+                        shelf.style.display = '';
+                        setShowcaseCache();
+                        showcase.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+
+                const ctaBtn = document.getElementById('story-cta-btn');
+                if (ctaBtn) ctaBtn.addEventListener('click', revealShelf);
+
+                // If user previously unlocked the lower homepage details, always keep them visible.
+                if (showcase && isShowcaseCached()) {
+                    document.documentElement.classList.add('home-chat-unlocked');
+                    showcase.style.display = '';
+                    showcase.hidden = false;
+                    shelf.style.display = '';
+                    shelf.hidden = false;
+
+                    // Start at the end of the scrollytelling section on return visits.
+                    if (!window.location.hash) {
+                        requestAnimationFrame(() => {
+                            const scrolly = document.getElementById('cake-scroll-section');
+                            if (scrolly) {
+                                const targetY = Math.max(0, scrolly.offsetTop + scrolly.offsetHeight - window.innerHeight);
+                                window.scrollTo(0, targetY);
+                            }
+                            // Force navbar/scroll-driven UI to sync immediately after programmatic jump.
+                            setTimeout(() => {
+                                window.dispatchEvent(new Event('scroll'));
+                                if (window.ScrollTrigger?.refresh) {
+                                    window.ScrollTrigger.refresh();
+                                }
+                            }, 0);
                         });
                     }
-                });
-
-                // Auto-reveal shelf if URL has #shop
-                if (window.location.hash === '#shop') {
-                    setTimeout(() => revealShelf(), 500);
                 }
 
                 // --- Search & Filter ---
@@ -1288,15 +2270,11 @@
                     item.classList.add('shelf-item-active');
 
                     card.style.display = '';
-                    const backdrop = document.getElementById('menu-card-backdrop');
-                    if(backdrop) backdrop.style.display = 'block';
                 }
 
                 function closeMenuCard() {
                     card.style.display = 'none';
                     items.forEach(i => i.classList.remove('shelf-item-active'));
-                    const backdrop = document.getElementById('menu-card-backdrop');
-                    if(backdrop) backdrop.style.display = 'none';
                 }
 
                 // Click on cake → open card
@@ -1306,8 +2284,6 @@
 
                 // Close button
                 if (cardClose) cardClose.addEventListener('click', closeMenuCard);
-                const backdrop = document.getElementById('menu-card-backdrop');
-                if (backdrop) backdrop.addEventListener('click', closeMenuCard);
 
                 // Qty +/-
                 document.getElementById('menu-card-qty-minus')?.addEventListener('click', () => {
@@ -1324,6 +2300,7 @@
                 const cartPanelToggle = document.getElementById('cart-panel-toggle');
                 const cartPanelBody = document.getElementById('cart-panel-body');
                 const cartBadge = document.getElementById('cart-badge');
+                const navbarCartBadge = document.querySelector('[data-cart-count-badge]');
                 const cakeBoxItems = document.getElementById('cake-box-items');
                 const cartItemsList = document.getElementById('cart-items-list');
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -1347,7 +2324,16 @@
 
                 function fmt(n) { return '₱' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
+                function syncNavbarCartBadge(count) {
+                    if (!navbarCartBadge) return;
+                    const safeCount = Number(count || 0);
+                    navbarCartBadge.textContent = String(safeCount);
+                    navbarCartBadge.classList.toggle('hidden', safeCount <= 0);
+                    navbarCartBadge.classList.toggle('inline-flex', safeCount > 0);
+                }
+
                 function renderCartPanel(data, autoExpand) {
+                    syncNavbarCartBadge(data.count);
                     // Hide cart completely if 0 items
                     if (data.count === 0) {
                         cartPanel.style.display = 'none';
@@ -1406,12 +2392,9 @@
                     cartForm.addEventListener('submit', async (e) => {
                         e.preventDefault();
                         if (!cardVariantId.value) {
-                            alert('Please select a variant first.');
+                            if (window.BonbonNotify) { window.BonbonNotify('warning', 'Please select a variant first.'); } else { alert('Please select a variant first.'); }
                             return;
                         }
-
-                        // Show loader on menu card
-                        if (window.BonBonLoader) BonBonLoader.show('#menu-card', 'Adding to cart...');
 
                         try {
                             const fd = new FormData(cartForm);
@@ -1421,6 +2404,7 @@
                                     'X-CSRF-TOKEN': csrfToken,
                                     'Accept': 'application/json',
                                     'X-Requested-With': 'XMLHttpRequest',
+                                    'X-Bonbon-No-Loader': '1',
                                 },
                                 body: fd,
                             });
@@ -1429,8 +2413,6 @@
                             closeMenuCard();
                         } catch (err) {
                             console.error('Add to cart failed:', err);
-                        } finally {
-                            if (window.BonBonLoader) BonBonLoader.hide('#menu-card');
                         }
                     });
                 }
@@ -1458,6 +2440,8 @@
                     } catch(e) { console.error(e); }
                     finally { if (window.BonBonLoader) BonBonLoader.hide('#cart-panel'); }
                 };
+
             })();
         </script>
     @endpush
+@endsection

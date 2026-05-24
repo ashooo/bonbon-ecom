@@ -26,7 +26,7 @@ export function createCakeScene(containerEl) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.3;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     containerEl.appendChild(renderer.domElement);
 
     // --- Lighting ---
@@ -121,7 +121,7 @@ export function createCakeScene(containerEl) {
     });
 
     // Elegant glossy white icing material
-    const icingMat = new THREE.MeshStandardMaterial({
+    const icingMat = new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
         roughness: 0.12,
         metalness: 0.02,
@@ -199,7 +199,7 @@ export function createCakeScene(containerEl) {
 
         // --- Glossy Chocolate Icing Top Layer ---
         const icingHeight = 0.045;
-        const chocoIcingMat = new THREE.MeshStandardMaterial({
+        const chocoIcingMat = new THREE.MeshPhysicalMaterial({
             color: 0x3b1a0a, // Rich dark fudge chocolate
             roughness: 0.1,
             metalness: 0.08,
@@ -529,7 +529,7 @@ export function createCakeScene(containerEl) {
 
     // 2. Middle Layer: Cascading Chocolate Drips on the right side, Diamond Quilted Lattice on the left side
     const middleSideDesign = new THREE.Group();
-    const dripMat = new THREE.MeshStandardMaterial({
+    const dripMat = new THREE.MeshPhysicalMaterial({
         color: 0x421b0b, // Rich dark fudge chocolate color
         roughness: 0.15,
         metalness: 0.05,
@@ -707,7 +707,7 @@ export function createCakeScene(containerEl) {
 
     // --- Cherry Topper in the center ---
     const cherryGroup = new THREE.Group();
-    const cherryMat = new THREE.MeshStandardMaterial({
+    const cherryMat = new THREE.MeshPhysicalMaterial({
         color: 0x8b0000,
         roughness: 0.08,
         metalness: 0.05,

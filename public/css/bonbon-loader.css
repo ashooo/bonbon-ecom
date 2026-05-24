@@ -1,29 +1,87 @@
 /* ═══════════════════════════════════════════════════
-   BonBon Loader — Reusable Loading Overlay
+   BonBon Loader — Soft Baking Preloader
    ═══════════════════════════════════════════════════ */
 
-/* ─── Overlay (inline) ─── */
 .bb-loader-overlay {
-    position: absolute; inset: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(13, 7, 5, 0.85);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     border-radius: inherit;
-    animation: bbLoaderFadeIn 0.25s ease;
+    background:
+        radial-gradient(
+            circle at 30% 20%,
+            rgba(255, 255, 255, 0.95),
+            transparent 18rem
+        ),
+        radial-gradient(
+            circle at 72% 72%,
+            rgba(230, 183, 190, 0.28),
+            transparent 16rem
+        ),
+        linear-gradient(
+            145deg,
+            rgba(255, 250, 248, 0.94),
+            rgba(255, 236, 242, 0.94)
+        );
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
+    animation: bbLoaderFadeIn 0.24s ease;
 }
 
-/* ─── Fullscreen ─── */
+.bb-loader-overlay::before,
+.bb-loader-overlay::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+.bb-loader-overlay::before {
+    width: 18rem;
+    height: 18rem;
+    right: -7rem;
+    top: -7rem;
+    background: rgba(255, 255, 255, 0.58);
+}
+
+.bb-loader-overlay::after {
+    width: 16rem;
+    height: 16rem;
+    left: -7rem;
+    bottom: -7rem;
+    background: rgba(200, 138, 146, 0.14);
+}
+
 .bb-loader-fullscreen {
-    position: fixed; inset: 0; z-index: 9999;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
     border-radius: 0;
-    background: rgba(13, 7, 5, 0.92);
+    background:
+        radial-gradient(
+            circle at 50% 24%,
+            rgba(255, 255, 255, 0.96),
+            transparent 19rem
+        ),
+        radial-gradient(
+            circle at 18% 78%,
+            rgba(246, 192, 203, 0.32),
+            transparent 18rem
+        ),
+        linear-gradient(180deg, #fffaf8 0%, #fff0f4 52%, #ffe6ee 100%);
 }
 
-/* ─── Fade ─── */
 @keyframes bbLoaderFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .bb-loader-fadeout {
@@ -32,89 +90,424 @@
     pointer-events: none;
 }
 
-/* ─── Inner ─── */
 .bb-loader-inner {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 0.8rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-width: 13rem;
+    padding: 1.3rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: 2rem;
+    background: rgba(245, 245, 245, 0);
 }
 
-/* ─── Animation Container ─── */
+.bb-loader-small .bb-loader-inner {
+    min-width: 8rem;
+    padding: 0.85rem;
+    border-radius: 1.3rem;
+}
+
 .bb-loader-anim {
     position: relative;
-    display: flex; align-items: center; justify-content: center;
-    width: 100px; height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 138px;
+    height: 138px;
 }
 
 .bb-loader-small .bb-loader-anim {
-    width: 56px; height: 56px;
+    width: 86px;
+    height: 86px;
 }
 
-/* ─── Cake SVG ─── */
-.bb-loader-cake {
-    animation: bbCakeBounce 1.4s ease-in-out infinite;
+.bb-baking-scene {
+    overflow: visible;
+    filter: drop-shadow(0 14px 18px rgba(90, 58, 58, 0.13));
 }
 
-@keyframes bbCakeBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+.bb-oven {
+    transform-origin: 80px 90px;
+    animation: bbOvenWarm 2.4s ease-in-out infinite;
 }
 
-/* ─── Steam ─── */
+.bb-oven-glow {
+    transform-origin: 80px 88px;
+    animation: bbOvenGlow 1.35s ease-in-out infinite;
+}
+
+.bb-cake-rise {
+    transform-origin: 80px 108px;
+    animation: bbCakeRise 2.4s ease-in-out infinite;
+}
+
+.bb-baking-shadow {
+    transform-origin: 80px 139px;
+    animation: bbShadowPulse 2.4s ease-in-out infinite;
+}
+
 .bb-steam {
-    animation: bbSteamRise 2s ease-in-out infinite;
+    opacity: 0;
+    transform-origin: center;
+    animation: bbSteamRise 2.2s ease-in-out infinite;
 }
 
-.bb-steam-1 { animation-delay: 0s; }
-.bb-steam-2 { animation-delay: 0.7s; }
+.bb-steam-2 {
+    animation-delay: 0.32s;
+}
+.bb-steam-3 {
+    animation-delay: 0.62s;
+}
+
+.bb-icing-drip {
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    animation: bbDripBake 2.4s ease-in-out infinite;
+}
+.bb-icing-drip-2 {
+    animation-delay: 0.12s;
+}
+.bb-icing-drip-3 {
+    animation-delay: 0.24s;
+}
+
+.bb-sprinkle {
+    transform-origin: center;
+    animation: bbSprinklePop 2.4s ease-in-out infinite;
+}
+.bb-sprinkle-2 {
+    animation-delay: 0.18s;
+}
+.bb-sprinkle-3 {
+    animation-delay: 0.32s;
+}
+
+.bb-whisk {
+    transform-origin: 48px 44px;
+    animation: bbWhiskWiggle 1.3s ease-in-out infinite;
+}
+
+.bb-baking-sparkles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.bb-baking-sparkles span {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #e6b7be;
+    opacity: 0;
+    animation: bbSparkleFloat 2.2s ease-in-out infinite;
+}
+
+.bb-baking-sparkles span:nth-child(1) {
+    left: 18%;
+    top: 24%;
+    background: #ffd166;
+    animation-delay: 0s;
+}
+.bb-baking-sparkles span:nth-child(2) {
+    right: 18%;
+    top: 28%;
+    background: #f06292;
+    animation-delay: 0.25s;
+}
+.bb-baking-sparkles span:nth-child(3) {
+    left: 28%;
+    bottom: 22%;
+    background: #8ed8b8;
+    animation-delay: 0.48s;
+}
+.bb-baking-sparkles span:nth-child(4) {
+    right: 28%;
+    bottom: 18%;
+    background: #e6b7be;
+    animation-delay: 0.72s;
+}
+.bb-baking-sparkles span:nth-child(5) {
+    left: 50%;
+    top: 10%;
+    background: #c88a92;
+    animation-delay: 0.95s;
+}
+
+.bb-loader-text {
+    margin: 0;
+    font-family:
+        "Instrument Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #9d6269;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    animation: bbTextPulse 1.8s ease-in-out infinite;
+}
+
+.bb-loader-text-sm {
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+}
+
+@keyframes bbOvenWarm {
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-1px) scale(1.012);
+    }
+}
+
+@keyframes bbOvenGlow {
+    0%,
+    100% {
+        opacity: 0.58;
+        filter: saturate(1);
+    }
+    50% {
+        opacity: 0.95;
+        filter: saturate(1.24);
+    }
+}
+
+@keyframes bbCakeRise {
+    0%,
+    100% {
+        transform: translateY(5px) scaleY(0.86);
+    }
+    48%,
+    58% {
+        transform: translateY(-4px) scaleY(1.06);
+    }
+}
+
+@keyframes bbShadowPulse {
+    0%,
+    100% {
+        transform: scaleX(0.86);
+        opacity: 0.35;
+    }
+    50% {
+        transform: scaleX(1.05);
+        opacity: 0.58;
+    }
+}
 
 @keyframes bbSteamRise {
-    0% { opacity: 0; transform: translateY(4px); }
-    30% { opacity: 0.6; }
-    100% { opacity: 0; transform: translateY(-8px); }
+    0% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.9);
+    }
+    35% {
+        opacity: 0.82;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-14px) scale(1.08);
+    }
 }
 
-/* ─── Orbiting Dots ─── */
+@keyframes bbDripBake {
+    0%,
+    28% {
+        stroke-dashoffset: 20;
+        opacity: 0.25;
+    }
+    52%,
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes bbSprinklePop {
+    0%,
+    34% {
+        opacity: 0;
+        transform: scale(0.2) translateY(5px);
+    }
+    48%,
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes bbWhiskWiggle {
+    0%,
+    100% {
+        transform: rotate(-4deg);
+    }
+    50% {
+        transform: rotate(7deg);
+    }
+}
+
+@keyframes bbSparkleFloat {
+    0% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.4);
+    }
+    30% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-18px) scale(1);
+    }
+}
+
+/* ─── Classic Loader Theme (previous orbiting cake) ─── */
+.bb-loader-overlay[data-bb-loader-theme="classic"] .bb-loader-inner {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.bb-classic-loader {
+    display: none;
+}
+
+.bb-baking-loader {
+    display: contents;
+}
+
+.bb-loader-overlay[data-bb-loader-theme="classic"] .bb-baking-loader {
+    display: none;
+}
+
+.bb-loader-overlay[data-bb-loader-theme="classic"] .bb-classic-loader {
+    display: contents;
+}
+
+.bb-loader-cake {
+    animation: bbClassicCakeBounce 1.4s ease-in-out infinite;
+}
+
+.bb-classic-steam {
+    animation: bbClassicSteamRise 2s ease-in-out infinite;
+}
+
+.bb-classic-steam-2 {
+    animation-delay: 0.7s;
+}
+
 .bb-orbit {
-    position: absolute; inset: 0;
-    animation: bbOrbitSpin 3s linear infinite;
-}
-
-@keyframes bbOrbitSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    position: absolute;
+    inset: 0;
+    animation: bbClassicOrbitSpin 3s linear infinite;
 }
 
 .bb-dot {
     position: absolute;
-    width: 6px; height: 6px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #E6B7BE;
-    top: 50%; left: 50%;
-    margin-top: -3px; margin-left: -3px;
+    background: #e6b7be;
+    top: 50%;
+    left: 50%;
+    margin-top: -3px;
+    margin-left: -3px;
 }
 
-.bb-dot:nth-child(1) { background: #C88A92; width: 7px; height: 7px; margin-top:-3.5px; margin-left:-3.5px; transform: rotate(0deg) translateX(var(--bb-orbit-r)); }
-.bb-dot:nth-child(2) { background: #E6B7BE; width: 6px; height: 6px; transform: rotate(60deg) translateX(var(--bb-orbit-r)); }
-.bb-dot:nth-child(3) { background: #F5E6E8; transform: rotate(120deg) translateX(var(--bb-orbit-r)); }
-.bb-dot:nth-child(4) { background: #C88A92; opacity: 0.5; transform: rotate(180deg) translateX(var(--bb-orbit-r)); }
-.bb-dot:nth-child(5) { background: #E6B7BE; opacity: 0.4; width: 5px; height: 5px; margin-top:-2.5px; margin-left:-2.5px; transform: rotate(240deg) translateX(var(--bb-orbit-r)); }
-.bb-dot:nth-child(6) { background: #F5E6E8; opacity: 0.3; width: 4px; height: 4px; margin-top:-2px; margin-left:-2px; transform: rotate(300deg) translateX(var(--bb-orbit-r)); }
-
-/* ─── Text ─── */
-.bb-loader-text {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.8rem; font-weight: 600;
-    color: #C88A92;
-    letter-spacing: 0.05em;
-    animation: pulse 2s ease-in-out infinite;
+.bb-dot:nth-child(1) {
+    background: #c88a92;
+    width: 7px;
+    height: 7px;
+    margin-top: -3.5px;
+    margin-left: -3.5px;
+    transform: rotate(0deg) translateX(var(--bb-orbit-r));
+}
+.bb-dot:nth-child(2) {
+    background: #e6b7be;
+    transform: rotate(60deg) translateX(var(--bb-orbit-r));
+}
+.bb-dot:nth-child(3) {
+    background: #f5e6e8;
+    transform: rotate(120deg) translateX(var(--bb-orbit-r));
+}
+.bb-dot:nth-child(4) {
+    background: #c88a92;
+    opacity: 0.5;
+    transform: rotate(180deg) translateX(var(--bb-orbit-r));
+}
+.bb-dot:nth-child(5) {
+    background: #e6b7be;
+    opacity: 0.4;
+    width: 5px;
+    height: 5px;
+    margin-top: -2.5px;
+    margin-left: -2.5px;
+    transform: rotate(240deg) translateX(var(--bb-orbit-r));
+}
+.bb-dot:nth-child(6) {
+    background: #f5e6e8;
+    opacity: 0.3;
+    width: 4px;
+    height: 4px;
+    margin-top: -2px;
+    margin-left: -2px;
+    transform: rotate(300deg) translateX(var(--bb-orbit-r));
 }
 
-.bb-loader-text-sm {
-    font-size: 0.6rem;
+@keyframes bbClassicCakeBounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+@keyframes bbClassicSteamRise {
+    0% {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    30% {
+        opacity: 0.6;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes bbClassicOrbitSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes bbTextPulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    50% {
+        opacity: 0.62;
+        transform: translateY(-1px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bb-loader-overlay *,
+    .bb-loader-overlay *::before,
+    .bb-loader-overlay *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
 }

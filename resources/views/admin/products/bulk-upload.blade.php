@@ -12,22 +12,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if ($errors->any())
-        <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-            <ul class="list-disc pl-5">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="mb-6 flex flex-wrap gap-2">
         <a href="{{ route('admin.products.bulk-upload.template.csv') }}" class="rounded-xl bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-300">Download CSV Template</a>
         <a href="{{ route('admin.products.bulk-upload.template.xls') }}" class="rounded-xl bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-300">Download Excel Template</a>

@@ -50,6 +50,18 @@ class CartController extends Controller
         return $response;
     }
 
+    private function redirectBackWithCartToken(Request $request, string $message): \Illuminate\Http\RedirectResponse
+    {
+        $response = redirect()->back()->with('success', $message);
+
+        if (! Auth::check()) {
+            $token = $this->guestCartToken ?: $this->resolveGuestCartToken($request);
+            $response->cookie('cart_token', $token, 60 * 24 * 30);
+        }
+
+        return $response;
+    }
+
     private function ensureItemBelongsToCart(Request $request, CartItem $item): void
     {
         $cart = $this->getCart($request);
@@ -64,18 +76,54 @@ class CartController extends Controller
         $request = request();
         $cart = $this->getCart($request);
         $items = $cart->items;
+        $settings = StoreSetting::query()->first();
         $subtotal = $cart->subtotal;
-        $delivery = 5.99;
-        $tax = $subtotal * 0.1;
-        $total = $subtotal + $delivery + $tax;
+        $delivery = (float) ($settings?->delivery_fee ?? 5.99);
+        $taxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $serviceFee = (float) ($settings?->service_fee ?? 0.0);
+        $tax = $subtotal * ($taxRate / 100);
+        $total = $subtotal + $delivery + $tax + $serviceFee;
 
-        $response = response()->view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total'));
+        $response = response()->view('pages.cart', compact('cart', 'items', 'subtotal', 'delivery', 'tax', 'total', 'taxRate', 'serviceFee'));
 
         if ($this->guestCartToken) {
             $response->cookie('cart_token', $this->guestCartToken, 60 * 24 * 30);
         }
 
         return $response;
+    }
+
+    public function cartJson(Request $request)
+    {
+        $cart = $this->getCart($request);
+        $items = $cart->items;
+        $settings = StoreSetting::query()->first();
+
+        $subtotal = (float) $cart->subtotal;
+        $delivery = (float) ($settings?->delivery_fee ?? 5.99);
+        $taxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $serviceFee = (float) ($settings?->service_fee ?? 0.0);
+        $tax = $subtotal * ($taxRate / 100);
+        $total = $subtotal + $delivery + $tax + $serviceFee;
+
+        return response()->json([
+            'count' => (int) $items->sum('quantity'),
+            'items' => $items->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->product?->name ?? (($item->customization_payload['item_name'] ?? null) ?: 'Custom Cake'),
+                    'variant' => $item->variant?->name ?? (($item->product || $item->variant) ? 'N/A' : 'Custom Design'),
+                    'image' => $item->product?->main_image_url,
+                    'quantity' => (int) $item->quantity,
+                    'subtotal' => (float) ($item->quantity * $item->unit_price),
+                ];
+            })->values(),
+            'subtotal' => $subtotal,
+            'delivery' => $delivery,
+            'tax' => $tax,
+            'service_fee' => $serviceFee,
+            'total' => $total,
+        ]);
     }
 
     public function add(Request $request)
@@ -96,8 +144,9 @@ class CartController extends Controller
             'customization.message' => 'nullable|string|max:50',
             'customization.frosting_custom' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'customization.drip' => 'nullable|in:none,chocolate,white_chocolate,pink,caramel',
-            'customization.toppings' => 'nullable|string|max:5000',
+            'customization.toppings' => 'nullable|string|max:50000',
             'customization.preview_svg' => 'nullable|string|max:120000',
+            'customization.preview_image' => 'nullable|string|max:2000000',
             'customization.topper' => 'nullable|in:none,name,acrylic,edible_print',
             'customization.rush' => 'nullable|in:no,yes',
         ]);
@@ -163,14 +212,9 @@ class CartController extends Controller
             return $this->cartJsonResponse($cart, $request);
         }
 
-        return $this->redirectWithCartToken($request, 'cart.index', 'Item added to cart!');
+        return $this->redirectBackWithCartToken($request, 'Item added to cart!');
     }
 
-    public function cartJson(Request $request)
-    {
-        $cart = $this->getCart($request);
-        return $this->cartJsonResponse($cart, $request);
-    }
 
     private function cartJsonResponse(Cart $cart, Request $request)
     {
@@ -209,7 +253,7 @@ class CartController extends Controller
 
     private function sanitizeCustomizationPayload(array $raw): array
     {
-        $allowedKeys = ['sponge', 'filling', 'frosting', 'frosting_custom', 'layers', 'shape', 'size', 'theme', 'message', 'drip', 'toppings', 'preview_svg', 'topper', 'rush'];
+        $allowedKeys = ['sponge', 'filling', 'frosting', 'frosting_custom', 'layers', 'shape', 'size', 'theme', 'message', 'drip', 'toppings', 'preview_svg', 'preview_image', 'topper', 'rush'];
         $payload = [];
 
         foreach ($allowedKeys as $key) {
@@ -232,6 +276,15 @@ class CartController extends Controller
                 continue;
             }
 
+            if ($key === 'preview_image') {
+                $sanitized = $this->sanitizePreviewImage($trimmed);
+                if ($sanitized === '') {
+                    continue;
+                }
+                $payload[$key] = $sanitized;
+                continue;
+            }
+
             $payload[$key] = $trimmed;
         }
 
@@ -247,6 +300,29 @@ class CartController extends Controller
         $clean = preg_replace('/on[a-zA-Z]+\s*=\s*("|\').*?("|\')/i', '', $clean) ?? '';
         $clean = preg_replace('/javascript:/i', '', $clean) ?? '';
         return trim($clean);
+    }
+
+    private function sanitizePreviewImage(string $value): string
+    {
+        if (! preg_match('/^data:image\/(png|jpe?g|webp);base64,/i', $value)) {
+            return '';
+        }
+
+        $parts = explode(',', $value, 2);
+        if (count($parts) !== 2) {
+            return '';
+        }
+
+        $decoded = base64_decode($parts[1], true);
+        if ($decoded === false || $decoded === '') {
+            return '';
+        }
+
+        if (strlen($decoded) > 1_500_000) {
+            return '';
+        }
+
+        return $parts[0] . ',' . base64_encode($decoded);
     }
 
     private function calculateCustomizationAdjustment(array $payload): float

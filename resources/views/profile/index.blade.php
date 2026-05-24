@@ -150,40 +150,40 @@
 
                     <section id="order-history" class="tab-section hidden">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-bold">Order History</h3>
-                        <span class="text-sm text-gray-500">Showing {{ $orders->count() }} most recent orders</span>
+                        <h3 class="text-xl font-bold text-[#4D2E38]">Order History</h3>
+                        <span class="text-sm text-[#8A6A76]">Showing {{ $orders->count() }} most recent orders</span>
                     </div>
 
                     @forelse ($orders as $order)
-                        <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                        <div class="mb-4 rounded-2xl border border-[#E9C7D4] bg-[linear-gradient(180deg,#FFFFFF_0%,#FBF2F6_100%)] p-4 shadow-[0_8px_24px_rgba(77,46,56,0.06)]">
                             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                 <div>
-                                    <h4 class="font-semibold">{{ $order->order_number }}</h4>
-                                    <p class="text-sm text-gray-600">Placed on {{ $order->placed_at?->format('F j, Y') ?? 'N/A' }}</p>
+                                    <h4 class="font-semibold text-[#4D2E38]">{{ $order->order_number }}</h4>
+                                    <p class="text-sm text-[#8A6A76]">Placed on {{ $order->placed_at?->format('F j, Y') ?? 'N/A' }}</p>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $order->status === 'Delivered' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                    <span class="rounded-full border border-[#E9C7D4] bg-[#FBEAF1] px-3 py-1 text-xs font-semibold text-[#8F6172]">
                                         {{ $order->status }}
                                     </span>
-                                    <p class="text-lg font-bold">₱{{ number_format($order->total_amount, 2) }}</p>
+                                    <p class="text-lg font-bold text-[#4D2E38]">₱{{ number_format($order->total_amount, 2) }}</p>
                                 </div>
                             </div>
 
                             <div class="mt-4 flex flex-wrap gap-3">
-                                <button type="button" data-action="toggle-order" data-target="order-details-{{ $order->id }}" class="text-pink-600 hover:text-pink-700 text-sm">View Details</button>
+                                <button type="button" data-action="toggle-order" data-target="order-details-{{ $order->id }}" class="rounded-md border border-[#E9C7D4] bg-[#FBEAF1] px-3 py-1.5 text-sm font-semibold text-[#4D2E38] hover:bg-[#F6DFE9]">View Details</button>
                                 <form method="POST" action="{{ route('profile.order.reorder', $order) }}">
                                     @csrf
-                                    <button type="submit" class="text-pink-600 hover:text-pink-700 text-sm">Reorder</button>
+                                    <button type="submit" class="rounded-md bg-[#C47A90] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#B66880]">Reorder</button>
                                 </form>
                             </div>
 
-                            <div id="order-details-{{ $order->id }}" class="order-details mt-4 hidden rounded-lg border border-gray-200 bg-gray-50 p-4">
-                                <p class="text-sm text-gray-700">{{ $order->description ?? 'No additional details available.' }}</p>
-                                <p class="mt-2 text-sm text-gray-600">Order created at: {{ $order->created_at->format('F j, Y h:i A') }}</p>
+                            <div id="order-details-{{ $order->id }}" class="order-details mt-4 hidden rounded-xl border border-[#ECD8E0] bg-[#FBF2F6] p-4">
+                                <p class="text-sm text-[#533843]">{{ $order->description ?? 'No additional details available.' }}</p>
+                                <p class="mt-2 text-sm text-[#8A6A76]">Order created at: {{ $order->created_at->format('F j, Y h:i A') }}</p>
                             </div>
                         </div>
                     @empty
-                        <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">
+                        <div class="rounded-2xl border border-dashed border-[#E9C7D4] bg-[#FBF2F6] p-6 text-[#533843]">
                             You have no orders yet. Your recent purchases will appear here.
                         </div>
                     @endforelse
@@ -242,7 +242,7 @@
                                 </form>
                             </div>
                         @empty
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">No payment methods saved yet.</div>
+                            <div class="rounded-2xl border border-dashed border-[#E9C7D4] bg-[#FBF2F6] p-6 text-[#533843]">No payment methods saved yet.</div>
                         @endforelse
                     </div>
 
@@ -354,7 +354,7 @@
                                 </form>
                             </div>
                         @empty
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-700">No saved addresses yet.</div>
+                            <div class="rounded-2xl border border-dashed border-[#E9C7D4] bg-[#FBF2F6] p-6 text-[#533843]">No saved addresses yet.</div>
                         @endforelse
                     </div>
 
@@ -729,3 +729,4 @@
         })();
     </script>
 @endsection
+

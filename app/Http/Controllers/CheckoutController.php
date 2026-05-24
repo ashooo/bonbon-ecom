@@ -7,6 +7,7 @@ use App\Models\Cart;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\StoreSetting;
 use App\Models\Variant;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,10 +18,29 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 
 class CheckoutController extends Controller
 {
     private ?string $guestCartToken = null;
+
+    private function resolveCartItemUnitPrice($item): float
+    {
+        $stored = (float) ($item->unit_price ?? 0);
+        if ($stored > 0) {
+            return $stored;
+        }
+
+        $base = (float) ($item->product?->effective_price ?? 0);
+        $variant = (float) ($item->variant?->price_adjustment ?? 0);
+        $derived = $base + $variant;
+
+        if ($base <= 0 && $variant > 0) {
+            $derived = $variant;
+        }
+
+        return max(0, $derived);
+    }
 
     private function resolveGuestCartToken(Request $request): string
     {
@@ -45,11 +65,29 @@ class CheckoutController extends Controller
         )->load('items.product', 'items.variant');
     }
 
-    private function getMaxPreOrderDays(Cart $cart): int
+    private function getMaxPreOrderDays(Collection $items): int
     {
-        return (int) $cart->items
+        return (int) $items
             ->filter(fn ($item) => (bool) ($item->product?->is_preorder))
             ->max(fn ($item) => (int) ($item->product?->pre_order_days ?? 0));
+    }
+
+    private function getSelectedItems(Cart $cart, Request $request): Collection
+    {
+        $selectionMode = $request->boolean('selection_mode') || $request->has('selected_item_ids');
+        $selectedIds = collect($request->input('selected_item_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($selectedIds->isEmpty()) {
+            return $selectionMode ? collect() : $cart->items;
+        }
+
+        return $cart->items
+            ->whereIn('id', $selectedIds->all())
+            ->values();
     }
 
     private function parseGuestOrderNumbers(Request $request): array
@@ -93,15 +131,24 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $cart = $this->getCart($request);
-        $items = $cart->items;
-        $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
+        $items = $this->getSelectedItems($cart, $request)->map(function ($item) {
+            $item->resolved_unit_price = $this->resolveCartItemUnitPrice($item);
+            return $item;
+        });
+        $selectedItemIds = $items->pluck('id')->map(fn ($id) => (int) $id)->values()->all();
+        $settings = StoreSetting::query()->first();
+        $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+        $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+        $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
+        $maxPreOrderDays = $this->getMaxPreOrderDays($items);
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
         $minFulfillmentTime = $minFulfillmentAt->format('H:i');
-        $subtotal = $cart->subtotal;
+        $subtotal = (float) $items->sum(fn ($item) => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)));
         $delivery = 0.0;
-        $tax = $subtotal * 0.1;
-        $total = $subtotal + $delivery + $tax;
+        $tax = $subtotal * ($configuredTaxRate / 100);
+        $serviceFee = $configuredServiceFee;
+        $total = $subtotal + $delivery + $tax + $serviceFee;
 
         $savedAddresses = Auth::check()
             ? Auth::user()->addresses()->latest()->get()
@@ -114,10 +161,14 @@ class CheckoutController extends Controller
             'delivery',
             'tax',
             'total',
+            'serviceFee',
+            'configuredDeliveryFee',
+            'configuredTaxRate',
             'maxPreOrderDays',
             'minFulfillmentDate',
             'minFulfillmentTime',
-            'savedAddresses'
+            'savedAddresses',
+            'selectedItemIds'
         ));
 
         if ($this->guestCartToken) {
@@ -130,16 +181,24 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $cart = $this->getCart($request);
+        $selectedItems = $this->getSelectedItems($cart, $request)->map(function ($item) {
+            $item->resolved_unit_price = $this->resolveCartItemUnitPrice($item);
+            return $item;
+        });
 
-        if ($cart->items->isEmpty()) {
+        if ($selectedItems->isEmpty()) {
             return redirect()->route('checkout.index')->withErrors([
-                'checkout' => 'Your cart is empty.',
+                'checkout' => 'Please select at least one cart item to checkout.',
             ]);
         }
 
-        $maxPreOrderDays = $this->getMaxPreOrderDays($cart);
+        $maxPreOrderDays = $this->getMaxPreOrderDays($selectedItems);
         $minFulfillmentAt = now()->addDays($maxPreOrderDays);
         $minFulfillmentDate = $minFulfillmentAt->toDateString();
+
+        $paymentMethodRule = Auth::check()
+            ? 'required|in:cod,paymongo'
+            : 'required|in:paymongo';
 
         $request->validate([
             'customer_name' => 'required|string|max:100',
@@ -147,15 +206,15 @@ class CheckoutController extends Controller
             'customer_phone' => 'required|string|max:20',
             'order_type' => 'required|in:pickup,delivery',
             'delivery_address' => 'nullable|string|required_if:order_type,delivery',
-            'payment_method' => 'required|in:cod,paymongo',
+            'payment_method' => $paymentMethodRule,
             'fulfillment_date' => 'required|date|after_or_equal:' . $minFulfillmentDate,
             'fulfillment_time' => 'required|date_format:H:i',
             'special_instructions' => 'nullable|string',
         ]);
 
-        if (! Auth::check() && $request->string('payment_method')->value() === 'paymongo') {
+        if (! Auth::check() && $request->string('payment_method')->value() === 'cod') {
             return redirect()->route('checkout.index')->withErrors([
-                'payment_method' => 'QRPH payment is only available for logged-in users. Please sign in or use COD.',
+                'payment_method' => 'Cash on Delivery is not available for guest checkout. Please use QRPH Online Payment.',
             ])->withInput();
         }
 
@@ -170,7 +229,7 @@ class CheckoutController extends Controller
             ])->withInput();
         }
 
-        foreach ($cart->items as $item) {
+        foreach ($selectedItems as $item) {
             $resolvedVariant = $this->resolveVariantForCartItem($item);
 
             if (! $item->product_id && ! $item->variant_id) {
@@ -194,13 +253,17 @@ class CheckoutController extends Controller
 
         try {
             $orderType = $request->string('order_type')->value();
+            $settings = StoreSetting::query()->first();
+            $configuredDeliveryFee = (float) ($settings?->delivery_fee ?? 5.99);
+            $configuredTaxRate = (float) ($settings?->tax_rate ?? 10.0);
+            $configuredServiceFee = (float) ($settings?->service_fee ?? 0.0);
             $deliveryAddress = $orderType === 'pickup'
                 ? Order::STORE_PICKUP_LOCATION_URL
                 : trim($request->string('delivery_address')->value());
-            $subtotal = (float) $cart->items->sum(fn ($item) => $item->quantity * $item->unit_price);
-            $deliveryFee = $orderType === 'delivery' ? 5.99 : 0.0;
-            $tax = $subtotal * 0.1;
-            $total = $subtotal + $deliveryFee + $tax;
+            $subtotal = (float) $selectedItems->sum(fn ($item) => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)));
+            $deliveryFee = $orderType === 'delivery' ? $configuredDeliveryFee : 0.0;
+            $tax = $subtotal * ($configuredTaxRate / 100);
+            $total = $subtotal + $deliveryFee + $tax + $configuredServiceFee;
 
             $paymentMethod = $request->string('payment_method')->value();
             $order = Order::create([
@@ -224,7 +287,7 @@ class CheckoutController extends Controller
                 'stock_deducted_at' => null,
             ]);
 
-            foreach ($cart->items as $item) {
+            foreach ($selectedItems as $item) {
                 $variant = $this->resolveVariantForCartItem($item);
                 $isCustomOnlyItem = ! $item->product_id && ! $item->variant_id;
                 if (! $variant && ! $isCustomOnlyItem) {
@@ -235,8 +298,8 @@ class CheckoutController extends Controller
                     'order_id' => $order->id,
                     'variant_id' => $variant?->id,
                     'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price,
-                    'subtotal' => $item->quantity * $item->unit_price,
+                    'unit_price' => (float) ($item->resolved_unit_price ?? 0),
+                    'subtotal' => ((float) $item->quantity) * ((float) ($item->resolved_unit_price ?? 0)),
                     'special_instructions' => $item->special_instructions,
                     'customization_payload' => $item->customization_payload,
                 ]);
@@ -246,12 +309,42 @@ class CheckoutController extends Controller
                 $this->deductOrderStock($order, Auth::id());
             }
 
-            $cart->items()->delete();
-            $cart->delete();
+            $selectedIds = $selectedItems->pluck('id')->all();
+            $cart->items()->whereIn('id', $selectedIds)->delete();
+            if (! $cart->items()->exists()) {
+                $cart->delete();
+            }
 
             DB::commit();
 
             if ($order->payment_method === 'paymongo') {
+                if ((float) $order->total <= 0) {
+                    DB::transaction(function () use ($order): void {
+                        $this->deductOrderStock($order, Auth::id());
+                        $order->update([
+                            'payment_status' => 'paid',
+                            'status' => $order->status === 'pending' ? 'confirmed' : $order->status,
+                        ]);
+                    });
+
+                    $response = redirect()
+                        ->route('orders.index')
+                        ->with('success', 'Order placed successfully! Free order confirmed: ' . $order->order_number);
+
+                    $this->sendOrderReceiptEmail($order->fresh(['items.variant.product', 'invoice']));
+
+                    if (! Auth::check()) {
+                        $guestOrders = $this->parseGuestOrderNumbers($request);
+                        array_unshift($guestOrders, $order->order_number);
+                        $guestOrders = array_slice(array_values(array_unique($guestOrders)), 0, 20);
+
+                        $response->cookie('guest_orders', json_encode($guestOrders), 60 * 24 * 180);
+                        $response->cookie('cart_token', '', -1);
+                    }
+
+                    return $response;
+                }
+
                 $checkoutUrl = $this->createPaymongoCheckoutSession($order);
                 if ($checkoutUrl) {
                     $redirect = redirect()->away($checkoutUrl);

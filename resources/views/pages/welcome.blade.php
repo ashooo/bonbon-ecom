@@ -4,7 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>{{ config('app.name', 'BonBon PH') }}</title>
+        <link rel="icon" type="image/svg+xml" href="{{ asset('images/bonbon-cupcake-icon.svg') }}">
+        <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Bonbon Ecom') }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/bonbon-cupcake-icon.svg') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=great-vibes:400|instrument-sans:400,500,600" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.BONBON_LOADER_THEME = '{{ env('BONBON_LOADER_THEME', 'baking') === 'classic' ? 'classic' : 'baking' }}';
+        document.documentElement.dataset.loaderTheme = window.BONBON_LOADER_THEME;
+    </script>
     <link rel="stylesheet" href="/css/bonbon-loader.css">
     <script src="/js/bonbon-loader.js" defer></script>
     <style>
@@ -75,6 +80,17 @@
         body.chat-open #bonbon-chat-panel {
             transform: translateX(0);
         }
+        #navbar-music-toggle.is-playing [data-music-icon] {
+            animation: bonbonMusicPulse 1.3s ease-in-out infinite;
+        }
+        #navbar-music-toggle.needs-gesture {
+            border-color: #C88A92;
+            background: #FFF6FA;
+        }
+        @keyframes bonbonMusicPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(200, 138, 146, .28); }
+            50% { box-shadow: 0 0 0 .42rem rgba(200, 138, 146, 0); }
+        }
         @media (max-width: 1023px) {
             body.chat-open #app-shell {
                 padding-right: 0;
@@ -94,57 +110,137 @@
     @endif
 </head>
 <body class="bg-[#F5F5F5] text-[#2E2E2E]">
+    <audio id="bonbon-site-music" src="{{ asset('audio/landing-music.mp3') }}" preload="none" loop></audio>
+    @php
+        $toastStatus = session()->pull('status');
+        $toastStatusMessage = match ($toastStatus) {
+            'verification-link-sent' => 'A new verification link has been sent to your email address.',
+            default => is_string($toastStatus) ? $toastStatus : null,
+        };
+        $globalToasts = array_values(array_filter([
+            ['type' => 'success', 'message' => session()->pull('success')],
+            ['type' => 'error', 'message' => session()->pull('error')],
+            ['type' => 'warning', 'message' => session()->pull('warning')],
+            ['type' => 'info', 'message' => session()->pull('info')],
+            ['type' => 'info', 'message' => $toastStatusMessage],
+            ['type' => 'error', 'message' => $errors->any() ? $errors->first() : null],
+        ], fn ($toast) => filled($toast['message'] ?? null)));
+    @endphp
+    @php($globalToasts = $globalToasts ?? [])
+    <x-toast-notifications :toasts="$globalToasts" />
     @unless (View::hasSection('hideGlobalLoader'))
+    @php($bonbonLoaderTheme = env('BONBON_LOADER_THEME', 'baking') === 'classic' ? 'classic' : 'baking')
     <!-- Page Loading Overlay -->
-    <div id="page-loader" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#F5F5F5;transition:opacity 0.5s ease, visibility 0.5s ease;">
-        <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;">
-            {{-- Orbiting dots (inline for instant render) --}}
-            <div style="position:absolute;inset:0;animation:_plOrbit 3s linear infinite;">
-                <span style="position:absolute;top:50%;left:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#C88A92;transform:rotate(0deg) translateX(44px);"></span>
-                <span style="position:absolute;top:50%;left:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#E6B7BE;transform:rotate(60deg) translateX(44px);"></span>
-                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#F5E6E8;transform:rotate(120deg) translateX(44px);"></span>
-                <span style="position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#C88A92;opacity:0.5;transform:rotate(180deg) translateX(44px);"></span>
-                <span style="position:absolute;top:50%;left:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#E6B7BE;opacity:0.4;transform:rotate(240deg) translateX(44px);"></span>
-                <span style="position:absolute;top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#F5E6E8;opacity:0.3;transform:rotate(300deg) translateX(44px);"></span>
+    <div id="page-loader" class="bb-loader-overlay bb-loader-fullscreen" data-bb-loader-theme="{{ $bonbonLoaderTheme }}" style="transition:opacity 0.5s ease, visibility 0.5s ease;">
+        <div class="bb-loader-inner">
+            <div class="bb-loader-anim">
+                <div class="bb-baking-loader">
+                    <div class="bb-baking-sparkles" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+                    <svg class="bb-baking-scene" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" width="128" height="128" aria-hidden="true">
+                    <ellipse class="bb-baking-shadow" cx="80" cy="139" rx="48" ry="8" fill="#E8C9CE" opacity="0.5"/>
+                    <g class="bb-oven">
+                        <rect x="34" y="48" width="92" height="76" rx="18" fill="#FFFDFB" stroke="#E9C8CF" stroke-width="4"/>
+                        <rect x="44" y="64" width="72" height="46" rx="10" fill="#6B4548"/>
+                        <rect class="bb-oven-glow" x="49" y="69" width="62" height="36" rx="8" fill="#FFD6A7"/>
+                        <circle cx="52" cy="57" r="4" fill="#E6B7BE"/><circle cx="66" cy="57" r="4" fill="#C88A92"/>
+                        <path d="M77 57H108" stroke="#EBD5D9" stroke-width="5" stroke-linecap="round"/>
+                    </g>
+                    <g class="bb-cake-rise">
+                        <ellipse cx="80" cy="107" rx="31" ry="7" fill="#C89473"/>
+                        <rect x="49" y="80" width="62" height="27" rx="9" fill="#F2C78D"/>
+                        <path d="M49 82C56 75 64 82 70 78C76 74 82 74 88 78C94 82 103 75 111 82V90H49V82Z" fill="#FFF1F4"/>
+                        <path class="bb-icing-drip bb-icing-drip-1" d="M61 86V99" stroke="#FFF1F4" stroke-width="7" stroke-linecap="round"/>
+                        <path class="bb-icing-drip bb-icing-drip-2" d="M84 86V101" stroke="#FFF1F4" stroke-width="7" stroke-linecap="round"/>
+                        <path class="bb-icing-drip bb-icing-drip-3" d="M101 86V96" stroke="#FFF1F4" stroke-width="7" stroke-linecap="round"/>
+                        <circle class="bb-sprinkle bb-sprinkle-1" cx="63" cy="83" r="2.2" fill="#F06292"/>
+                        <circle class="bb-sprinkle bb-sprinkle-2" cx="78" cy="80" r="2" fill="#FFD166"/>
+                        <circle class="bb-sprinkle bb-sprinkle-3" cx="94" cy="83" r="2" fill="#8ED8B8"/>
+                        <path d="M80 65C78 60 82 57 80 52" stroke="#F5A7B5" stroke-width="3" stroke-linecap="round" class="bb-steam bb-steam-1"/>
+                        <path d="M66 68C63 63 68 60 65 55" stroke="#E6B7BE" stroke-width="3" stroke-linecap="round" class="bb-steam bb-steam-2"/>
+                        <path d="M96 68C99 63 94 60 97 55" stroke="#E6B7BE" stroke-width="3" stroke-linecap="round" class="bb-steam bb-steam-3"/>
+                    </g>
+                    <g class="bb-whisk">
+                        <path d="M36 31L54 49" stroke="#C88A92" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M57 52C51 57 43 57 38 52C33 47 33 39 38 34C43 29 51 29 56 34C61 39 62 47 57 52Z" stroke="#E6B7BE" stroke-width="3"/>
+                    </g>
+                    </svg>
+                </div>
+                <div class="bb-classic-loader">
+                    <div class="bb-orbit" style="--bb-orbit-r:44px" aria-hidden="true"><span class="bb-dot"></span><span class="bb-dot"></span><span class="bb-dot"></span><span class="bb-dot"></span><span class="bb-dot"></span><span class="bb-dot"></span></div>
+                    <svg class="bb-loader-cake" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="54" aria-hidden="true">
+                        <path class="bb-classic-steam bb-classic-steam-1" d="M28 8 C28 4,32 2,32 0" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+                        <path class="bb-classic-steam bb-classic-steam-2" d="M36 10 C36 6,40 4,40 2" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.3"/>
+                        <rect x="29" y="12" width="4" height="14" rx="2" fill="#F8E2E7"/>
+                        <ellipse cx="31" cy="11" rx="3" ry="4" fill="#FFD97D"/><ellipse cx="31" cy="12" rx="2" ry="2.5" fill="#FFB347"/>
+                        <path d="M12 30 C12 30,16 24,22 26 C28 28,30 22,32 22 C34 22,36 28,42 26 C48 24,52 30,52 30 L52 38 L12 38 Z" fill="#C88A92"/>
+                        <rect x="12" y="34" width="40" height="12" rx="3" fill="#F5E6E8"/><rect x="12" y="34" width="40" height="4" rx="2" fill="#E6B7BE" opacity="0.5"/>
+                        <path d="M8 46 C8 44,12 42,18 44 C24 46,26 40,32 40 C38 40,40 46,46 44 C52 42,56 44,56 46 L56 48 L8 48 Z" fill="#C88A92"/>
+                        <rect x="8" y="46" width="48" height="14" rx="4" fill="#F5E6E8"/><rect x="8" y="46" width="48" height="4" rx="2" fill="#E6B7BE" opacity="0.4"/>
+                        <ellipse cx="32" cy="62" rx="28" ry="4" fill="#EED9DE"/>
+                        <circle cx="20" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="28" cy="36" r="1" fill="#FFD97D"/><circle cx="36" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="44" cy="36" r="1" fill="#FFD97D"/>
+                        <circle cx="16" cy="52" r="1.2" fill="#FFD97D"/><circle cx="24" cy="53" r="1" fill="#FFB6C1"/><circle cx="32" cy="51" r="1.3" fill="#B5EAD7"/><circle cx="40" cy="53" r="1" fill="#FFB6C1"/><circle cx="48" cy="52" r="1.2" fill="#FFD97D"/>
+                        <circle cx="31" cy="22" r="4" fill="#E74C6F"/><circle cx="29.5" cy="20.5" r="1.2" fill="#FF7E9D" opacity="0.7"/>
+                        <path d="M31 18 C33 14,35 16,34 18" stroke="#5A3A3A" stroke-width="1" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
             </div>
-            {{-- Cake SVG --}}
-            <svg style="animation:_plBounce 1.4s ease-in-out infinite;" viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="54">
-                <path d="M28 8 C28 4,32 2,32 0" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.5" style="animation:_plSteam 2s ease-in-out infinite;"/>
-                <path d="M36 10 C36 6,40 4,40 2" stroke="#E6B7BE" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.3" style="animation:_plSteam 2s ease-in-out 0.7s infinite;"/>
-                <rect x="29" y="12" width="4" height="14" rx="2" fill="#F8E2E7"/>
-                <ellipse cx="31" cy="11" rx="3" ry="4" fill="#FFD97D"/>
-                <ellipse cx="31" cy="12" rx="2" ry="2.5" fill="#FFB347"/>
-                <path d="M12 30 C12 30,16 24,22 26 C28 28,30 22,32 22 C34 22,36 28,42 26 C48 24,52 30,52 30 L52 38 L12 38 Z" fill="#C88A92"/>
-                <rect x="12" y="34" width="40" height="12" rx="3" fill="#F5E6E8"/>
-                <rect x="12" y="34" width="40" height="4" rx="2" fill="#E6B7BE" opacity="0.5"/>
-                <path d="M8 46 C8 44,12 42,18 44 C24 46,26 40,32 40 C38 40,40 46,46 44 C52 42,56 44,56 46 L56 48 L8 48 Z" fill="#C88A92"/>
-                <rect x="8" y="46" width="48" height="14" rx="4" fill="#F5E6E8"/>
-                <rect x="8" y="46" width="48" height="4" rx="2" fill="#E6B7BE" opacity="0.4"/>
-                <ellipse cx="32" cy="62" rx="28" ry="4" fill="#EED9DE"/>
-                <circle cx="20" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="28" cy="36" r="1" fill="#FFD97D"/>
-                <circle cx="36" cy="37" r="1.2" fill="#FFB6C1"/><circle cx="44" cy="36" r="1" fill="#FFD97D"/>
-                <circle cx="16" cy="52" r="1.2" fill="#FFD97D"/><circle cx="24" cy="53" r="1" fill="#FFB6C1"/>
-                <circle cx="32" cy="51" r="1.3" fill="#B5EAD7"/><circle cx="40" cy="53" r="1" fill="#FFB6C1"/>
-                <circle cx="48" cy="52" r="1.2" fill="#FFD97D"/>
-                <circle cx="31" cy="22" r="4" fill="#E74C6F"/>
-                <circle cx="29.5" cy="20.5" r="1.2" fill="#FF7E9D" opacity="0.7"/>
-                <path d="M31 18 C33 14,35 16,34 18" stroke="#5A3A3A" stroke-width="1" fill="none" stroke-linecap="round"/>
-            </svg>
+            <p class="bb-loader-text">{{ $bonbonLoaderTheme === 'classic' ? 'Loading your treats...' : 'Baking your treats...' }}</p>
         </div>
-        <p style="font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:700;color:#C88A92;letter-spacing:0.15em;text-transform:uppercase;animation:pulse 2s ease-in-out infinite;">Loading your treats...</p>
     </div>
-    <style>
-        @keyframes _plOrbit { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-        @keyframes _plBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes _plSteam { 0%{opacity:0;transform:translateY(4px)} 30%{opacity:0.6} 100%{opacity:0;transform:translateY(-8px)} }
-    </style>
     <script>
+        (function () {
+            window.__bonbonPageLoaderStartedAt = Date.now();
+            window.__bonbonPageLoaderMinVisibleMs = 2600;
+            var loader = document.getElementById('page-loader');
+            if (!loader) return;
+
+            var navEntry = performance.getEntriesByType('navigation')[0];
+            var isBackForward = navEntry && navEntry.type === 'back_forward';
+            var isHome = window.location.pathname === '/';
+            var hasSeenHome = false;
+
+            try {
+                hasSeenHome = sessionStorage.getItem('bonbon-home-loaded') === '1';
+            } catch (e) {}
+
+            // Skip loader on history navigation and on repeat homepage visits in same tab.
+            if (isBackForward || (isHome && hasSeenHome)) {
+                loader.style.display = 'none';
+            }
+        })();
+
         window.addEventListener('load', function() {
             var loader = document.getElementById('page-loader');
+            var finish = function () {
+                if (loader) {
+                    loader.style.opacity = '0';
+                    loader.style.visibility = 'hidden';
+                    setTimeout(function() { loader.remove(); }, 600);
+                }
+            };
+
+            if (loader && loader.style.display !== 'none') {
+                var startedAt = window.__bonbonPageLoaderStartedAt || Date.now();
+                var minVisible = window.__bonbonPageLoaderMinVisibleMs || 2600;
+                var elapsed = Date.now() - startedAt;
+                setTimeout(finish, Math.max(0, minVisible - elapsed));
+            } else {
+                finish();
+            }
+
+            if (window.location.pathname === '/') {
+                try {
+                    sessionStorage.setItem('bonbon-home-loaded', '1');
+                } catch (e) {}
+            }
+        });
+
+        // When page is restored from bfcache, make sure loader never reappears.
+        window.addEventListener('pageshow', function(event) {
+            if (!event.persisted) return;
+            var loader = document.getElementById('page-loader');
             if (loader) {
-                loader.style.opacity = '0';
-                loader.style.visibility = 'hidden';
-                setTimeout(function() { loader.remove(); }, 600);
+                loader.remove();
             }
         });
     </script>
@@ -222,7 +318,7 @@
         <div class="shrink-0 border-t border-[#F1DADF] bg-white px-4 py-4">
             <div id="bonbon-chat-typing-indicator" class="mb-3 hidden text-sm text-[#9E7680]">Bonbon Support is typing...</div>
 
-            <form id="bonbon-chat-send-form" class="space-y-3" enctype="multipart/form-data">
+            <form id="bonbon-chat-send-form" class="space-y-3" enctype="multipart/form-data" data-no-loader>
                 <div id="bonbon-chat-attachment-preview" class="hidden rounded-[1.25rem] border border-[#EED9DE] bg-[#FFF7F8] p-3">
                     <div class="flex items-start justify-between gap-3">
                         <div id="bonbon-chat-attachment-preview-content" class="min-w-0 flex-1"></div>
@@ -265,18 +361,6 @@
         @include('components.navbar')
 
         <main class="container mx-auto px-4 py-8">
-            @if (session('success'))
-                <div class="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div class="mb-6 rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             @yield('content')
         </main>
 
@@ -358,6 +442,7 @@
                     'X-CSRF-TOKEN': csrf,
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
+                    'X-Bonbon-No-Loader': '1',
                     ...(json ? { 'Content-Type': 'application/json' } : {}),
                     ...(socketId ? { 'X-Socket-ID': socketId } : {}),
                 };
@@ -1036,5 +1121,178 @@
         })();
     </script>
     @endunless
+
+    <div id="bonbon-confirm-modal" class="fixed inset-0 z-[10060] hidden items-center justify-center bg-[#2E2E2E]/45 p-4" aria-hidden="true">
+        <div class="w-full max-w-md rounded-2xl border border-[#EED9DE] bg-white p-5 shadow-2xl">
+            <h3 id="bonbon-confirm-title" class="text-lg font-semibold text-[#5A3A3A]">Please confirm</h3>
+            <p id="bonbon-confirm-message" class="mt-2 text-sm text-[#8C6770]">Are you sure you want to continue?</p>
+            <div class="mt-5 flex justify-end gap-3">
+                <button type="button" id="bonbon-confirm-cancel" class="rounded-xl border border-[#D6B7C3] bg-white px-4 py-2 text-sm font-semibold text-[#6B4957] transition hover:bg-[#FAF1F5]">Cancel</button>
+                <button type="button" id="bonbon-confirm-ok" class="rounded-xl bg-[#C88A92] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#7A5252]">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const audio = document.getElementById('bonbon-site-music');
+            const button = document.getElementById('navbar-music-toggle');
+            if (!audio || !button) return;
+
+            const label = button.querySelector('[data-music-label]');
+            const STORAGE_KEY = 'bonbon-landing-music-enabled';
+            audio.volume = 0.32;
+
+            const setUi = (playing, needsGesture = false) => {
+                button.classList.toggle('is-playing', playing);
+                button.classList.toggle('needs-gesture', needsGesture);
+                button.setAttribute('aria-pressed', playing ? 'true' : 'false');
+                if (label) {
+                    label.textContent = needsGesture ? 'Tap music' : (playing ? 'Music on' : 'Music off');
+                }
+            };
+
+            const play = async ({ remember = true } = {}) => {
+                try {
+                    await audio.play();
+                    setUi(true, false);
+                    if (remember) localStorage.setItem(STORAGE_KEY, '1');
+                    return true;
+                } catch (_) {
+                    setUi(false, true);
+                    return false;
+                }
+            };
+
+            const pause = () => {
+                audio.pause();
+                setUi(false, false);
+                localStorage.setItem(STORAGE_KEY, '0');
+            };
+
+            audio.addEventListener('error', () => {
+                button.hidden = true;
+            });
+
+            button.addEventListener('click', () => {
+                if (audio.paused) play();
+                else pause();
+            });
+
+            const shouldPlayByDefault = (() => {
+                try {
+                    return localStorage.getItem(STORAGE_KEY) !== '0';
+                } catch (_) {
+                    return true;
+                }
+            })();
+
+            if (shouldPlayByDefault) {
+                play({ remember: false }).then((started) => {
+                    if (started) return;
+                    const resumeOnFirstGesture = () => {
+                        play();
+                        window.removeEventListener('pointerdown', resumeOnFirstGesture);
+                        window.removeEventListener('keydown', resumeOnFirstGesture);
+                    };
+                    window.addEventListener('pointerdown', resumeOnFirstGesture, { once: true });
+                    window.addEventListener('keydown', resumeOnFirstGesture, { once: true });
+                });
+            } else {
+                setUi(false, false);
+            }
+        })();
+    </script>
+
+    <script>
+        (() => {
+            const CLICK_SOUND_SRC = '{{ asset('audio/click.mp3') }}';
+            let clickAudio = null;
+            let audioReady = true;
+
+            const shouldPlayClick = (event) => {
+                if (!audioReady || event.defaultPrevented) return false;
+                const target = event.target;
+                if (!target?.closest) return false;
+                if (target.closest('[data-no-click-sound]')) return false;
+                if (target.closest('input, textarea, select, option, label')) return false;
+                return Boolean(target.closest('button, a[href], [role="button"], input[type="button"], input[type="submit"], input[type="reset"]'));
+            };
+
+            const getAudio = () => {
+                if (clickAudio) return clickAudio;
+                clickAudio = new Audio(CLICK_SOUND_SRC);
+                clickAudio.preload = 'auto';
+                clickAudio.volume = 0.38;
+                clickAudio.addEventListener('error', () => {
+                    audioReady = false;
+                }, { once: true });
+                return clickAudio;
+            };
+
+            document.addEventListener('pointerdown', (event) => {
+                if (!shouldPlayClick(event)) return;
+                try {
+                    const audio = getAudio();
+                    audio.currentTime = 0;
+                    void audio.play();
+                } catch (_) {}
+            }, true);
+        })();
+    </script>
+
+    <script>
+        (() => {
+            const modal = document.getElementById('bonbon-confirm-modal');
+            const titleEl = document.getElementById('bonbon-confirm-title');
+            const messageEl = document.getElementById('bonbon-confirm-message');
+            const cancelBtn = document.getElementById('bonbon-confirm-cancel');
+            const okBtn = document.getElementById('bonbon-confirm-ok');
+            let pendingForm = null;
+
+            const closeModal = () => {
+                pendingForm = null;
+                modal?.classList.add('hidden');
+                modal?.classList.remove('flex');
+                modal?.setAttribute('aria-hidden', 'true');
+            };
+
+            const openModal = (form) => {
+                if (!modal) return;
+                pendingForm = form;
+                titleEl.textContent = form.dataset.confirmTitle || 'Please confirm';
+                messageEl.textContent = form.dataset.confirmMessage || 'Are you sure you want to continue?';
+                okBtn.textContent = form.dataset.confirmOk || 'Confirm';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modal.setAttribute('aria-hidden', 'false');
+            };
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target.closest('form[data-confirm]');
+                if (!form || form.dataset.confirmBypassed === '1') return;
+                event.preventDefault();
+                openModal(form);
+            }, true);
+
+            okBtn?.addEventListener('click', () => {
+                if (!pendingForm) return closeModal();
+                pendingForm.dataset.confirmBypassed = '1';
+                pendingForm.requestSubmit();
+                pendingForm.dataset.confirmBypassed = '0';
+                closeModal();
+            });
+
+            cancelBtn?.addEventListener('click', closeModal);
+            modal?.addEventListener('click', (event) => {
+                if (event.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -113,7 +113,44 @@ class Product extends Model
     // Get the main image URL
     public function getMainImageUrlAttribute()
     {
-        return $this->main_image ? asset('storage/' . $this->main_image) : null;
+        $value = $this->main_image;
+        if (! $value) {
+            return null;
+        }
+
+        if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+            return $value;
+        }
+
+        $normalized = ltrim($value, '/');
+        if (str_starts_with($normalized, 'images/products_image/')) {
+            $baseFile = basename($normalized);
+            $directPath = 'images/products_image/' . $baseFile;
+            $legacyPath = 'images/products_image/Images/' . $baseFile;
+            if (file_exists(public_path($directPath))) {
+                $normalized = $directPath;
+            } elseif (file_exists(public_path($legacyPath))) {
+                $normalized = $legacyPath;
+            }
+        }
+        if (str_starts_with($normalized, 'images/')) {
+            return asset($normalized);
+        }
+        if (str_starts_with($normalized, 'storage/')) {
+            return asset($normalized);
+        }
+
+        // Backward-compatibility for filename-only records like "CMC.jpeg"
+        if (! str_contains($normalized, '/')) {
+            $directPath = 'images/products_image/' . $normalized;
+            $legacyPath = 'images/products_image/Images/' . $normalized;
+            if (file_exists(public_path($directPath))) {
+                return asset($directPath);
+            }
+            return asset($legacyPath);
+        }
+
+        return asset('storage/' . $normalized);
     }
 
     // Check if product is in stock
@@ -137,7 +174,20 @@ class Product extends Model
     // Get the effective price (with discount if available)
     public function getEffectivePriceAttribute()
     {
-        return $this->sale_price ?? $this->price;
+        if ($this->sale_price !== null) {
+            return $this->sale_price;
+        }
+
+        if ($this->price !== null) {
+            return $this->price;
+        }
+
+        // Fallback for products whose price is defined at variant level.
+        $defaultVariant = $this->relationLoaded('variants')
+            ? $this->variants->sortByDesc('is_default')->first()
+            : $this->variants()->orderByDesc('is_default')->orderBy('display_order')->first();
+
+        return (float) ($defaultVariant?->price_adjustment ?? 0);
     }
 
     // Check if product has discount

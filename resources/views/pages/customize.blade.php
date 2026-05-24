@@ -1,83 +1,306 @@
 @extends('layouts.app')
 
 @section('content')
-    <style>
-        .color-pill {
-            appearance: none;
-            -webkit-appearance: none;
-            border-radius: 1rem;
+<style>
+    .color-pill {
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 1rem;
+        overflow: hidden;
+        padding: 0;
+    }
+    .color-pill::-webkit-color-swatch-wrapper {
+        padding: 0;
+        border-radius: inherit;
+    }
+    .color-pill::-webkit-color-swatch {
+        border: none;
+        border-radius: inherit;
+    }
+    .color-pill::-moz-color-swatch {
+        border: none;
+        border-radius: inherit;
+    }
+    .custom-frosting-swatch {
+        --custom-color: #6a4638;
+        background: radial-gradient(
+            circle at center,
+            #f7f7f7 0 42%,
+            var(--custom-color) 43% 66%,
+            #f7f7f7 67% 100%
+        );
+    }
+    .no-scrollbar {
+        scrollbar-width: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    #test-customize-page {
+        isolation: isolate;
+    }
+    #test-customize-page::before,
+    #test-customize-page::after {
+        content: '';
+        position: absolute;
+        border-radius: 999px;
+        pointer-events: none;
+        filter: blur(4px);
+        opacity: 0.55;
+        z-index: 0;
+    }
+    #test-customize-page::before {
+        right: -8rem;
+        top: -6rem;
+        width: 24rem;
+        height: 24rem;
+        background: rgba(255, 255, 255, 0.72);
+    }
+    #test-customize-page::after {
+        left: 24rem;
+        bottom: -10rem;
+        width: 28rem;
+        height: 28rem;
+        background: rgba(244, 114, 182, 0.18);
+    }
+    #cake-3d-wrap,
+    #customize-control-panel,
+    #customize-view-tabs {
+        z-index: 10;
+    }
+    #customize-phone,
+    #customize-view-tabs,
+    #spin-hint,
+    #filling-badge {
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+    }
+    #customize-scroll :is(select, textarea, input[type='number'], input[type='color']) {
+        outline: none;
+        transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+    #customize-scroll :is(select, textarea, input[type='number'], input[type='color']):focus {
+        border-color: #ec5a61;
+        box-shadow: 0 0 0 4px rgba(236, 90, 97, 0.14);
+        background-color: #fff;
+    }
+    #customize-scroll button,
+    #customize-view-tabs button {
+        touch-action: manipulation;
+    }
+    @media (max-width: 1023px), (hover: none) and (pointer: coarse) {
+        #test-customize-page {
+            left: auto;
+            width: 100%;
+            min-height: 100svh;
+            height: auto;
+            transform: none;
+            overflow: visible;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            margin-top: -1rem;
+            margin-bottom: -1rem;
+        }
+        #test-customize-page::before {
+            right: -10rem;
+            top: -8rem;
+            width: 18rem;
+            height: 18rem;
+        }
+        #test-customize-page::after {
+            left: -9rem;
+            bottom: 18rem;
+            width: 20rem;
+            height: 20rem;
+        }
+        #cake-3d-wrap {
+            position: relative;
+            inset: auto;
+            order: 1;
+            height: min(720px, calc(100svh - 6.5rem));
+            min-height: 520px;
             overflow: hidden;
+            border: 1px solid rgba(243, 215, 221, 0.9);
+            border-radius: 2rem;
+            background: linear-gradient(160deg, rgba(255,255,255,.6), rgba(255,231,239,.72));
+            box-shadow: 0 20px 48px rgba(90, 58, 58, 0.14);
+        }
+        #spin-hint {
+            top: .85rem;
+            right: .85rem;
+            padding: .45rem .75rem;
+            font-size: 10px;
+        }
+        #filling-badge {
+            right: .85rem;
+            bottom: .85rem;
+            max-width: min(12rem, calc(100% - 1.7rem));
+        }
+        #customize-control-panel {
+            position: relative;
+            left: auto;
+            top: auto;
+            bottom: auto;
+            order: 2;
+            display: block;
+            width: 100%;
+            pointer-events: auto;
+        }
+        #customize-phone {
+            width: 100%;
+            max-width: 46rem;
+            height: auto;
+            max-height: none;
+            margin: 0 auto;
             padding: 0;
+            overflow: visible;
+            border: 0;
+            border-radius: 2rem;
+            background: rgba(255, 250, 248, 0.9);
+            box-shadow: 0 18px 42px rgba(90, 58, 58, 0.13);
         }
-        .color-pill::-webkit-color-swatch-wrapper {
-            padding: 0;
-            border-radius: inherit;
+        #customize-notch,
+        #customize-home-indicator {
+            display: none;
         }
-        .color-pill::-webkit-color-swatch {
-            border: none;
-            border-radius: inherit;
+        #customize-scroll {
+            overflow: visible;
+            border-radius: 2rem;
+            padding: 1.25rem;
         }
-        .color-pill::-moz-color-swatch {
-            border: none;
-            border-radius: inherit;
+        #customize-view-tabs {
+            position: sticky;
+            bottom: .75rem;
+            left: auto;
+            transform: none;
+            order: 3;
+            width: 100%;
+            max-width: 46rem;
+            margin: 0 auto;
+            justify-content: flex-start;
+            gap: .5rem;
+            overflow-x: auto;
+            border-radius: 1.5rem;
+            padding: .5rem;
         }
-        .custom-frosting-swatch {
-            --custom-color: #6a4638;
-            background: radial-gradient(
-                circle at center,
-                #f7f7f7 0 42%,
-                var(--custom-color) 43% 66%,
-                #f7f7f7 67% 100%
-            );
+        #customize-view-tabs button {
+            min-width: max-content;
+            padding: .75rem 1rem;
+            font-size: .8rem;
         }
-    </style>
-    <section class="mb-8 rounded-[2rem] border border-[#F3D7DD] bg-gradient-to-br from-white via-[#FFF8F9] to-[#FDF0F3] p-8 shadow-[0_20px_45px_rgba(90,58,58,0.12)] md:p-10">
-        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.3em] text-pink-600">Cake Builder</p>
-        <h1 class="text-4xl font-bold text-[#5A3A3A] md:text-5xl">Build Your Dream Cake</h1>
-        <p class="mt-3 max-w-3xl text-[#7A5252]">Choose your base, decorate it, and see a live preview and estimate before adding to cart.</p>
-    </section>
+    }
+    @media (max-width: 480px) {
+        #test-customize-page {
+            padding: .75rem;
+            gap: .75rem;
+        }
+        #cake-3d-wrap {
+            height: calc(100svh - 6rem);
+            min-height: 460px;
+            border-radius: 1.5rem;
+        }
+        #customize-scroll {
+            padding: 1rem;
+        }
+        #customize-scroll section {
+            border-radius: 1.25rem;
+            padding: 1rem;
+        }
+        #customize-scroll h1 {
+            font-size: 1.45rem;
+        }
+        #builder-frosting-swatches {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+        #builder-frosting-swatches button {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    }
+</style>
+<div id="test-customize-page" class="relative w-[100vw] left-1/2 -translate-x-1/2 -mt-8 -mb-8 h-[calc(100svh-150px)] min-h-[600px] overflow-hidden bg-gradient-to-br from-[#fff9fb] via-[#fff0f4] to-[#ffe2ec]">
 
-        <div class="grid grid-cols-1 gap-8 xl:grid-cols-[1.15fr_0.85fr]">
-            <form method="POST" action="{{ route('cart.add') }}" class="space-y-6" id="cake-builder-form">
+    {{-- 3D Canvas Background (Fullscreen Turntable) --}}
+    <div id="cake-3d-wrap" class="absolute inset-0">
+        <div id="cake-3d-canvas" class="block h-full w-full cursor-grab active:cursor-grabbing"></div>
+
+        {{-- Auto-rotating hint --}}
+        <div id="spin-hint" class="absolute top-10 right-10 z-10 rounded-full border border-white/70 bg-white/82 px-4 py-2 text-xs font-semibold text-[#7A5252] shadow-md" style="transition:opacity .6s">✦ Auto-rotating</div>
+
+        {{-- Filling badge --}}
+        <div id="filling-badge" class="absolute bottom-24 right-10 z-10 hidden max-w-[160px] rounded-2xl border border-white/70 bg-white/92 px-4 py-3 shadow-lg">
+            <div class="mb-1 text-[10px] font-bold uppercase tracking-wider text-[#5A3A3A]">Inside Filling</div>
+            <div id="filling-badge-name" class="truncate text-sm font-bold text-[#7A5252]"></div>
+            <div id="filling-badge-swatch" class="mt-2 h-3 w-full rounded-full" style="background:#6a3d2d"></div>
+        </div>
+    </div>
+
+    {{-- Bottom View Tabs Overlay --}}
+    <div id="customize-view-tabs" class="absolute bottom-8 left-1/2 z-20 flex -translate-x-1/2 gap-3 rounded-full border border-[#F3D7DD] bg-white/82 p-2 shadow-2xl">
+        <button id="tab-view-front" data-cake-view="auto" type="button" class="rounded-full border border-[#ec5a61] bg-pink-600 px-8 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-pink-500">360 View</button>
+        <button id="tab-view-top" data-cake-view="top" type="button" class="rounded-full border border-transparent px-8 py-3 text-sm font-bold text-[#7A5252] transition-all hover:bg-pink-100 hover:text-pink-700">Top View</button>
+        <button id="tab-view-side" data-cake-view="side" type="button" class="rounded-full border border-transparent px-8 py-3 text-sm font-bold text-[#7A5252] transition-all hover:bg-pink-100 hover:text-pink-700">Side View</button>
+        <button id="tab-view-inside" data-cake-view="inside" type="button" class="rounded-full border border-pink-300 bg-pink-50 px-8 py-3 text-sm font-black text-pink-600 transition-all hover:bg-pink-100 shadow-inner">🍰 Inside View</button>
+    </div>
+
+    {{-- Cellphone Mockup Control Panel (Left Side) --}}
+    <div id="customize-control-panel" class="absolute bottom-8 left-4 top-4 z-20 flex items-start pointer-events-none sm:left-6 lg:left-10">
+        <div id="customize-phone" class="relative flex h-full max-h-[830px] w-[385px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[2.75rem] border-[10px] border-[#202024] bg-[#202024] p-2 shadow-[0_26px_70px_rgba(55,28,35,0.28)] pointer-events-auto ring-1 ring-white/35">
+            {{-- iPhone Notch --}}
+            <div id="customize-notch" class="absolute left-1/2 top-2 z-50 h-6 w-[42%] -translate-x-1/2 rounded-b-3xl bg-[#202024]"></div>
+
+            {{-- Scrollable Form Area --}}
+            <div id="customize-scroll" class="flex-1 overflow-y-auto rounded-[2.05rem] bg-[#fffaf8] px-4 pb-7 pt-10 no-scrollbar">
+                <div class="mb-4">
+                    <p class="text-[10px] font-black uppercase tracking-[0.22em] text-pink-600">Cake Studio</p>
+                    <h1 class="mt-1 text-2xl font-black leading-tight text-[#4f3338]">Build Your Dream Cake</h1>
+                    <p class="mt-2 text-xs leading-relaxed text-[#86646a]">Choose the structure first, then decorate the cake in 3D.</p>
+                </div>
+
+                <div class="mt-4">
+                    <form method="POST" action="{{ route('cart.add') }}" class="space-y-4" id="cake-builder-form" data-no-loader>
                 @csrf
                 <input type="hidden" id="builder-toppings-hidden" name="customization[toppings]" value="[]">
                 <input type="hidden" id="builder-preview-svg-hidden" name="customization[preview_svg]" value="">
+                <input type="hidden" id="builder-preview-image-hidden" name="customization[preview_image]" value="">
 
-                <section class="rounded-3xl border border-[#F3D7DD] bg-white p-5 shadow-lg">
+                <section class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/90 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)]">
                     <div class="mb-3 flex items-center justify-between">
-                        <h2 class="text-xl font-bold text-[#5A3A3A]">Build Steps</h2>
-                        <span id="builder-step-label" class="text-sm font-semibold text-pink-600">Step 1 of 2</span>
+                        <h2 class="text-sm font-black uppercase tracking-[0.14em] text-[#5A3A3A]">Build Steps</h2>
+                        <span id="builder-step-label" class="rounded-full bg-pink-50 px-2.5 py-1 text-[11px] font-bold text-pink-600">Step 1 of 2</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold md:text-sm">
+                    <div class="grid grid-cols-2 gap-2 text-xs font-bold">
                         <div id="step-pill-1" class="rounded-xl bg-pink-600 px-3 py-2 text-center text-white">Structure</div>
                         <div id="step-pill-2" class="rounded-xl bg-[#F7E7EB] px-3 py-2 text-center text-[#7A5252]">Toppings & Text</div>
                     </div>
                 </section>
 
-                <section data-step="1" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg">
-                    <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Foundation</h2>
-                    <div class="grid gap-4 md:grid-cols-2">
+                <section data-step="1" class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/92 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)]">
+                    <h2 class="mb-3 text-lg font-black text-[#4f3338]">Foundation</h2>
+                    <div class="grid gap-3">
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Shape</label>
-                            <select id="builder-shape" name="customization[shape]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Shape</label>
+                            <select id="builder-shape" name="customization[shape]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="Round">Round</option><option value="Square">Square</option><option value="Heart">Heart</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Base Size</label>
-                            <select id="builder-size" name="customization[size]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Base Size</label>
+                            <select id="builder-size" name="customization[size]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="6">6 inches</option><option value="8">8 inches</option><option value="10">10 inches</option><option value="12">12 inches</option>
                             </select>
                         </div>
                     </div>
                 </section>
 
-                <section data-step="1" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg">
-                    <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Design</h2>
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <section data-step="1" class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/92 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)]">
+                    <h2 class="mb-3 text-lg font-black text-[#4f3338]">Design</h2>
+                    <div class="grid grid-cols-1 gap-3">
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Cake Flavor</label>
-                            <select name="customization[sponge]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Cake Flavor</label>
+                            <select name="customization[sponge]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="Vanilla">Vanilla</option>
                                 <option value="Chocolate">Chocolate</option>
                                 <option value="Red Velvet">Red Velvet</option>
@@ -85,11 +308,11 @@
                                 <option value="Strawberry">Strawberry</option>
                                 <option value="Funfetti">Funfetti</option>
                             </select>
-                            <p class="mt-1 text-xs text-[#8f6a73]">This is the cake base flavor inside each tier.</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-[#8f6a73]">Cake base flavor inside each tier.</p>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Filling</label>
-                            <select name="customization[filling]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Filling</label>
+                            <select name="customization[filling]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="Chocolate Mousse">Chocolate mousse</option>
                                 <option value="Strawberry Jam">Strawberry jam</option>
                                 <option value="Vanilla Cream">Vanilla cream</option>
@@ -97,19 +320,19 @@
                                 <option value="Cookies & Cream">Cookies & cream</option>
                                 <option value="Buttercream">Buttercream</option>
                             </select>
-                            <p class="mt-1 text-xs text-[#8f6a73]">Flavor layer between sponge tiers.</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-[#8f6a73]">Flavor layer between sponge tiers.</p>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="mb-2 block text-sm font-semibold uppercase tracking-[0.08em] text-[#7a7474]">Frosting Color (+PHP 10)</label>
+                        <div>
+                            <label class="mb-2 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Frosting Color (+PHP 10)</label>
                             <input id="builder-frosting" type="hidden" name="customization[frosting]" value="ivory">
                             <input id="builder-frosting-custom-hidden" type="hidden" name="customization[frosting_custom]" value="">
-                            <div class="flex flex-wrap items-center gap-3" id="builder-frosting-swatches">
-                                <button type="button" data-frosting="white" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#f2f2f2]" aria-label="White frosting"></button>
-                                <button type="button" data-frosting="ivory" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#e9e2cf]" aria-label="Ivory frosting"></button>
-                                <button type="button" data-frosting="blush" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#edd3d6]" aria-label="Blush frosting"></button>
-                                <button type="button" data-frosting="sage" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d2e1d8]" aria-label="Sage frosting"></button>
-                                <button type="button" data-frosting="powder_blue" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d6e1ea]" aria-label="Powder blue frosting"></button>
-                                <button type="button" data-frosting="chocolate" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#4a2f1f]" aria-label="Chocolate frosting"></button>
+                            <div class="grid grid-cols-6 gap-2" id="builder-frosting-swatches">
+                                <button type="button" data-frosting="white" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#f2f2f2]" aria-label="White frosting"></button>
+                                <button type="button" data-frosting="ivory" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#e9e2cf]" aria-label="Ivory frosting"></button>
+                                <button type="button" data-frosting="blush" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#edd3d6]" aria-label="Blush frosting"></button>
+                                <button type="button" data-frosting="sage" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#d2e1d8]" aria-label="Sage frosting"></button>
+                                <button type="button" data-frosting="powder_blue" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#d6e1ea]" aria-label="Powder blue frosting"></button>
+                                <button type="button" data-frosting="chocolate" class="frosting-swatch h-10 w-10 rounded-full border border-[#dddddd] bg-[#4a2f1f]" aria-label="Chocolate frosting"></button>
                                 <button type="button" data-frosting="mocha" class="frosting-swatch h-11 w-11 rounded-full border-2 border-[#ec5a61] bg-[#6a4638] text-white" aria-label="Mocha frosting">✓</button>
                                 <button type="button" data-frosting="lavender" class="frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] bg-[#d7b2ef]" aria-label="Lavender frosting"></button>
                                 <button id="builder-frosting-custom-btn" type="button" data-frosting="custom" class="custom-frosting-swatch frosting-swatch h-11 w-11 rounded-full border border-[#dddddd] text-xl font-bold leading-none text-[#7A5252]" aria-label="Custom frosting color">+</button>
@@ -117,48 +340,48 @@
                             <input id="builder-frosting-custom" type="color" value="#6a4638" class="sr-only" tabindex="-1" aria-hidden="true">
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Drip</label>
-                            <select id="builder-drip" name="customization[drip]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Drip</label>
+                            <select id="builder-drip" name="customization[drip]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="none">No drip</option>
                                 <option value="chocolate">Chocolate drip</option>
                                 <option value="white_chocolate">White chocolate drip</option>
                                 <option value="pink">Pink drip</option>
                                 <option value="caramel">Caramel drip</option>
                             </select>
-                            <p class="mt-1 text-xs text-[#8f6a73]">Turn drip overlay on or off.</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-[#8f6a73]">Turn drip overlay on or off.</p>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Tiers</label>
-                            <select id="builder-layers" name="customization[layers]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Tiers</label>
+                            <select id="builder-layers" name="customization[layers]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="1">1 tier</option><option value="2">2 tiers</option><option value="3">3 tiers</option><option value="4">4 tiers</option>
                             </select>
-                            <p class="mt-1 text-xs text-[#8f6a73]">Adds vertical cake levels for larger designs.</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-[#8f6a73]">Adds vertical cake levels for larger designs.</p>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topper</label>
-                            <select id="builder-topper" name="customization[topper]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                            <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Topper</label>
+                            <select id="builder-topper" name="customization[topper]" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                                 <option value="none">No topper</option><option value="name">Name topper</option><option value="acrylic">Acrylic topper</option><option value="edible_print">Edible print topper</option>
                             </select>
-                            <p class="mt-1 text-xs text-[#8f6a73]">Decorative sign placed at the top of the cake.</p>
+                            <p class="mt-1 text-[11px] leading-relaxed text-[#8f6a73]">Decorative sign placed at the top of the cake.</p>
                         </div>
                     </div>
                 </section>
 
-                <section data-step="2" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg hidden">
-                    <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Toppings & Text</h2>
-                    <p class="mb-4 text-sm text-[#7A5252]">Add flat toppings and personalize text placement, then check it in the Live Preview tabs.</p>
+                <section data-step="2" class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/92 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)] hidden">
+                    <h2 class="mb-2 text-lg font-black text-[#4f3338]">Toppings & Text</h2>
+                    <p class="mb-4 text-xs leading-relaxed text-[#7A5252]">Add flat toppings and personalize text placement, then check it in the 3D view.</p>
 
                     <div class="space-y-4">
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Message on cake</label>
-                                <textarea id="builder-message" name="customization[message]" maxlength="50" rows="3" placeholder="Message on cake" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3"></textarea>
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Message on cake</label>
+                                <textarea id="builder-message" name="customization[message]" maxlength="50" rows="3" placeholder="Message on cake" class="w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]"></textarea>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Text color</label>
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Text color</label>
                                 <input id="builder-text-color" type="color" value="#7a3444" class="color-pill h-11 w-full cursor-pointer rounded-2xl border border-[#F3D7DB] bg-white p-0">
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topping shapes</label>
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Topping shapes</label>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] p-2">
                                         <div class="mb-2 text-center text-lg">●</div>
@@ -191,11 +414,11 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Topping color</label>
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Topping color</label>
                                 <input id="builder-topping-color" type="color" value="#ff7eac" class="color-pill h-11 w-full cursor-pointer rounded-2xl border border-[#F3D7DB] bg-white p-0">
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-semibold text-[#5A3A3A]">Quick toppings</label>
+                                <label class="mb-1.5 block text-xs font-bold uppercase tracking-[0.08em] text-[#7a5258]">Quick toppings</label>
                                 <div class="grid grid-cols-2 gap-2">
                                     <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="sprinkles">Sprinkles</button>
                                     <button type="button" class="quick-topping rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-xs font-semibold text-[#7A5252]" data-preset="sprinkles_choco">Chocolate Sprinkles</button>
@@ -212,17 +435,17 @@
                     </div>
                 </section>
 
-                <section data-step="2" class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg hidden">
-                    <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Finish</h2>
-                    <div class="grid gap-4 md:grid-cols-2">
+                <section data-step="2" class="rounded-[1.45rem] border border-[#f0d7dc] bg-white/92 p-4 shadow-[0_14px_28px_rgba(90,58,58,0.08)] hidden">
+                    <h2 class="mb-3 text-lg font-black text-[#4f3338]">Finish</h2>
+                    <div class="grid gap-3">
                         <label class="flex items-center gap-3 rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
                             <input id="builder-rush" type="checkbox" value="yes" class="h-4 w-4">
                             <input id="builder-rush-hidden" type="hidden" name="customization[rush]" value="no">
                             <span>Rush order (+&#8369;350)</span>
                         </label>
-                        <input name="quantity" type="number" min="1" value="1" class="rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3">
+                        <input name="quantity" type="number" min="1" value="1" class="rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]">
                     </div>
-                    <textarea name="special_instructions" rows="3" placeholder="Special instructions" class="mt-4 w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-4 py-3"></textarea>
+                    <textarea name="special_instructions" rows="3" placeholder="Special instructions" class="mt-3 w-full rounded-2xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-3 text-sm font-semibold text-[#57393f]"></textarea>
                 </section>
 
                 <div class="flex gap-3">
@@ -231,53 +454,30 @@
                     <button id="builder-submit" class="hidden w-full rounded-2xl bg-pink-600 px-6 py-4 text-lg font-bold text-white hover:bg-pink-700">Add Custom Cake to Cart</button>
                 </div>
             </form>
+                </div>
+            </div>
 
-            <aside class="rounded-3xl border border-[#F3D7DD] bg-white p-6 shadow-lg h-fit xl:sticky xl:top-24">
-                <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Live Preview</h2>
-                <div class="mb-3 grid grid-cols-2 gap-2">
-                    <button id="preview-tab-front" type="button" class="rounded-xl border border-[#ec5a61] bg-[#FDECEF] px-3 py-2 text-sm font-semibold text-[#5A3A3A]">Front View</button>
-                    <button id="preview-tab-top" type="button" class="rounded-xl border border-[#F3D7DB] bg-[#FFF7F7] px-3 py-2 text-sm font-semibold text-[#7A5252]">Top View</button>
-                </div>
-                <div class="relative mb-6 overflow-hidden rounded-3xl border border-[#F3D7DD] bg-gradient-to-b from-[#fff6f8] to-[#ffe7ef] p-4">
-                    <div id="preview-panel-front">
-                        <div class="absolute right-3 top-3 z-20 w-32 rounded-2xl border border-[#ecc9d1] bg-white/95 p-2 shadow-md">
-                            <p class="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7A5252]">Inside View</p>
-                            <svg id="cake-inside-svg" class="h-20 w-full" viewBox="0 0 120 82" aria-label="Cake inside preview">
-                                <rect x="18" y="10" width="84" height="58" rx="10" fill="#f7d6a5" stroke="#c99c6f" stroke-width="1.2"></rect>
-                                <g id="cake-inside-layers"></g>
-                            </svg>
-                            <p id="cake-inside-label" class="mt-1 truncate text-[10px] font-semibold text-[#7A5252]"></p>
-                        </div>
-                        <svg id="cake-svg" class="mx-auto h-[330px] w-full max-w-sm" viewBox="0 0 400 420" aria-label="Cake preview">
-                            <ellipse id="cake-shadow" cx="200" cy="370" rx="145" ry="50" fill="#dcb1bf" opacity="0.5"></ellipse>
-                            <g id="cake-layers"></g>
-                            <text id="cake-message-preview" x="200" y="96" text-anchor="middle" font-size="14" font-weight="700" fill="#7A3444"></text>
-                            <g id="cake-topper" style="display:none;">
-                                <rect x="145" y="58" width="110" height="24" rx="12" fill="#ffffff" opacity="0.94"></rect>
-                                <text id="cake-topper-text" x="200" y="74" text-anchor="middle" font-size="11" font-weight="700" fill="#7a4252"></text>
-                            </g>
-                        </svg>
-                    </div>
-                    <div id="preview-panel-top" class="hidden">
-                        <svg id="cake-top-svg" class="mx-auto h-[330px] w-full max-w-sm" viewBox="0 0 320 320" aria-label="Cake top view">
-                            <g id="cake-top-base"></g>
-                            <g id="cake-top-toppings"></g>
-                            <text id="cake-top-message-preview" x="160" y="165" text-anchor="middle" font-size="16" font-weight="700" fill="#7A3444"></text>
-                        </svg>
-                    </div>
-                </div>
-
-                <h2 class="mb-4 text-2xl font-bold text-[#5A3A3A]">Live Estimate</h2>
-                <div class="space-y-2 text-sm text-[#6E4D53]">
-                    <div class="flex justify-between"><span>Builder subtotal</span><span id="estimate-addon">&#8369;0.00</span></div>
-                </div>
-                <div class="mt-4 border-t border-[#F3D7DD] pt-4 flex justify-between text-xl font-bold text-[#5A3A3A]">
-                    <span>Estimated Total</span><span id="estimate-total">&#8369;0.00</span>
-                </div>
-                <p class="mt-4 text-sm text-[#7A4F57]">Pricing is estimated and will be finalized at checkout.</p>
-            </aside>
+            {{-- Home Indicator --}}
+            <div id="customize-home-indicator" class="absolute bottom-2 left-1/2 z-50 h-1.5 w-1/3 -translate-x-1/2 rounded-full bg-gray-300"></div>
         </div>
+    </div>
 
+    <div id="slice-modal" class="fixed inset-0 z-[9999] hidden">
+                    <div id="slice-modal-backdrop" class="absolute inset-0 cursor-pointer bg-[#14070d]/86" style="backdrop-filter:blur(18px) saturate(1.12)"></div>
+                    <div class="absolute inset-0 flex items-center justify-center p-4 md:p-8">
+                        <div class="relative overflow-hidden rounded-[2rem] shadow-[0_34px_90px_rgba(0,0,0,0.46)] ring-1 ring-white/10" style="width:min(94vw,900px);height:min(84vh,660px);background:radial-gradient(circle at 50% 28%,#49323a 0%,#241018 45%,#12060b 100%)">
+                            <canvas id="slice-3d-canvas" style="display:block;width:100%;height:100%"></canvas>
+                            <button id="slice-modal-close" class="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/16 text-xl font-bold text-white shadow-lg transition hover:bg-white/30" style="backdrop-filter:blur(10px)">×</button>
+                            <div class="absolute bottom-5 left-5 max-w-[78%] rounded-2xl border border-white/12 bg-[#17070f]/66 px-5 py-4 shadow-2xl" style="pointer-events:none;backdrop-filter:blur(16px)">
+                                <div class="mb-1 text-[10px] font-bold uppercase tracking-widest text-[#ffd7df]">Inside Your Cake</div>
+                                <div id="slice-info" class="text-lg font-bold leading-tight text-white"></div>
+                                <div id="slice-filling-info" class="mt-1 text-sm text-white/74"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         (() => {
             const sizeSelect = document.getElementById('builder-size');
@@ -301,6 +501,8 @@
             const topViewMessageEl = document.getElementById('cake-top-message-preview');
             const toppingsHiddenInput = document.getElementById('builder-toppings-hidden');
             const previewSvgHiddenInput = document.getElementById('builder-preview-svg-hidden');
+            const previewImageHiddenInput = document.getElementById('builder-preview-image-hidden');
+            const builderForm = document.getElementById('cake-builder-form');
             const shapeAdjustBtns = [...document.querySelectorAll('.shape-adjust')];
             const toppingColorInput = document.getElementById('builder-topping-color');
             const clearToppingsBtn = document.getElementById('builder-clear-toppings');
@@ -371,6 +573,15 @@
                 Custard: '#f4d986',
                 'Fruit Jam': '#cf4f6a',
                 'Cream Cheese': '#f0e8dc'
+            };
+
+            const fillingStyle = {
+                'Chocolate Mousse': { accent: '#7c4e3c', chunks: 8, drip: 0.7, rough: 0.55, metal: 0.08 },
+                'Strawberry Jam': { accent: '#f08aa4', chunks: 14, drip: 1.25, rough: 0.24, metal: 0.02 },
+                'Vanilla Cream': { accent: '#fff8ea', chunks: 7, drip: 0.65, rough: 0.62, metal: 0.01 },
+                Nutella: { accent: '#7b4a37', chunks: 9, drip: 0.8, rough: 0.42, metal: 0.06 },
+                'Cookies & Cream': { accent: '#6a6470', chunks: 16, drip: 0.6, rough: 0.72, metal: 0.02 },
+                Buttercream: { accent: '#ffe9c6', chunks: 6, drip: 0.55, rough: 0.68, metal: 0.01 },
             };
 
             const dripTone = {
@@ -662,27 +873,7 @@
             };
 
             const renderInsidePreview = () => {
-                const sponge = spongeSelect.value || 'Vanilla';
-                const filling = fillingSelect.value || 'Vanilla Cream';
-                const spongeColor = spongeTone[sponge] || '#f5d7a5';
-                const fillingColor = fillingTone[filling] || '#f6f0dc';
-                const fillingLineColor = darkenHex(fillingColor, 0.72);
-                const frameY = 10;
-                const frameH = 58;
-                const bodyX = 22;
-                const bodyW = 76;
-                const bodyY = frameY + 4;
-                const bodyH = frameH - 8;
-                let markup = '';
-                const thinFillH = 2.4;
-                const thin1Y = bodyY + (bodyH * 0.34) - (thinFillH / 2);
-                const thin2Y = bodyY + (bodyH * 0.68) - (thinFillH / 2);
-
-                markup += `<rect x="${bodyX}" y="${bodyY.toFixed(2)}" width="${bodyW}" height="${bodyH.toFixed(2)}" rx="2" fill="${spongeColor}"></rect>`;
-                markup += `<rect x="${bodyX}" y="${thin1Y.toFixed(2)}" width="${bodyW}" height="${thinFillH.toFixed(2)}" rx="1" fill="${fillingLineColor}"></rect>`;
-                markup += `<rect x="${bodyX}" y="${thin2Y.toFixed(2)}" width="${bodyW}" height="${thinFillH.toFixed(2)}" rx="1" fill="${fillingLineColor}"></rect>`;
-                cakeInsideLayersEl.innerHTML = markup;
-                cakeInsideLabelEl.textContent = `${sponge} + ${filling}`;
+                // 3D inside view handled by Three.js preview system
             };
 
             const shapeTopPath = {
@@ -700,11 +891,16 @@
                 if (shape === 'Square') {
                     return x >= 52 && x <= 268 && y >= 52 && y <= 268;
                 }
-                // Heart implicit equation, normalized around center for robust hit-test.
+                // Heart implicit equation, with an inner edible area so toppings do not collect on the point.
                 const nx = (x - 160) / 88;
                 const ny = (y - 154) / 76;
                 const v = Math.pow((nx * nx) + (ny * ny) - 1, 3) - (nx * nx * Math.pow(ny, 3));
-                return v <= 0;
+                const lowerPointInset = y > 198 ? (y - 198) * 0.95 : 0;
+                return v <= -0.012
+                    && y >= 92
+                    && y <= 222
+                    && x >= 72 + lowerPointInset
+                    && x <= 248 - lowerPointInset;
             };
 
             const randomPointInTopShape = (shape) => {
@@ -744,7 +940,7 @@
                 const bounds = shape === 'Square'
                     ? { minX: 52, maxX: 268, minY: 52, maxY: 268 }
                     : shape === 'Heart'
-                        ? { minX: 52, maxX: 268, minY: 72, maxY: 268 }
+                        ? { minX: 72, maxX: 248, minY: 92, maxY: 222 }
                         : { minX: 52, maxX: 268, minY: 52, maxY: 268 };
                 for (let tries = 0; tries < 300; tries++) {
                     const x = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
@@ -787,83 +983,36 @@
                 return `<circle cx="${x}" cy="${y}" r="8" fill="${color}" stroke="#b84f74" stroke-width="1"/>`;
             };
 
-            const renderTopView = () => {
-                const [toneTop] = getFrostingTone();
-                const topMarkup = shapeTopPath[shapeSelect.value] || shapeTopPath.Round;
-                const clipShape = topMarkup;
-                const effectiveDripMode = dripSelect.value || 'none';
-                const topDripColor = dripTone[effectiveDripMode] || darkenHex(toneTop, 0.65);
-                const topSurfaceColor = effectiveDripMode !== 'none' ? topDripColor : toneTop;
-                const topDripOverlay = effectiveDripMode !== 'none'
-                    ? `<g fill="none" stroke="${topDripColor}" stroke-width="14" stroke-linecap="round" opacity="0.95">${topMarkup}</g>`
-                    : '';
-                topViewBaseEl.innerHTML = `
-                    <defs>
-                        <clipPath id="cake-top-clip">
-                            ${clipShape}
-                        </clipPath>
-                    </defs>
-                    <g fill="${topSurfaceColor}" stroke="#bf8b99" stroke-width="2">
-                        ${topMarkup}
-                    </g>
-                    ${topDripOverlay}
-                `;
-                topViewToppingsEl.innerHTML = `<g clip-path="url(#cake-top-clip)">${toppingItems.map((item, idx) => toppingSvg(item.shape, item.x, item.y, item.color, idx)).join('')}</g>`;
-                const rawMessage = (messageInput.value || '').slice(0, 50);
-                renderMultilineSvgText(topViewMessageEl, rawMessage, 16, 160, 165);
-                topViewMessageEl.setAttribute('fill', textColorInput.value || '#7A3444');
+            const sync3DPreview = () => {
                 toppingsHiddenInput.value = JSON.stringify(toppingItems);
+                const [frostingTop, frostingBottom] = getFrostingTone();
+                const detail = {
+                    shape: shapeSelect.value || 'Round',
+                    size: sizeSelect.value || '6',
+                    layers: layersSelect.value || '1',
+                    sponge: spongeSelect.value || 'Vanilla',
+                    filling: fillingSelect.value || 'Vanilla Cream',
+                    spongeColor: spongeTone[spongeSelect.value] || '#f5d7a5',
+                    fillingColor: fillingTone[fillingSelect.value] || '#f6f0dc',
+                    frostingTop,
+                    frostingBottom,
+                    drip: dripSelect.value || 'none',
+                    topper: topperSelect.value || 'none',
+                    message: messageInput.value || '',
+                    textColor: textColorInput.value || '#7A3444',
+                    toppings: toppingItems.map((item) => ({ ...item })),
+                };
+
+                window.__bonbonCustomize3DState = detail;
+                window.dispatchEvent(new CustomEvent('bonbon-customize-3d:update', { detail }));
+                window.BonbonCustomize3D?.update?.(detail);
             };
 
-            const renderMultilineSvgText = (textEl, rawText, maxLineChars, x, y) => {
-                const text = (rawText || '').slice(0, 50);
-                const lines = [];
-                const hardLines = text.split(/\r?\n/);
-                hardLines.forEach((line) => {
-                    const content = line.trim();
-                    if (!content) {
-                        lines.push('');
-                        return;
-                    }
-                    let start = 0;
-                    while (start < content.length) {
-                        lines.push(content.slice(start, start + maxLineChars));
-                        start += maxLineChars;
-                    }
-                });
-                const normalizedLines = lines.length ? lines.slice(0, 4) : [''];
-                textEl.replaceChildren();
-                textEl.setAttribute('x', String(x));
-                textEl.setAttribute('y', String(y));
-                textEl.setAttribute('text-anchor', 'middle');
-                const lineHeight = 18;
-                const baselineOffset = ((normalizedLines.length - 1) * lineHeight) / 2;
-                normalizedLines.forEach((line, idx) => {
-                    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    tspan.setAttribute('x', String(x));
-                    tspan.setAttribute('dy', idx === 0 ? String(-baselineOffset) : String(lineHeight));
-                    tspan.textContent = line;
-                    textEl.appendChild(tspan);
-                });
+            const renderTopView = () => {
+                sync3DPreview();
             };
 
-            const setPreviewTab = (tab) => {
-                const showTop = tab === 'top';
-                previewPanelFront.classList.toggle('hidden', showTop);
-                previewPanelTop.classList.toggle('hidden', !showTop);
-                previewTabFrontBtn.classList.toggle('border-[#ec5a61]', !showTop);
-                previewTabFrontBtn.classList.toggle('bg-[#FDECEF]', !showTop);
-                previewTabFrontBtn.classList.toggle('text-[#5A3A3A]', !showTop);
-                previewTabFrontBtn.classList.toggle('border-[#F3D7DB]', showTop);
-                previewTabFrontBtn.classList.toggle('bg-[#FFF7F7]', showTop);
-                previewTabFrontBtn.classList.toggle('text-[#7A5252]', showTop);
-                previewTabTopBtn.classList.toggle('border-[#ec5a61]', showTop);
-                previewTabTopBtn.classList.toggle('bg-[#FDECEF]', showTop);
-                previewTabTopBtn.classList.toggle('text-[#5A3A3A]', showTop);
-                previewTabTopBtn.classList.toggle('border-[#F3D7DB]', !showTop);
-                previewTabTopBtn.classList.toggle('bg-[#FFF7F7]', !showTop);
-                previewTabTopBtn.classList.toggle('text-[#7A5252]', !showTop);
-            };
+
 
             const updateStepView = () => {
                 stepSections.forEach((section) => {
@@ -883,97 +1032,38 @@
                 submitBtn.classList.toggle('hidden', currentStep !== 2);
                 if (currentStep === 1) nextStepBtn.textContent = 'Next: Toppings';
                 if (currentStep === 2) nextStepBtn.textContent = 'Review & Submit';
-                if (currentStep === 2) setPreviewTab('top');
+                if (currentStep === 2 && typeof setView === 'function') setView('top');
                 renderTopView();
             };
 
             const renderCake = () => {
-                const layers = Number(layersSelect.value || 1);
-                const baseWidthAtSix = 124;
-                // Keep size differences subtle so larger sizes don't blow out the preview frame.
-                const sizeScaleMap = { '6': 1, '8': 1.08, '10': 1.16, '12': 1.24 };
-                const heightMap = { '6': 26, '8': 30, '10': 34, '12': 38 };
-                const baseWidth = baseWidthAtSix * Number(sizeScaleMap[sizeSelect.value] || 1);
-                const layerHeight = heightMap[sizeSelect.value] || 36;
-                const [toneTop, toneBottom] = getFrostingTone();
-                const shape = shapeSelect.value;
-                const dripMode = dripSelect.value || 'none';
-                const tierGap = Number(tierGapByShape[shape] ?? 4);
-                const scaledBaseWidth = baseWidth * overallCakeScale;
-                const scaledLayerHeight = layerHeight * overallCakeScale;
-                const seatedOverlap = Math.max(8, scaledLayerHeight * 0.26);
-                const stackStep = Math.max(14, (scaledLayerHeight - seatedOverlap) + tierGap);
-                const previewTop = 94;
-                const previewBottom = 300;
-                const baseTopY = previewBottom - scaledLayerHeight;
-                const topMostY = baseTopY - ((layers - 1) * stackStep);
-                const pushDown = Math.max(0, previewTop - topMostY);
-
-                cakeLayersEl.innerHTML = '';
-                const baseTierYAnchor = baseTopY + pushDown;
-                const extraLiftForLevel = (level) => {
-                    const ratio = Math.max(0.18, 0.72 - ((level - 1) * 0.18));
-                    return Math.max(8, scaledLayerHeight * ratio);
-                };
-                const tierYFromBase = (tierIndex) => {
-                    if (tierIndex === 0) return baseTierYAnchor;
-                    let lift = 0;
-                    for (let lvl = 1; lvl <= tierIndex; lvl++) {
-                        const extra = extraLiftForLevel(lvl);
-                        lift += (scaledLayerHeight / 2) + extra;
-                    }
-                    return baseTierYAnchor - lift;
-                };
-
-                let baseTierX = 200 - (scaledBaseWidth / 2);
-                let baseTierY = baseTierYAnchor;
-                let baseTierWidth = scaledBaseWidth;
-                const contactShadowColor = darkenHex(toneBottom, 0.62);
-                for (let i = 0; i < layers; i++) {
-                    const width = Math.max(86, scaledBaseWidth - i * (14 * overallCakeScale));
-                    const x = (200 - (width / 2));
-                    const y = tierYFromBase(i);
-                    if (i === 0) {
-                        baseTierX = x;
-                        baseTierY = y;
-                        baseTierWidth = width;
-                    }
-                    if (i > 0) {
-                        const contactShadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-                        contactShadow.setAttribute('cx', String(x + (width / 2)));
-                        contactShadow.setAttribute('cy', String(y + Math.max(9, scaledLayerHeight * 0.78)));
-                        contactShadow.setAttribute('rx', String(Math.max(18, width * 0.43)));
-                        contactShadow.setAttribute('ry', String(Math.max(4, scaledLayerHeight * 0.13)));
-                        contactShadow.setAttribute('fill', contactShadowColor);
-                        contactShadow.setAttribute('opacity', String(Math.max(0.06, 0.14 - (i * 0.02))));
-                        cakeLayersEl.appendChild(contactShadow);
-                    }
-                    cakeLayersEl.appendChild(drawLayer(shape, x, y, width, scaledLayerHeight, toneTop, toneBottom, i, dripMode));
-                }
-
-                const baseCenterX = baseTierX + (baseTierWidth / 2);
-                const shadowY = baseTierY + (scaledLayerHeight * 2);
-                const shadowRx = Math.max(92, baseTierWidth * 0.78);
-                const shadowRy = Math.max(26, shadowRx * 0.4);
-                cakeShadowEl.setAttribute('opacity', '0.5');
-                cakeShadowEl.setAttribute('cx', String(baseCenterX));
-                cakeShadowEl.setAttribute('cy', String(shadowY));
-                cakeShadowEl.setAttribute('rx', String(shadowRx));
-                cakeShadowEl.setAttribute('ry', String(shadowRy));
-
-                const message = (messageInput.value || '').slice(0, 50);
-                messageInput.value = message;
-                renderMultilineSvgText(messagePreviewEl, message, 18, 200, 96);
-                messagePreviewEl.setAttribute('fill', textColorInput.value || '#7A3444');
-
-                const topperMap = { none: '', name: 'Name Topper', acrylic: 'Acrylic Topper', edible_print: 'Edible Print' };
-                const topperLabel = topperMap[topperSelect.value] || '';
-                topperWrapEl.style.display = topperLabel === '' ? 'none' : 'block';
-                topperTextEl.textContent = topperLabel;
-                renderTopView();
-                renderInsidePreview();
+                sync3DPreview();
             };
 
+            const syncPreviewSnapshot = () => {
+                if (previewSvgHiddenInput && cakeSvgEl) {
+                    previewSvgHiddenInput.value = cakeSvgEl.outerHTML || '';
+                }
+
+                if (!previewImageHiddenInput) {
+                    return;
+                }
+
+                const renderCanvas = document.querySelector('#cake-3d-canvas canvas');
+                if (!renderCanvas) {
+                    return;
+                }
+
+                try {
+                    previewImageHiddenInput.value = renderCanvas.toDataURL('image/webp', 0.86);
+                } catch (_) {
+                    try {
+                        previewImageHiddenInput.value = renderCanvas.toDataURL('image/png');
+                    } catch (_) {
+                        previewImageHiddenInput.value = '';
+                    }
+                }
+            };
 
             const compute = () => {
                 const subtotal =
@@ -989,48 +1079,9 @@
 
                 rushHidden.value = rushCheckbox.checked ? 'yes' : 'no';
                 frostingCustomHidden.value = frostingSelect.value === 'custom' ? (frostingCustomInput.value || '') : '';
-                addonEl.textContent = php(subtotal);
-                totalEl.textContent = php(subtotal);
+                if (addonEl) addonEl.textContent = php(subtotal);
+                if (totalEl) totalEl.textContent = php(subtotal);
                 renderCake();
-                syncPreviewSvgSnapshot();
-            };
-
-            const syncPreviewSvgSnapshot = () => {
-                try {
-                    if (!cakeSvgEl) return;
-                    const clone = cakeSvgEl.cloneNode(true);
-                    clone.removeAttribute('id');
-                    clone.removeAttribute('class');
-                    clone.setAttribute('width', '160');
-                    clone.setAttribute('height', '120');
-
-                    // Keep gradient/clip ids working in saved SVG by remapping them to unique names.
-                    const uid = `snap${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
-                    const idMap = new Map();
-                    clone.querySelectorAll('[id]').forEach((node, idx) => {
-                        const oldId = node.getAttribute('id');
-                        if (!oldId) return;
-                        const nextId = `${uid}-${idx}`;
-                        idMap.set(oldId, nextId);
-                        node.setAttribute('id', nextId);
-                    });
-                    const refAttrs = ['fill', 'stroke', 'filter', 'clip-path', 'mask', 'href', 'xlink:href'];
-                    clone.querySelectorAll('*').forEach((node) => {
-                        refAttrs.forEach((attr) => {
-                            const value = node.getAttribute(attr);
-                            if (!value) return;
-                            let updated = value;
-                            idMap.forEach((nextId, oldId) => {
-                                updated = updated.replace(new RegExp(`url\\(#${oldId}\\)`, 'g'), `url(#${nextId})`);
-                                if (updated === `#${oldId}`) updated = `#${nextId}`;
-                            });
-                            if (updated !== value) node.setAttribute(attr, updated);
-                        });
-                    });
-                    previewSvgHiddenInput.value = clone.outerHTML;
-                } catch (error) {
-                    previewSvgHiddenInput.value = '';
-                }
             };
 
             const syncFrostingSwatchUI = () => {
@@ -1078,6 +1129,10 @@
                 compute();
             });
 
+            builderForm?.addEventListener('submit', () => {
+                syncPreviewSnapshot();
+            });
+
             const addSingleShapeTopping = (shapeType) => {
                 const shape = shapeSelect.value || 'Round';
                 const pt = randomPointInTopShape(shape);
@@ -1087,7 +1142,7 @@
                     x: pt.x,
                     y: pt.y
                 });
-                renderTopView();
+                compute();
             };
 
             const removeSingleShapeTopping = (shapeType) => {
@@ -1097,7 +1152,7 @@
                         break;
                     }
                 }
-                renderTopView();
+                compute();
             };
 
             const addPresetToppings = (preset) => {
@@ -1123,7 +1178,7 @@
                             b.classList.add('bg-[#FFF7F7]', 'border-[#F3D7DB]', 'text-[#7A5252]');
                         }
                     });
-                    renderTopView();
+                    compute();
                     return;
                 }
 
@@ -1160,7 +1215,7 @@
                         b.classList.add('bg-[#FDECEF]', 'border-[#ec5a61]', 'text-[#5A3A3A]');
                     }
                 });
-                renderTopView();
+                compute();
             };
 
             clearToppingsBtn.addEventListener('click', () => {
@@ -1170,7 +1225,7 @@
                     b.classList.remove('bg-[#FDECEF]', 'border-[#ec5a61]', 'text-[#5A3A3A]');
                     b.classList.add('bg-[#FFF7F7]', 'border-[#F3D7DB]', 'text-[#7A5252]');
                 });
-                renderTopView();
+                compute();
             });
 
             quickToppingBtns.forEach((btn) => {
@@ -1185,8 +1240,7 @@
                     if (action === 'remove') removeSingleShapeTopping(shapeType);
                 });
             });
-            previewTabFrontBtn.addEventListener('click', () => setPreviewTab('front'));
-            previewTabTopBtn.addEventListener('click', () => setPreviewTab('top'));
+            // Tab switching is handled by the 3D preview system below
 
             prevStepBtn.addEventListener('click', () => {
                 currentStep = Math.max(1, currentStep - 1);
@@ -1201,9 +1255,993 @@
             compute();
             syncCustomFrostingSwatch();
             syncFrostingSwatchUI();
-            setPreviewTab('front');
             updateStepView();
         })();
     </script>
-@endsection
 
+    {{-- ═══ THREE.JS 3D CAKE PREVIEW ═══ --}}
+    <script>
+    function initCake3DPreview() {
+        const wrap = document.getElementById('cake-3d-wrap');
+        const canvas = document.getElementById('cake-3d-canvas');
+        if (!wrap || !canvas || typeof THREE === 'undefined') {
+            console.warn('cake-3d: container or Three.js missing');
+            return;
+        }
+
+        // Wait until the wrap actually has real pixel dimensions
+        if (!wrap.clientWidth || !wrap.clientHeight) {
+            requestAnimationFrame(initCake3DPreview);
+            return;
+        }
+
+        // ── Renderer / Scene / Camera ──────────────────────────────────────
+        const scene = new THREE.Scene();
+        let W = wrap.clientWidth, H = wrap.clientHeight;
+        const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
+        camera.position.set(0, 1.2, 6.4);
+        camera.lookAt(0, 0.2, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+        renderer.setSize(W, H);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.localClippingEnabled = true;
+
+        // ── Lighting ──────────────────────────────────────────────────────
+        scene.add(new THREE.AmbientLight(0xffe8f2, 0.95));
+        const key = new THREE.DirectionalLight(0xfff4ec, 2.2);
+        key.position.set(4, 8, 6); key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024); key.shadow.bias = -0.002;
+        scene.add(key);
+        const fill = new THREE.DirectionalLight(0xffcce8, 0.7); fill.position.set(-4, 3, 3); scene.add(fill);
+        const rim  = new THREE.DirectionalLight(0xffd4b8, 0.4); rim.position.set(0, 2, -5);  scene.add(rim);
+        const front= new THREE.PointLight(0xfff0f6, 0.55, 14); front.position.set(0, 2, 7);  scene.add(front);
+
+        // Ground reflection disc
+        const groundM = new THREE.MeshStandardMaterial({ color: 0xffb8d0, transparent: true, opacity: 0.18, roughness: 1 });
+        const groundMesh = new THREE.Mesh(new THREE.CircleGeometry(3, 48), groundM);
+        groundMesh.rotation.x = -Math.PI / 2; groundMesh.position.y = -0.01; groundMesh.receiveShadow = true;
+        scene.add(groundMesh);
+
+        // ── Groups ────────────────────────────────────────────────────────
+        const cakeGroup = new THREE.Group(); scene.add(cakeGroup);
+        const cutGroup  = new THREE.Group(); scene.add(cutGroup);  cutGroup.visible = false;
+
+        // Clipping plane: reveal only x > 0 (right half of cake)
+        const HALF_PLANE = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0.02);
+
+        // ── Color Maps ────────────────────────────────────────────────────
+        const FROST = {
+            white:'#f2f2f2', ivory:'#e9e2cf', blush:'#edd3d6',
+            sage:'#d2e1d8', powder_blue:'#d6e1ea', chocolate:'#4a2f1f',
+            mocha:'#6a4638', lavender:'#d7b2ef'
+        };
+        const SPONGE = {
+            'Vanilla':'#f5d7a5','Chocolate':'#7b4a38','Red Velvet':'#a43b4a',
+            'Lemon':'#f3e38a','Strawberry':'#f3a6b8','Funfetti':'#f7e3b8','Ube':'#b9a0da'
+        };
+        const FILL = {
+            'Chocolate Mousse':'#6a3d2d','Strawberry Jam':'#cf4f6a',
+            'Vanilla Cream':'#f0e8d4','Nutella':'#5a3528',
+            'Cookies & Cream':'#d5d2dd','Buttercream':'#f6dfb2'
+        };
+        const fillingStyle = {
+            'Chocolate Mousse': { accent: '#7c4e3c', chunks: 8, drip: 0.7, rough: 0.55, metal: 0.08 },
+            'Strawberry Jam': { accent: '#f08aa4', chunks: 14, drip: 1.25, rough: 0.24, metal: 0.02 },
+            'Vanilla Cream': { accent: '#fff8ea', chunks: 7, drip: 0.65, rough: 0.62, metal: 0.01 },
+            Nutella: { accent: '#7b4a37', chunks: 9, drip: 0.8, rough: 0.42, metal: 0.06 },
+            'Cookies & Cream': { accent: '#6a6470', chunks: 16, drip: 0.6, rough: 0.72, metal: 0.02 },
+            Buttercream: { accent: '#ffe9c6', chunks: 6, drip: 0.55, rough: 0.68, metal: 0.01 },
+        };
+        const DRIP = { none:null, chocolate:'#3f2219', white_chocolate:'#fff6ea', pink:'#f26ca1', caramel:'#b66a3d' };
+
+        // ── Helpers ───────────────────────────────────────────────────────
+        const tc = hex => new THREE.Color(hex.startsWith('#') ? hex : '#' + hex);
+        const darken3dHex = (hex, factor = 0.75) => {
+            const value = String(hex || '').replace('#', '');
+            if (value.length !== 6) return hex;
+            const r = Math.max(0, Math.min(255, Math.round(parseInt(value.slice(0, 2), 16) * factor)));
+            const g = Math.max(0, Math.min(255, Math.round(parseInt(value.slice(2, 4), 16) * factor)));
+            const b = Math.max(0, Math.min(255, Math.round(parseInt(value.slice(4, 6), 16) * factor)));
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        };
+        const mkMat = (hex, o = {}) => new THREE.MeshStandardMaterial({
+            color: tc(hex),
+            roughness: o.r ?? 0.62,
+            metalness: o.m ?? 0.02,
+            transparent: !!o.t,
+            opacity: o.o ?? 1,
+            side: o.side ?? THREE.FrontSide,
+            clippingPlanes: o.clip ?? [],
+        });
+
+        const mkDrips = (grp, radius, height, dripHex, clip) => {
+            if (!dripHex) return;
+            const dm = mkMat(dripHex, { r: 0.1, m: 0.04, clip });
+            const n = 24;
+            for (let i = 0; i < n; i++) {
+                const a = (i / n) * Math.PI * 2;
+                const len = 0.036 + Math.sin(i * 1.9 + 0.4) * 0.026 + (i % 4 === 0 ? 0.058 : 0);
+                const dc = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.011, len, 7), dm);
+                dc.position.set(Math.cos(a) * radius, height / 2 - len / 2 + 0.009, Math.sin(a) * radius);
+                dc.castShadow = true; grp.add(dc);
+                const bb = new THREE.Mesh(new THREE.SphereGeometry(0.024, 7, 7), dm);
+                bb.position.set(Math.cos(a) * radius, height / 2 - len + 0.007, Math.sin(a) * radius);
+                bb.scale.y = 1.38; grp.add(bb);
+            }
+        };
+
+        // ── Tier Builders ─────────────────────────────────────────────────
+        const buildRound = (r, h, fHex, dHex, clip) => {
+            const g = new THREE.Group(); const cp = clip ? [HALF_PLANE] : [];
+            const sm = mkMat(fHex, { r: 0.55, clip: cp });
+            g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 80, 1, true), sm), { castShadow: true }));
+            const tm = mkMat(fHex, { r: 0.46, clip: cp });
+            const top = new THREE.Mesh(new THREE.CircleGeometry(r, 80), tm);
+            top.rotation.x = -Math.PI / 2; top.position.y = h / 2; g.add(top);
+            const bot = new THREE.Mesh(new THREE.CircleGeometry(r, 80), mkMat(fHex, { r: 0.72, clip: cp }));
+            bot.rotation.x = Math.PI / 2; bot.position.y = -h / 2; g.add(bot);
+            mkDrips(g, r, h, dHex, cp); return g;
+        };
+
+        const buildSquare = (s, h, fHex, dHex, clip) => {
+            const g = new THREE.Group(); const cp = clip ? [HALF_PLANE] : [];
+            g.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(s * 2, h, s * 2), mkMat(fHex, { r: 0.55, clip: cp })), { castShadow: true }));
+            if (dHex) {
+                const dm = mkMat(dHex, { r: 0.1, clip: cp });
+                [0, 1, 2, 3].forEach(side => {
+                    for (let i = 0; i < 11; i++) {
+                        const t = (i + 0.5) / 11;
+                        const len = 0.028 + Math.sin(i * 2.3) * 0.018 + (i % 3 === 0 ? 0.042 : 0);
+                        let x = 0, z = 0;
+                        if (side === 0) { x = -s + t * s * 2; z = s; }
+                        else if (side === 1) { x = s; z = s - t * s * 2; }
+                        else if (side === 2) { x = s - t * s * 2; z = -s; }
+                        else { x = -s; z = -s + t * s * 2; }
+                        const dc = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.009, len, 6), dm);
+                        dc.position.set(x, h / 2 - len / 2, z); g.add(dc);
+                    }
+                });
+            }
+            return g;
+        };
+
+        const buildHeart = (r, h, fHex, clip) => {
+            const g = new THREE.Group(); const cp = clip ? [HALF_PLANE] : [];
+            const shape = new THREE.Shape();
+            const s = r * 0.88;
+            shape.moveTo(0, -s * 0.72);
+            shape.bezierCurveTo(-s * 1.22, -s * 0.82, -s * 1.32, s * 0.18, -s * 0.92, s * 0.56);
+            shape.bezierCurveTo(-s * 0.66, s * 0.97, -s * 0.1, s * 0.72, 0, s * 1.12);
+            shape.bezierCurveTo(s * 0.1, s * 0.72, s * 0.66, s * 0.97, s * 0.92, s * 0.56);
+            shape.bezierCurveTo(s * 1.32, s * 0.18, s * 1.22, -s * 0.82, 0, -s * 0.72);
+            const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false });
+            geo.rotateX(-Math.PI / 2); geo.translate(0, h / 2, 0);
+            g.add(Object.assign(new THREE.Mesh(geo, mkMat(fHex, { r: 0.55, clip: cp, side: THREE.DoubleSide })), { castShadow: true }));
+            return g;
+        };
+
+        const buildCutFace = (p, tiers) => {
+            const g = new THREE.Group();
+            const TH = 0.62, GAP = 0.04;
+            // Tier heights - tall filling (35%) like real cake
+            const sH  = TH * 0.32;  // bottom sponge
+            const fH  = TH * 0.30;  // filling (thick, like photo)
+            const s2H = TH * 0.32;  // top sponge
+            const frH = TH * 0.06;  // frosting cap layer
+            const fillFx = fillingStyle[p.filling] || fillingStyle['Vanilla Cream'];
+
+            let y = 0;
+            for (let t = 0; t < tiers; t++) {
+                const r = Math.max(0.55, 1.1 * (1 + (p.size - 6) * 0.045) - t * 0.22);
+                const W = r * 2; // full width of cross-section
+                const FROST_COAT = 0.06; // frosting thickness on outside
+
+                // ── CROSS-SECTION FACE (flat cut plane at x=0) ──────────────
+                // Each layer is a PlaneGeometry facing +X direction
+
+                // Frosting top cap face
+                const frCapFace = new THREE.Mesh(
+                    new THREE.PlaneGeometry(W, frH),
+                    mkMat(p.frostHex, { r: 0.45, side: THREE.DoubleSide })
+                );
+                frCapFace.rotation.y = -Math.PI / 2;
+                frCapFace.position.set(0, y + TH - frH / 2, 0);
+                g.add(frCapFace);
+
+                // Top sponge face
+                const sp2Face = new THREE.Mesh(
+                    new THREE.PlaneGeometry(W, s2H),
+                    mkMat(p.spongeHex, { r: 0.9, side: THREE.DoubleSide })
+                );
+                sp2Face.rotation.y = -Math.PI / 2;
+                sp2Face.position.set(0, y + sH + fH + s2H / 2, 0);
+                g.add(sp2Face);
+
+                // Filling face – thick, vibrant band
+                const fillFace = new THREE.Mesh(
+                    new THREE.PlaneGeometry(W, fH),
+                    mkMat(p.fillHex, { r: 0.28, side: THREE.DoubleSide })
+                );
+                fillFace.rotation.y = -Math.PI / 2;
+                fillFace.position.set(0, y + sH + fH / 2, 0);
+                if (fillFace.material) {
+                    fillFace.material.roughness = fillFx.rough;
+                    fillFace.material.metalness = fillFx.metal;
+                    fillFace.material.polygonOffset = true;
+                    fillFace.material.polygonOffsetFactor = 1;
+                    fillFace.material.polygonOffsetUnits = 1;
+                }
+                g.add(fillFace);
+
+                for (let i = 0; i < fillFx.chunks; i++) {
+                    const zJitter = -r * 0.78 + (i / Math.max(1, fillFx.chunks - 1)) * (r * 1.56);
+                    const yJitter = y + sH + fH * (0.2 + ((i * 37) % 55) / 100);
+                    const dot = new THREE.Mesh(
+                        new THREE.SphereGeometry(0.018 + (i % 3) * 0.005, 8, 8),
+                        mkMat(fillFx.accent, { r: 0.35, side: THREE.DoubleSide })
+                    );
+                    dot.position.set(0.01 + (i % 2) * 0.004, yJitter, zJitter);
+                    dot.scale.set(1.25, 0.8, 1.1);
+                    dot.castShadow = false;
+                    g.add(dot);
+                }
+
+                // Bottom sponge face
+                const sp1Face = new THREE.Mesh(
+                    new THREE.PlaneGeometry(W, sH),
+                    mkMat(p.spongeHex, { r: 0.9, side: THREE.DoubleSide })
+                );
+                sp1Face.rotation.y = -Math.PI / 2;
+                sp1Face.position.set(0, y + sH / 2, 0);
+                g.add(sp1Face);
+
+                // ── FROSTING COAT borders on the cut face edges ──────────────
+                // Left strip
+                const frLeft = new THREE.Mesh(
+                    new THREE.PlaneGeometry(FROST_COAT, TH),
+                    mkMat(p.frostHex, { r: 0.45, side: THREE.DoubleSide })
+                );
+                frLeft.rotation.y = -Math.PI / 2;
+                frLeft.position.set(0, y + TH / 2, -r + FROST_COAT / 2);
+                g.add(frLeft);
+
+                // Right strip
+                const frRight = new THREE.Mesh(
+                    new THREE.PlaneGeometry(FROST_COAT, TH),
+                    mkMat(p.frostHex, { r: 0.45, side: THREE.DoubleSide })
+                );
+                frRight.rotation.y = -Math.PI / 2;
+                frRight.position.set(0, y + TH / 2, r - FROST_COAT / 2);
+                g.add(frRight);
+
+                // ── FILLING OOZE / DRIPS from cut edges ──────────────────────
+                const drpM = mkMat(p.fillHex, { r: 0.14, t: true, o: 0.92, side: THREE.DoubleSide });
+                const fillCenterY = y + sH + fH * 0.5;
+                const numDrips = Math.max(3, Math.round((6 + Math.floor(r * 4)) * fillFx.drip));
+                for (let d = 0; d < numDrips; d++) {
+                    const zPos = -r * 0.82 + (d / (numDrips - 1)) * r * 1.64;
+                    const dLen = (0.03 + (d % 4 === 0 ? 0.09 : 0.025) + Math.abs(Math.sin(d * 2.3)) * 0.04) * fillFx.drip;
+                    const dc = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.009, dLen, 6), drpM);
+                    dc.position.set(0, fillCenterY - fH * 0.3 - dLen / 2, zPos);
+                    g.add(dc);
+                    const bb = new THREE.Mesh(new THREE.SphereGeometry(0.021, 7, 7), drpM);
+                    bb.position.set(0, fillCenterY - fH * 0.3 - dLen, zPos);
+                    bb.scale.set(1.2, 1.5, 1.2);
+                    g.add(bb);
+                }
+
+                // ── TOP FROSTING DOLLOPS (piped cream on top, like photo) ────
+                if (t === tiers - 1) {
+                    const pipeMat = mkMat(p.frostHex, { r: 0.35 });
+                    const nPipes = Math.round(r * 3.5);
+                    for (let i = 0; i < nPipes; i++) {
+                        const zPos = -r * 0.85 + (i / Math.max(1, nPipes - 1)) * r * 1.7;
+                        // Sphere base of pipe
+                        const s = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), pipeMat);
+                        s.position.set(0, y + TH + frH + 0.07, zPos);
+                        s.scale.set(0.7, 1.1, 0.7);
+                        g.add(s);
+                        // Small peak
+                        const tip = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.1, 8), pipeMat);
+                        tip.position.set(0, y + TH + frH + 0.14, zPos);
+                        g.add(tip);
+                    }
+                }
+
+                y += TH + GAP;
+            }
+
+            const totalH = y - GAP;
+            g.position.y = -totalH / 2;
+            return g;
+        };
+
+        // ── Read Form ─────────────────────────────────────────────────────
+        const getP = () => {
+            const fKey = document.getElementById('builder-frosting')?.value || 'ivory';
+            const cHex = document.getElementById('builder-frosting-custom')?.value || '#e9e2cf';
+            const frostHex = fKey === 'custom' ? cHex : (FROST[fKey] || '#e9e2cf');
+            const dMode = document.getElementById('builder-drip')?.value || 'none';
+            const sponge  = document.querySelector('select[name="customization[sponge]"]')?.value || 'Vanilla';
+            const filling = document.querySelector('select[name="customization[filling]"]')?.value || 'Vanilla Cream';
+            return {
+                tiers: Math.max(1, Math.min(4, parseInt(document.getElementById('builder-layers')?.value || '1'))),
+                shape: document.getElementById('builder-shape')?.value || 'Round',
+                size: parseInt(document.getElementById('builder-size')?.value || '6'),
+                frostHex, dMode, dripHex: DRIP[dMode] || null,
+                sponge, filling,
+                spongeHex: SPONGE[sponge] || '#f5d7a5',
+                fillHex: FILL[filling] || '#f0e8d4',
+                fillStyle: fillingStyle[filling] || fillingStyle['Vanilla Cream'],
+                topper: document.getElementById('builder-topper')?.value || 'none',
+            };
+        };
+
+        // ── Build Cake ────────────────────────────────────────────────────
+        const build = () => {
+            while (cakeGroup.children.length) cakeGroup.remove(cakeGroup.children[0]);
+            while (cutGroup.children.length)  cutGroup.remove(cutGroup.children[0]);
+
+            const p = getP();
+            const isInside = currentView === 'inside';
+            const TH = 0.62, GAP = 0.04;
+            const ss = { 6: 1.0, 8: 1.1, 10: 1.2, 12: 1.3 };
+            const baseR = 1.1 * (ss[p.size] || 1.0);
+
+            let yPos = 0;
+            const radii = [];
+            for (let i = 0; i < p.tiers; i++) {
+                const r = Math.max(0.55, baseR - i * 0.22);
+                radii.push(r);
+                let tier;
+                if (p.shape === 'Square')     tier = buildSquare(r * 0.88, TH, p.frostHex, p.dripHex, isInside);
+                else if (p.shape === 'Heart') tier = buildHeart(r * 0.75, TH, p.frostHex, isInside);
+                else                          tier = buildRound(r, TH, p.frostHex, p.dripHex, isInside);
+                tier.position.y = yPos + TH / 2;
+                tier.castShadow = true; tier.receiveShadow = true;
+                cakeGroup.add(tier);
+
+                // Filling ring between tiers (visible band at tier boundary)
+                if (p.shape === 'Round' && i < p.tiers - 1) {
+                    const fr = new THREE.Mesh(
+                        new THREE.CylinderGeometry(r + 0.006, r + 0.006, 0.017, 72),
+                        mkMat(p.fillHex, { r: 0.72, clip: isInside ? [HALF_PLANE] : [] })
+                    );
+                    fr.position.y = yPos + TH - 0.009;
+                    cakeGroup.add(fr);
+                }
+                yPos += TH + GAP;
+            }
+
+            const totalH = yPos - GAP;
+            cakeGroup.position.y = -totalH / 2;
+
+            // Topper
+            if (p.topper !== 'none') {
+                const stk = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.3, 8),
+                    mkMat('#c9a84c', { r: 0.28, m: 0.82 }));
+                stk.position.y = cakeGroup.position.y + totalH + 0.15;
+                const bnr = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.1, 0.018), mkMat('#fff8fa', { r: 0.8 }));
+                bnr.position.y = 0.18; stk.add(bnr);
+                cakeGroup.add(stk);
+            }
+
+            // Inside view cut-face
+            if (isInside) {
+                const cf = buildCutFace(p, p.tiers);
+                cf.position.y = cakeGroup.position.y;
+                cutGroup.add(cf);
+                cutGroup.visible = true;
+            } else {
+                cutGroup.visible = false;
+            }
+
+               const syncViewButtons = (v) => {
+            ['front', 'top', 'side', 'inside'].forEach(name => {
+                const btn = document.getElementById('tab-view-' + name);
+                if (!btn) return;
+                const active = name === v;
+
+                if (name === 'inside') {
+                    btn.className = 'rounded-full px-8 py-3 text-sm font-black transition-all shadow-inner border ' +
+                        (active ? 'border-[#ec5a61] bg-pink-600 text-white' : 'border-pink-300 bg-pink-50 text-pink-600 hover:bg-pink-100');
+                    return;
+                }
+
+                btn.className = 'rounded-full px-8 py-3 text-sm font-bold transition-all shadow-sm border ' +
+                    (active ? 'border-[#ec5a61] bg-pink-600 text-white hover:bg-pink-500' : 'border-transparent bg-white/50 text-[#7A5252] hover:bg-pink-100 hover:text-pink-700');
+            });
+        };   let currentView = 'front', autoRot = true, rotY = 0;
+        const CAM = {
+            front:  { pos: [0, 1.2, 6.4],  look: [0, 0.1, 0], fov: 38 },
+            top:    { pos: [0, 7.8, 0.01], look: [0, 0,   0], fov: 36 },
+            side:   { pos: [6.4, 1.2, 0],  look: [0, 0.1, 0], fov: 38 },
+            inside: { pos: [5.2, 0.5, 0.0], look: [0, 0, 0], fov: 38 },
+        };
+        let camFrom = null, camTo = null, camT = 0;
+        const CAM_DUR = 42;
+
+        const setView = v => {
+            currentView = v;
+            autoRot = v === 'front';
+            if (v === 'side') rotY = Math.PI / 2;
+            else if (v === 'top') rotY = 0;
+            else rotY = 0;
+            if (v !== 'front') { cakeGroup.rotation.y = 0; cutGroup.rotation.y = 0; rotY = 0; }
+
+            // Update tab styling
+            ['front', 'top', 'side', 'inside'].forEach(name => {
+                const btn = document.getElementById('tab-view-' + name);
+                if (!btn) return;
+                const active = name === v;
+                btn.className = 'rounded-xl px-2 py-2 text-xs font-semibold text-center transition-all border ' +
+                    (active ? 'border-[#ec5a61] bg-pink-600 text-white' : 'border-[#F3D7DB] bg-[#FFF7F7] text-[#7A5252]');
+            });
+
+            const lbl = document.getElementById('cam-view-label');
+            if (lbl) lbl.textContent = v === 'front' ? '3D View' : v === 'top' ? 'Top View' : 'Inside View';
+
+            const hint = document.getElementById('inside-click-hint');
+            if (hint) hint.style.display = (v === 'inside') ? 'flex' : 'none';
+
+            const spinHint = document.getElementById('spin-hint');
+            if (spinHint) spinHint.style.opacity = (v === 'front') ? '1' : '0';
+
+            build();
+
+            const cv = CAM[v];
+            if (cv) {
+                camFrom = { pos: camera.position.clone(), fov: camera.fov };
+                camTo = { pos: new THREE.Vector3(...cv.pos), look: new THREE.Vector3(...cv.look), fov: cv.fov };
+                camT = 0;
+            }
+        };
+
+        // ── Slice Modal ───────────────────────────────────────────────────
+        let sliceR, sliceSc, sliceCam, sliceRAF;
+
+        const openSlice = () => {
+            const modal = document.getElementById('slice-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            const sc = document.getElementById('slice-3d-canvas');
+            if (!sc) return;
+            const mw = sc.closest('.relative') || sc.parentElement;
+            // Force layout so dimensions are correct
+            const SW = Math.max(320, (mw ? mw.clientWidth : 0) || sc.clientWidth || 700);
+            const SH = Math.max(240, (mw ? mw.clientHeight : 0) || sc.clientHeight || 500);
+
+            if (!sliceSc) {
+                sliceSc = new THREE.Scene();
+                sliceSc.background = new THREE.Color(0x1f0d13);
+                sliceSc.fog = new THREE.Fog(0x1f0d13, 4.5, 8.4);
+                sliceCam = new THREE.PerspectiveCamera(30, SW / SH, 0.1, 100);
+                sliceCam.position.set(0.28, 0.42, 4.35);
+                sliceCam.lookAt(0.05, 0.02, 0);
+                sliceR = new THREE.WebGLRenderer({ canvas: sc, antialias: true, powerPreference: 'high-performance' });
+                sliceR.setSize(SW, SH, false);
+                sliceR.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                sliceR.toneMapping = THREE.ACESFilmicToneMapping;
+                sliceR.toneMappingExposure = 1.38;
+                sliceR.outputEncoding = THREE.sRGBEncoding;
+                sliceR.shadowMap.enabled = true;
+                sliceR.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                sliceSc.add(new THREE.HemisphereLight(0xffefe5, 0x2a0f17, 1.1));
+                sliceSc.add(new THREE.AmbientLight(0xffe7dc, 0.42));
+                const sl1 = new THREE.DirectionalLight(0xfff3de, 2.65);
+                sl1.position.set(-2.6, 4.8, 4.2);
+                sl1.castShadow = true;
+                sl1.shadow.mapSize.set(2048, 2048);
+                sl1.shadow.bias = -0.0008;
+                sl1.shadow.camera.left = -3;
+                sl1.shadow.camera.right = 3;
+                sl1.shadow.camera.top = 3;
+                sl1.shadow.camera.bottom = -3;
+                sliceSc.add(sl1);
+                const sl2 = new THREE.DirectionalLight(0xffb8c8, 1.0);
+                sl2.position.set(3.8, 1.6, 2.6);
+                sliceSc.add(sl2);
+                const sl3 = new THREE.DirectionalLight(0xffffff, 1.15);
+                sl3.position.set(0.8, 2.4, -3.8);
+                sliceSc.add(sl3);
+                const productGlow = new THREE.PointLight(0xffe0b8, 0.9, 5);
+                productGlow.position.set(-1.6, 1.1, 2.4);
+                sliceSc.add(productGlow);
+
+                const bgMat = new THREE.MeshBasicMaterial({
+                    color: 0x3a242a,
+                    transparent: true,
+                    opacity: 0.92,
+                    side: THREE.DoubleSide,
+                });
+                const bg = new THREE.Mesh(new THREE.PlaneGeometry(7, 4.8), bgMat);
+                bg.position.set(0, 0.28, -1.25);
+                bg.userData.isStudioBackdrop = true;
+                sliceSc.add(bg);
+
+                const floorMat = new THREE.ShadowMaterial({ opacity: 0.22 });
+                const floor = new THREE.Mesh(new THREE.PlaneGeometry(6.5, 4.2), floorMat);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.set(0, -1.02, 0.18);
+                floor.receiveShadow = true;
+                floor.userData.isStudioFloor = true;
+                sliceSc.add(floor);
+            } else {
+                // Clear previous cake
+                sliceSc.children.filter(c => c.isGroup).forEach(c => sliceSc.remove(c));
+                sliceR.setSize(SW, SH, false);
+            }
+            sliceCam.aspect = SW / SH;
+            sliceCam.updateProjectionMatrix();
+
+            const p = getP();
+            let sliceGroup;
+            try {
+                sliceGroup = buildSliceScene(p);
+            } catch (e) {
+                sliceGroup = new THREE.Group();
+                const fallback = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1.1, 1.1, 1.2, 24, 1, false, -Math.PI * 0.25, Math.PI * 0.5),
+                    mkMat(p.frostHex, { r: 0.45, side: THREE.DoubleSide })
+                );
+                fallback.castShadow = true;
+                sliceGroup.add(fallback);
+                console.error('Slice scene fallback due to render error:', e);
+            }
+            sliceSc.add(sliceGroup);
+
+            const si = document.getElementById('slice-info');
+            const sfi = document.getElementById('slice-filling-info');
+            if (si) si.textContent = p.sponge + ' sponge · ' + p.tiers + (p.tiers === 1 ? ' tier' : ' tiers');
+            if (sfi) sfi.textContent = 'Filled with ' + p.filling + (p.dMode !== 'none' ? ' · ' + p.dMode.replace('_', ' ') + ' drip' : '');
+
+            if (sliceRAF) cancelAnimationFrame(sliceRAF);
+            // Keep the slice still by default, then let shoppers rotate it by dragging.
+            sliceGroup.rotation.y = -Math.PI * 0.08;
+            if (!sc.dataset.dragRotateReady) {
+                sc.dataset.dragRotateReady = 'true';
+                sc.style.cursor = 'grab';
+
+                let dragging = false;
+                let lastX = 0;
+                let lastY = 0;
+                let pinchDistance = 0;
+                let sliceZoom = 4.35;
+                const minZoom = 2.7;
+                const maxZoom = 6.2;
+                const setSliceZoom = (nextZoom) => {
+                    sliceZoom = Math.max(minZoom, Math.min(maxZoom, nextZoom));
+                    if (!sliceCam) return;
+                    sliceCam.position.z = sliceZoom;
+                    sliceCam.lookAt(0.05, 0.02, 0);
+                };
+                const getPinchDistance = (touches) => {
+                    if (!touches || touches.length < 2) return 0;
+                    const dx = touches[0].clientX - touches[1].clientX;
+                    const dy = touches[0].clientY - touches[1].clientY;
+                    return Math.hypot(dx, dy);
+                };
+
+                const activeSlice = () => sliceSc?.children?.find(c => c.userData?.isCakeSlice);
+
+                sc.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    setSliceZoom(sliceZoom + event.deltaY * 0.0028);
+                }, { passive: false });
+
+                sc.addEventListener('pointerdown', (event) => {
+                    dragging = true;
+                    lastX = event.clientX;
+                    lastY = event.clientY;
+                    sc.style.cursor = 'grabbing';
+                    sc.setPointerCapture?.(event.pointerId);
+                });
+
+                sc.addEventListener('pointermove', (event) => {
+                    if (!dragging) return;
+                    const group = activeSlice();
+                    if (!group) return;
+
+                    const dx = event.clientX - lastX;
+                    const dy = event.clientY - lastY;
+                    group.rotation.y += dx * 0.008;
+                    group.rotation.x = Math.max(-0.45, Math.min(0.35, group.rotation.x + dy * 0.005));
+                    lastX = event.clientX;
+                    lastY = event.clientY;
+                });
+
+                const stopDrag = (event) => {
+                    dragging = false;
+                    sc.style.cursor = 'grab';
+                    sc.releasePointerCapture?.(event.pointerId);
+                };
+                sc.addEventListener('pointerup', stopDrag);
+                sc.addEventListener('pointercancel', stopDrag);
+                sc.addEventListener('pointerleave', () => {
+                    dragging = false;
+                    sc.style.cursor = 'grab';
+                });
+
+                sc.addEventListener('touchstart', (event) => {
+                    pinchDistance = getPinchDistance(event.touches);
+                }, { passive: true });
+
+                sc.addEventListener('touchmove', (event) => {
+                    if (event.touches.length < 2) return;
+                    event.preventDefault();
+                    const nextDistance = getPinchDistance(event.touches);
+                    if (pinchDistance > 0 && nextDistance > 0) {
+                        setSliceZoom(sliceZoom - (nextDistance - pinchDistance) * 0.01);
+                    }
+                    pinchDistance = nextDistance;
+                }, { passive: false });
+
+                sc.addEventListener('touchend', () => {
+                    pinchDistance = 0;
+                }, { passive: true });
+            }
+            sliceGroup.userData.isCakeSlice = true;
+            const sLoop = () => {
+                sliceRAF = requestAnimationFrame(sLoop);
+                sliceR.render(sliceSc, sliceCam);
+            };
+            sLoop();
+        };
+
+        const buildSliceScene = p => {
+            const g = new THREE.Group();
+            const fillFx = p.fillStyle || (fillingStyle[p.filling] || fillingStyle['Vanilla Cream']);
+
+            const makeMat = (hex, opts = {}) => new THREE.MeshPhysicalMaterial({
+                color: tc(hex),
+                map: opts.map ?? null,
+                bumpMap: opts.bumpMap ?? null,
+                bumpScale: opts.bumpScale ?? 0,
+                roughnessMap: opts.roughnessMap ?? null,
+                roughness: opts.r ?? 0.58,
+                metalness: opts.m ?? 0.02,
+                transparent: !!opts.t,
+                opacity: opts.o ?? 1,
+                side: opts.side ?? THREE.DoubleSide,
+                clearcoat: opts.clearcoat ?? 0,
+                clearcoatRoughness: opts.clearcoatRoughness ?? 0.08,
+                reflectivity: opts.reflectivity ?? 0.28,
+                transmission: opts.transmission ?? 0,
+                thickness: opts.thickness ?? 0,
+                ior: opts.ior ?? 1.45,
+                envMapIntensity: opts.env ?? 0.55,
+                emissive: opts.emissive ? tc(opts.emissive) : new THREE.Color(0x000000),
+                emissiveIntensity: opts.emissiveIntensity ?? 0,
+            });
+
+            const textureCanvas = (size, draw, repeatX = 1, repeatY = 1) => {
+                const c = document.createElement('canvas');
+                c.width = size;
+                c.height = size;
+                const ctx = c.getContext('2d');
+                draw(ctx, size);
+                const tex = new THREE.CanvasTexture(c);
+                tex.wrapS = THREE.RepeatWrapping;
+                tex.wrapT = THREE.RepeatWrapping;
+                tex.repeat.set(repeatX, repeatY);
+                tex.encoding = THREE.sRGBEncoding;
+                tex.needsUpdate = true;
+                return tex;
+            };
+
+            const spongeTex = textureCanvas(512, (ctx, s) => {
+                ctx.fillStyle = p.spongeHex;
+                ctx.fillRect(0, 0, s, s);
+                for (let i = 0; i < 950; i++) {
+                    const x = Math.random() * s;
+                    const y = Math.random() * s;
+                    const r = 1 + Math.random() * 5;
+                    ctx.fillStyle = i % 4 === 0 ? 'rgba(95,55,18,0.22)' : 'rgba(255,245,199,0.28)';
+                    ctx.beginPath();
+                    ctx.ellipse(x, y, r * 1.45, r, Math.random() * Math.PI, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                for (let i = 0; i < 190; i++) {
+                    ctx.fillStyle = 'rgba(112,68,22,0.22)';
+                    ctx.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 5, 1 + Math.random() * 2);
+                }
+            }, 2.2, 1.2);
+
+            const creamTex = textureCanvas(512, (ctx, s) => {
+                const grad = ctx.createLinearGradient(0, 0, s, s);
+                grad.addColorStop(0, '#fff9ea');
+                grad.addColorStop(0.55, p.frostHex);
+                grad.addColorStop(1, '#d8c5a7');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, s, s);
+                for (let i = 0; i < 95; i++) {
+                    ctx.strokeStyle = i % 2 ? 'rgba(255,255,255,0.28)' : 'rgba(170,132,94,0.16)';
+                    ctx.lineWidth = 1 + Math.random() * 5;
+                    ctx.beginPath();
+                    const y = Math.random() * s;
+                    ctx.moveTo(-20, y);
+                    ctx.bezierCurveTo(s * 0.25, y + Math.sin(i) * 22, s * 0.65, y - Math.cos(i) * 18, s + 20, y + Math.sin(i * 1.7) * 18);
+                    ctx.stroke();
+                }
+            }, 1.7, 1.1);
+
+            const mousseTex = textureCanvas(512, (ctx, s) => {
+                const base = p.filling === 'Chocolate Mousse' ? '#4a281e' : p.fillHex;
+                const hi = p.filling === 'Chocolate Mousse' ? '#9a5b43' : fillFx.accent;
+                ctx.fillStyle = base;
+                ctx.fillRect(0, 0, s, s);
+                for (let i = 0; i < 260; i++) {
+                    const x = Math.random() * s;
+                    const y = Math.random() * s;
+                    const r = 4 + Math.random() * 22;
+                    const g2 = ctx.createRadialGradient(x, y, 0, x, y, r);
+                    g2.addColorStop(0, i % 3 === 0 ? 'rgba(255,235,210,0.42)' : 'rgba(255,255,255,0.18)');
+                    g2.addColorStop(0.45, hi + '88');
+                    g2.addColorStop(1, 'rgba(38,12,8,0)');
+                    ctx.fillStyle = g2;
+                    ctx.beginPath();
+                    ctx.ellipse(x, y, r * 1.5, r * 0.75, Math.random() * Math.PI, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }, 1.7, 0.8);
+
+            const width = 2.55;
+            const depth = 0.88;
+            const faceZ = depth / 2 + 0.018;
+            const spongeH = 0.34;
+            const fillH = 0.20;
+            const creamH = 0.075;
+            const topFrostH = 0.12;
+            const totalH = spongeH * 3 + fillH * 2 + creamH * 4 + topFrostH;
+            const left = -width / 2;
+
+            const spongeMat = makeMat(p.spongeHex, { r: 0.94, reflectivity: 0.08, env: 0.2, map: spongeTex, bumpMap: spongeTex, bumpScale: 0.045, emissive: p.spongeHex, emissiveIntensity: 0.018 });
+            const spongeDarkMat = makeMat(darken3dHex(p.spongeHex, 0.68), { r: 0.96, reflectivity: 0.04, env: 0.12 });
+            const crustMat = makeMat(darken3dHex(p.spongeHex, 0.55), { r: 0.86, reflectivity: 0.05, env: 0.14 });
+            const fillMat = makeMat(p.filling === 'Chocolate Mousse' ? '#4a281e' : p.fillHex, { r: Math.min(fillFx.rough, 0.2), m: fillFx.metal, clearcoat: 1, clearcoatRoughness: 0.018, transmission: 0.1, thickness: 0.14, ior: 1.52, reflectivity: 0.68, env: 1.2, map: mousseTex, bumpMap: mousseTex, bumpScale: 0.028 });
+            const fillAccentMat = makeMat(p.filling === 'Chocolate Mousse' ? '#8e4d38' : fillFx.accent, { r: 0.2, clearcoat: 0.95, clearcoatRoughness: 0.035, transmission: 0.08, thickness: 0.08, reflectivity: 0.58, env: 1.0, map: mousseTex, bumpMap: mousseTex, bumpScale: 0.018 });
+            const frostingMat = makeMat(p.frostHex, { r: 0.52, clearcoat: 0.18, clearcoatRoughness: 0.28, reflectivity: 0.14, env: 0.32, map: creamTex, bumpMap: creamTex, bumpScale: 0.032, emissive: '#fff2dc', emissiveIntensity: 0.012 });
+            const shadowMat = new THREE.ShadowMaterial({ opacity: 0.24 });
+            const creviceMat = new THREE.MeshBasicMaterial({
+                color: 0x2b120b,
+                transparent: true,
+                opacity: 0.22,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+            });
+
+            const addBlock = (w, h, d, x, y, z, mat) => {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d, 10, 2, 4), mat);
+                mesh.position.set(x, y + h / 2, z);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                g.add(mesh);
+                return mesh;
+            };
+
+            const addFaceBand = (h, y, mat, inset = 0.02) => {
+                const shape = new THREE.Shape();
+                const waves = 18;
+                shape.moveTo(left + inset, y);
+                for (let i = 0; i <= waves; i++) {
+                    const x = left + inset + (i / waves) * (width - inset * 2);
+                    const wobble = Math.sin(i * 1.7 + y * 5.1) * 0.012 + Math.cos(i * 0.9) * 0.006;
+                    shape.lineTo(x, y + wobble);
+                }
+                for (let i = waves; i >= 0; i--) {
+                    const x = left + inset + (i / waves) * (width - inset * 2);
+                    const wobble = Math.sin(i * 1.5 + y * 4.4) * 0.012 + Math.cos(i * 1.1) * 0.006;
+                    shape.lineTo(x, y + h + wobble);
+                }
+                shape.closePath();
+                const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), mat);
+                mesh.position.z = faceZ;
+                g.add(mesh);
+                return mesh;
+            };
+
+            const addCreamRibbon = (y, h = creamH) => {
+                const ribbon = addFaceBand(h, y, frostingMat, 0.015);
+                ribbon.position.z = faceZ + 0.006;
+                for (let i = 0; i < 18; i++) {
+                    const x = left + 0.1 + (i / 17) * (width - 0.2);
+                    const puff = new THREE.Mesh(new THREE.SphereGeometry(0.035 + (i % 3) * 0.006, 10, 8), frostingMat);
+                    puff.position.set(x, y + h * (0.48 + Math.sin(i * 1.8) * 0.12), faceZ + 0.02);
+                    puff.scale.set(1.25, 0.55, 0.45);
+                    g.add(puff);
+                }
+            };
+
+            const addCreviceShadow = (y) => {
+                const shadow = new THREE.Mesh(new THREE.PlaneGeometry(width * 0.94, 0.028), creviceMat);
+                shadow.position.set(0, y, faceZ + 0.052);
+                g.add(shadow);
+            };
+
+            const addSpongeTexture = (y, h) => {
+                for (let i = 0; i < 105; i++) {
+                    const x = left + 0.06 + ((i * 37) % 100) / 100 * (width - 0.12);
+                    const yy = y + 0.035 + ((i * 61) % 100) / 100 * (h - 0.07);
+                    const pore = new THREE.Mesh(new THREE.SphereGeometry(0.007 + (i % 4) * 0.003, 6, 5), i % 5 === 0 ? crustMat : spongeDarkMat);
+                    pore.position.set(x, yy, faceZ + 0.024 + (i % 3) * 0.003);
+                    pore.scale.set(1.25, 0.75, 0.45);
+                    g.add(pore);
+                }
+                for (let i = 0; i < 24; i++) {
+                    const x = left + 0.04 + (i / 23) * (width - 0.08);
+                    const crumb = new THREE.Mesh(new THREE.SphereGeometry(0.018 + (i % 3) * 0.006, 8, 6), spongeMat);
+                    crumb.position.set(x, y + h + Math.sin(i * 1.9) * 0.018, faceZ + 0.022);
+                    crumb.scale.set(1.15, 0.55, 0.5);
+                    g.add(crumb);
+                }
+            };
+
+            const addFillingLayer = (y) => {
+                const xSegs = 90;
+                const ySegs = 16;
+                const planeGeo = new THREE.PlaneGeometry(width - 0.04, fillH, xSegs, ySegs);
+                const pos = planeGeo.attributes.position;
+
+                for(let i = 0; i < pos.count; i++) {
+                    const vx = pos.getX(i);
+                    const vy = pos.getY(i);
+                    // nx is normalized x from 0 to 1 across the width of the face
+                    const nx = (vx - (left + 0.02)) / (width - 0.04);
+
+                    // z_factor is 0 at the top of the layer, 1 at the bottom
+                    const z_factor = (-vy + fillH/2) / fillH;
+
+                    let edge_fade = 1.0;
+                    const dist_from_edge = Math.min(nx, 1.0 - nx);
+                    if (dist_from_edge < 0.08) {
+                        const f = dist_from_edge / 0.08;
+                        edge_fade = f * f * (3 - 2 * f);
+                    }
+
+                    // Sine waves for deep, heavy drips based on the python script
+                    const drip_pattern = Math.max(0, 0.1 + 0.18 * Math.sin(nx * 22.0) + 0.1 * Math.cos(nx * 48.0));
+
+                    const outward = drip_pattern * z_factor * edge_fade * fillFx.drip * 0.28;
+                    const downward = (drip_pattern * 3.2) * Math.pow(z_factor, 1.8) * edge_fade * fillFx.drip * 0.18;
+
+                    pos.setY(i, vy - downward);
+                    pos.setZ(i, pos.getZ(i) + outward);
+                }
+                planeGeo.computeVertexNormals();
+
+                const mesh = new THREE.Mesh(planeGeo, fillMat);
+                mesh.position.set(0, y + fillH / 2, faceZ + 0.015);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                g.add(mesh);
+
+                // Add the chunks/bits inside the filling
+                for (let i = 0; i < Math.max(18, fillFx.chunks * 2); i++) {
+                    const x = left + 0.1 + ((i * 43) % 100) / 100 * (width - 0.2);
+                    const yy = y + fillH * (0.22 + ((i * 29) % 58) / 100);
+                    const blob = new THREE.Mesh(new THREE.SphereGeometry(0.04 + (i % 4) * 0.012, 12, 10), i % 3 === 0 ? fillAccentMat : fillMat);
+                    blob.position.set(x, yy, faceZ + 0.035);
+                    blob.scale.set(1.65, 0.78, 0.55);
+                    blob.castShadow = true;
+                    g.add(blob);
+                }
+            };
+
+            addBlock(width, totalH, depth, 0, 0, 0, frostingMat);
+            addBlock(0.12, totalH * 0.94, depth + 0.035, width / 2 - 0.06, 0.02, 0.015, frostingMat);
+            addBlock(width, topFrostH, depth + 0.04, 0, totalH - topFrostH, 0.02, frostingMat);
+
+            let y = 0.03;
+            addFaceBand(spongeH, y, spongeMat); addSpongeTexture(y, spongeH);
+            y += spongeH; addCreviceShadow(y); addCreamRibbon(y, creamH); y += creamH;
+            addFillingLayer(y); y += fillH; addCreviceShadow(y);
+            addCreamRibbon(y, creamH); y += creamH; addCreviceShadow(y);
+            addFaceBand(spongeH, y, spongeMat); addSpongeTexture(y, spongeH);
+            y += spongeH; addCreviceShadow(y); addCreamRibbon(y, creamH); y += creamH;
+            addFillingLayer(y); y += fillH; addCreviceShadow(y);
+            addCreamRibbon(y, creamH); y += creamH; addCreviceShadow(y);
+            addFaceBand(spongeH, y, spongeMat); addSpongeTexture(y, spongeH);
+
+            for (let i = 0; i < 8; i++) {
+                const x = left + 0.24 + (i / 7) * (width - 0.48);
+                const base = new THREE.Mesh(new THREE.SphereGeometry(0.085, 14, 10), frostingMat);
+                base.position.set(x, totalH + 0.035, 0.05 + Math.sin(i * 1.4) * 0.05);
+                base.scale.set(1.2, 0.72, 1);
+                g.add(base);
+                const peak = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.11, 12), frostingMat);
+                peak.position.set(x + 0.015, totalH + 0.105, 0.05 + Math.sin(i * 1.4) * 0.05);
+                peak.rotation.z = Math.sin(i) * 0.25;
+                g.add(peak);
+            }
+
+            const berryMat = makeMat('#d7192f', { r: 0.32, clearcoat: 0.75, clearcoatRoughness: 0.08 });
+            const berry = new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 12), berryMat);
+            berry.position.set(0.42, totalH + 0.16, 0.08);
+            berry.scale.set(1.25, 0.42, 0.78);
+            berry.rotation.z = -0.45;
+            g.add(berry);
+            const berryCut = new THREE.Mesh(new THREE.CircleGeometry(0.13, 24), makeMat('#ffd5c9', { r: 0.42 }));
+            berryCut.position.set(0.42, totalH + 0.165, 0.205);
+            berryCut.rotation.z = -0.45;
+            g.add(berryCut);
+
+            const plate = new THREE.Mesh(new THREE.CylinderGeometry(1.65, 1.72, 0.07, 72), makeMat('#e8dfd5', { r: 0.54 }));
+            plate.position.y = -0.05;
+            plate.receiveShadow = true;
+            g.add(plate);
+            const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.6, 48), shadowMat);
+            shadow.rotation.x = -Math.PI / 2;
+            shadow.position.y = -0.015;
+            g.add(shadow);
+
+            g.position.y = -totalH / 2;
+            g.rotation.x = -0.02;
+            g.scale.set(1.22, 1.22, 1.22);
+            return g;
+        };
+
+        const closeSlice = () => {
+            document.getElementById('slice-modal')?.classList.add('hidden');
+            document.body.style.overflow = '';
+            if (sliceRAF) { cancelAnimationFrame(sliceRAF); sliceRAF = null; }
+        };
+
+        // ── Event Wiring ──────────────────────────────────────────────────
+        ['front', 'top', 'side', 'inside'].forEach(v => {
+            document.getElementById('tab-view-' + v)?.addEventListener('click', () => setView(v));
+        });
+        document.getElementById('inside-click-hint')?.addEventListener('click', openSlice);
+        document.getElementById('slice-modal-close')?.addEventListener('click', closeSlice);
+        document.getElementById('slice-modal-backdrop')?.addEventListener('click', closeSlice);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSlice(); });
+
+        // Expose to compute()
+        window.__cake3dUpdate = build;
+
+        // ── Animation Loop ────────────────────────────────────────────────
+        const animate = () => {
+            requestAnimationFrame(animate);
+            if (camFrom && camTo && camT < 1) {
+                camT = Math.min(1, camT + 1 / CAM_DUR);
+                const e = camT < 0.5 ? 2 * camT * camT : -1 + (4 - 2 * camT) * camT;
+                camera.position.lerpVectors(camFrom.pos, camTo.pos, e);
+                camera.fov = camFrom.fov + (camTo.fov - camFrom.fov) * e;
+                camera.updateProjectionMatrix();
+                camera.lookAt(camTo.look);
+                if (camT >= 1) { camFrom = camTo = null; }
+            }
+            if (autoRot) {
+                rotY += 0.0055;
+                cakeGroup.rotation.y = rotY;
+                cutGroup.rotation.y = rotY;
+            }
+            renderer.render(scene, camera);
+        };
+        animate();
+
+        // ── Resize ────────────────────────────────────────────────────────
+        new ResizeObserver(() => {
+            const w = wrap.clientWidth, h = wrap.clientHeight;
+            if (!w || !h) return;
+            camera.aspect = w / h; camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        }).observe(wrap);
+
+        // ── Init ──────────────────────────────────────────────────────────
+        build();
+        setView('front');
+    }
+
+    // Blender model preview is initialized by resources/js/customize-3d.js.
+    // The older inline preview is kept dormant while we use the shared 3D module.
+    // initCake3DPreview();
+    </script>
+@endsection
